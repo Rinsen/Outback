@@ -290,3 +290,4 @@ __pycache__/
 /nuget.exe
 
 tempkey.rsa
+/src/Rinsen.InnovationBoost/package-lock.json
