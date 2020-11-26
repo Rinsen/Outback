@@ -8,6 +8,16 @@ namespace Rinsen.Outback.Clients
 {
     public class ClientService
     {
+        public Task<Client> GetClient(string clientId, string clientSecret)
+        {
+
+
+            return Task.FromResult(new Client
+            {
+                ClientId = clientId
+            });
+        }
+
         public Task<Client> GetClient(string clientId)
         {
 

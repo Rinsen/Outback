@@ -8,6 +8,7 @@ namespace Rinsen.Outback.Clients
 {
     public class ClientValidator
     {
+
         public bool IsScopeValid(Client client, string scope)
         {
             throw new NotImplementedException();
