@@ -10,6 +10,7 @@ namespace Rinsen.Outback.Clients
     {
         public Task<Client> GetClient(string clientId, string clientSecret)
         {
+            // Validate client secret if needed
 
 
             return Task.FromResult(new Client

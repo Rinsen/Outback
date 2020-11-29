@@ -43,9 +43,10 @@ namespace Rinsen.Outback.Grant
             return Task.FromResult(persistedGrant);
         }
 
-        public string CreateAndStoreGrant(Client client, string subjectId, string codeChallenge, string codeChallengeMethod, string nonce, string redirectUri, string scope, string state, string responseType)
+        public Task<string> CreateAndStoreGrant(Client client, string subjectId, string codeChallenge, string codeChallengeMethod, string nonce, string redirectUri, string scope, string state, string responseType)
         {
             var code = _randomStringGenerator.GetRandomString(15);
+
             _persistedGrants.TryAdd(code, new PersistedGrant
             {
                 ClientId = client.ClientId,
@@ -60,7 +61,7 @@ namespace Rinsen.Outback.Grant
                 SubjectId = subjectId
             });
 
-            return code;
+            return Task.FromResult(code);
         }
     }
 }

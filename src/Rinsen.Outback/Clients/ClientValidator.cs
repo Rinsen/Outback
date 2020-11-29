@@ -18,5 +18,10 @@ namespace Rinsen.Outback.Clients
         {
             throw new NotImplementedException();
         }
+
+        public bool IsGrantTypeSupported(Client client, string grantType)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
