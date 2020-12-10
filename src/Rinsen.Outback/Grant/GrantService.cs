@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
 using Rinsen.Outback.Clients;
+using Rinsen.Outback.Models;
 
 namespace Rinsen.Outback.Grant
 {
@@ -43,21 +44,40 @@ namespace Rinsen.Outback.Grant
             return Task.FromResult(persistedGrant);
         }
 
-        public Task<string> CreateAndStoreGrant(Client client, string subjectId, string codeChallenge, string codeChallengeMethod, string nonce, string redirectUri, string scope, string state, string responseType)
+        public Task<string> CreateAndStoreGrant(Client client, ClaimsPrincipal user, AuthorizeModel model)
         {
             var code = _randomStringGenerator.GetRandomString(15);
+            string refreshToken = null;
+
+            if (!user.Claims.Any(m => m.Type == "sub"))
+            {
+                throw new SecurityException("sub claim not found");
+            }
+
+            var subjectId = user.FindFirstValue("sub");
+
+            if (string.IsNullOrEmpty(subjectId))
+            {
+                throw new SecurityException("sub claim empty is not supported");
+            }
+
+            if (client.IssueRefreshToken)
+            {
+                refreshToken = _randomStringGenerator.GetRandomString(30);
+            }
 
             _persistedGrants.TryAdd(code, new PersistedGrant
             {
                 ClientId = client.ClientId,
                 Code = code,
-                CodeChallange = codeChallenge,
-                CodeChallangeMethod = codeChallengeMethod,
-                Nonce = nonce,
-                RedirectUri = redirectUri,
-                ResponseType = responseType,
-                Scope = scope,
-                State = state,
+                CodeChallange = model.CodeChallenge,
+                CodeChallangeMethod = model.CodeChallengeMethod,
+                Nonce = model.Nonce,
+                RedirectUri = model.RedirectUri,
+                ResponseType = model.ResponseType,
+                RefreshToken = refreshToken,
+                Scope = model.Scope,
+                State = model.State,
                 SubjectId = subjectId
             });
 

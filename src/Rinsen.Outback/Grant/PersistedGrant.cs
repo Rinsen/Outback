@@ -28,5 +28,10 @@ namespace Rinsen.Outback.Grant
 
         public string ResponseType { get; set; }
 
+        public string RefreshToken { get; set; }
+
+        public DateTime Created { get; set; }
+
+        public DateTime Resolved { get; set; }
     }
 }

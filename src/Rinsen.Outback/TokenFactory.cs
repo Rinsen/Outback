@@ -22,12 +22,14 @@ namespace Rinsen.Outback
             _ellipticCurveJsonWebKeyService = ellipticCurveJsonWebKeyService;
         }
 
-        public TokenResponse CreateTokenResponse(ClaimsIdentity claimsIdentity, Client client, PersistedGrant persistedGrant, string issuer)
+        public TokenResponse CreateTokenResponse(ClaimsPrincipal claimsPrincipal, Client client, PersistedGrant persistedGrant, string issuer)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
+
+            var identity = (ClaimsIdentity)claimsPrincipal.Identity;
             var identityTokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = claimsIdentity,
+                Subject = identity,
                 TokenType = null,
                 Expires = DateTime.UtcNow.AddSeconds(client.AccessTokenLifetime),
                 Issuer = issuer,
@@ -43,7 +45,7 @@ namespace Rinsen.Outback
 
             var accessTokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = claimsIdentity,
+                Subject = identity,
                 TokenType = "at+jwt",
                 Expires = DateTime.UtcNow.AddSeconds(client.IdentityTokenLifetime),
                 Issuer = issuer,
@@ -57,6 +59,18 @@ namespace Rinsen.Outback
 
             var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);
             var tokenString = tokenHandler.WriteToken(accessToken);
+
+            if (client.IssueRefreshToken)
+            {
+                return new RefreshTokenResponse
+                {
+                    AccessToken = tokenString,
+                    IdentityToken = identityTokenString,
+                    ExpiresIn = client.AccessTokenLifetime,
+                    RefreshToken = persistedGrant.RefreshToken,
+                    TokenType = "Bearer"
+                };
+            }
 
             return new TokenResponse
             {
