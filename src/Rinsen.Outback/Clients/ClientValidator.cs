@@ -1,27 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rinsen.Outback.Clients
 {
     public class ClientValidator
     {
 
-        public bool IsScopeValid(Client client, string scope)
+        public static bool IsScopeValid(Client client, string requestScopes)
         {
-            throw new NotImplementedException();
+            var scopes = requestScopes.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var scope in scopes)
+            {
+                if (!client.Scopes.Any(s => string.Equals(s, scope)))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
-        public bool IsRedirectUriValid(Client client, string redirectUri)
+        public static bool IsRedirectUriValid(Client client, string redirectUri)
         {
-            throw new NotImplementedException();
+            return client.RedirectUris.Any(r => string.Equals(r, redirectUri));
         }
 
-        public bool IsGrantTypeSupported(Client client, string grantType)
+        public static bool IsGrantTypeSupported(Client client, string grantType)
         {
-            throw new NotImplementedException();
+            return client.GrantTypes.Any(gt => string.Equals(gt, grantType));
         }
     }
 }

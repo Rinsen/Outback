@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Rinsen.Outback
@@ -13,6 +11,9 @@ namespace Rinsen.Outback
 
         [BindProperty(Name = "code")]
         public string Code { get; set; }
+
+        [BindProperty(Name = "refresh_token")]
+        public string RefreshToken { get; set; }
 
         [BindProperty(Name = "redirect_uri")]
         public string RedirectUri { get; set; }

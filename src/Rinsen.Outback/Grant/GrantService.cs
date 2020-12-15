@@ -83,5 +83,10 @@ namespace Rinsen.Outback.Grant
 
             return Task.FromResult(code);
         }
+
+        public Task<PersistedGrant> GetGrant(string refreshToken, string clientId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -13,5 +13,13 @@ namespace Rinsen.Outback.Clients
         public bool IssueRefreshToken { get; set; }
         public int AccessTokenLifetime { get; set; }
         public int IdentityTokenLifetime { get; set; }
+
+        public List<string> Scopes { get; set; }
+
+        public List<string> RedirectUris { get; set; }
+
+        public List<string> GrantTypes { get; set; }
+
+
     }
 }
