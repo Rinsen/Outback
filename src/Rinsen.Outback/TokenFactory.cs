@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
 using Rinsen.Outback.Clients;
 using Rinsen.Outback.Cryptography;
-using Rinsen.Outback.Grant;
+using Rinsen.Outback.Grants;
 using Rinsen.Outback.Models;
 
 namespace Rinsen.Outback
@@ -22,7 +22,7 @@ namespace Rinsen.Outback
             _ellipticCurveJsonWebKeyService = ellipticCurveJsonWebKeyService;
         }
 
-        public TokenResponse CreateTokenResponse(ClaimsPrincipal claimsPrincipal, Client client, PersistedGrant persistedGrant, string issuer)
+        public TokenResponse CreateTokenResponse(ClaimsPrincipal claimsPrincipal, Client client, Grant persistedGrant, string issuer)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
 

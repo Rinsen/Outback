@@ -1,9 +1,7 @@
-﻿Add request parameter validation for Augmented Backus–Naur form from spec
-Add error response handling
+﻿Add error response handling
 Add Client credentials flow
-Move validation out of connect controller
 Rotate refresh tokens and log failures to resolve refresh token
-Store refresh token history when rotating
-Add refresh tokens valid to
-Grants valid to?
+Store refresh token history when rotating and faile refresh if refresh token is reused
 Content Security Policy (CSP) level 2
+Support Clients without secrets
+Storage abstractions

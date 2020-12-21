@@ -1,18 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Rinsen.Outback.Grant
+namespace Rinsen.Outback.Grants
 {
-    public class PersistedGrant
+    public class Grant
     {
-        public string Code { get; set; }
-
         public string ClientId { get; set; }
 
         public string SubjectId { get; set; }
+
+        public string Code { get; set; }
+
+        public DateTime? CodeExpires { get; set; }
 
         public string CodeChallange { get; set; }
 
@@ -30,8 +28,12 @@ namespace Rinsen.Outback.Grant
 
         public string RefreshToken { get; set; }
 
+        public DateTime? RefreshTokenExpires { get; set; }
+
         public DateTime Created { get; set; }
 
         public DateTime Resolved { get; set; }
+
+        public DateTime? Expires { get; set; }
     }
 }
