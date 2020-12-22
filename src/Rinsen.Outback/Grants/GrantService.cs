@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
+using Rinsen.Outback.Abstractons;
 using Rinsen.Outback.Clients;
 using Rinsen.Outback.Models;
 
@@ -14,17 +15,19 @@ namespace Rinsen.Outback.Grants
 {
     public class GrantService
     {
-        private readonly ConcurrentDictionary<string, Grant> _persistedGrants = new ConcurrentDictionary<string, Grant>();
         private readonly RandomStringGenerator _randomStringGenerator;
+        private readonly IGrantStorage _grantStorage;
 
-        public GrantService(RandomStringGenerator randomStringGenerator)
+        public GrantService(RandomStringGenerator randomStringGenerator,
+            IGrantStorage grantStorage)
         {
             _randomStringGenerator = randomStringGenerator;
+            _grantStorage = grantStorage;
         }
 
-        public Task<Grant> GetGrant(string code, string clientId, string codeVerifier)
+        public async Task<Grant> GetGrant(string code, string clientId, string codeVerifier)
         {
-            _persistedGrants.TryGetValue(code, out var persistedGrant);
+            var persistedGrant = await _grantStorage.GetGrant(code);
 
             if (persistedGrant.Expires != null && persistedGrant.Expires > DateTime.UtcNow)
             {
@@ -52,10 +55,10 @@ namespace Rinsen.Outback.Grants
                 throw new SecurityException("Code verifier is not matching code challenge");
             }
 
-            return Task.FromResult(persistedGrant);
+            return persistedGrant;
         }
 
-        public Task<string> CreateAndStoreGrant(Client client, ClaimsPrincipal user, AuthorizeModel model)
+        public async Task<string> CreateAndStoreGrant(Client client, ClaimsPrincipal user, AuthorizeModel model)
         {
             var code = _randomStringGenerator.GetRandomString(15);
             string refreshToken = null;
@@ -83,7 +86,7 @@ namespace Rinsen.Outback.Grants
                 throw new SecurityException("Code challange is not valid");
             }
 
-            _persistedGrants.TryAdd(code, new Grant
+            await _grantStorage.Save(new Grant
             {
                 ClientId = client.ClientId,
                 Code = code,
@@ -98,7 +101,7 @@ namespace Rinsen.Outback.Grants
                 SubjectId = subjectId
             });
 
-            return Task.FromResult(code);
+            return code;
         }
 
         public Task<string> GetCodeForExistingConsent(Client client, ClaimsPrincipal user, AuthorizeModel model)

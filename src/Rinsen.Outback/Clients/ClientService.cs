@@ -1,22 +1,27 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.WebUtilities;
+using Rinsen.Outback.Abstractons;
 using Rinsen.Outback.Models;
 
 namespace Rinsen.Outback.Clients
 {
     public class ClientService
     {
+        private readonly IClientStorage _clientStorage;
 
-
-        
-
-        public Task<Client> GetClient(AuthorizeModel model)
+        public ClientService(IClientStorage clientStorage)
         {
-            var client = GetClientPrivate(model.ClientId);
+            _clientStorage = clientStorage;
+        }
+
+        public async Task<Client> GetClient(AuthorizeModel model)
+        {
+            var client = await _clientStorage.GetClient(model.ClientId);
 
             if (!ClientValidator.IsScopeValid(client, model.Scope))
             {
@@ -28,59 +33,39 @@ namespace Rinsen.Outback.Clients
                 throw new SecurityException();
             }
 
-            return Task.FromResult(client);
+            return client;
         }
 
-        public Task<Client> GetClient(string clientId, string clientSecret)
+        public async Task<Client> GetClient(ClientIdentity clientIdentity)
         {
             // Validate client secret if needed
-            var client = GetClientPrivate(clientId);
+            var client = await _clientStorage.GetClient(clientIdentity.ClientId);
 
             switch (client.ClientType)
             {
                 case ClientType.Confidential:
-                    // Validate secret
-                    break;
                 case ClientType.Credentialed:
-                    // Validate secret
-                    break;
+                    if (string.IsNullOrEmpty(clientIdentity.Secret))
+                    {
+                        throw new SecurityException($"No secret for client {clientIdentity.ClientId}");
+                    }
+                    
+                    using (var sha256 = SHA256.Create())
+                    {
+                        var secretHash = WebEncoders.Base64UrlEncode(sha256.ComputeHash(Encoding.UTF8.GetBytes(clientIdentity.Secret)));
+
+                        if (!client.Secrets.Any(s => s == secretHash))
+                        {
+                            throw new SecurityException($"No valid secret for client {clientIdentity.ClientId}");
+                        } 
+                    }
+
+                    return client;
                 case ClientType.Public:
-                    throw new NotSupportedException();
-                default:
-                    break;
+                    return client;
             }
 
-
-            return Task.FromResult(client);
-        }
-
-        private Client GetClientPrivate(string clientId)
-        {
-            return new Client
-            {
-                AccessTokenLifetime = 3600,
-                ClientId = clientId,
-                ClientType = ClientType.Confidential,
-                ClientClaims = new List<ClientClaim>(),
-                ConsentRequired = false,
-                IdentityTokenLifetime = 300,
-                IssueRefreshToken = false,
-                PostLogoutRedirectUri = new List<string>(),
-                Secrets = new List<string>(),
-                Scopes = new List<string>
-                {
-                    "openid",
-                    "profile"
-                },
-                RedirectUris = new List<string>
-                {
-                    "https://localhost:44372/signin-oidc"
-                },
-                GrantTypes = new List<string>
-                {
-                    "authorization_code"
-                }
-            };
+            throw new Exception($"Client '{clientIdentity.ClientId}' not found");
         }
     }
 }

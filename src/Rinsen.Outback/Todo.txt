@@ -3,5 +3,4 @@ Add Client credentials flow
 Rotate refresh tokens and log failures to resolve refresh token
 Store refresh token history when rotating and faile refresh if refresh token is reused
 Content Security Policy (CSP) level 2
-Support Clients without secrets
 Storage abstractions

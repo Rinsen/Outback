@@ -5,7 +5,6 @@ namespace Rinsen.Outback.Clients
 {
     public class ClientValidator
     {
-
         public static bool IsScopeValid(Client client, string requestScopes)
         {
             var scopes = requestScopes.Split(' ', StringSplitOptions.RemoveEmptyEntries);
