@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Rinsen.Outback.Models;
 
-namespace Rinsen.Outback.Cryptography
+namespace Rinsen.Outback.Abstractons
 {
     public interface IWellKnownSigningStorage
     {

@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
+using Rinsen.Outback.Abstractons;
 using Rinsen.Outback.Clients;
-using Rinsen.Outback.Cryptography;
 using Rinsen.Outback.Grants;
 using Rinsen.Outback.Models;
 
