@@ -60,9 +60,47 @@ namespace Rinsen.Outback.Grants
 
         public async Task<string> CreateAndStoreGrant(Client client, ClaimsPrincipal user, AuthorizeModel model)
         {
-            var code = _randomStringGenerator.GetRandomString(15);
-            string refreshToken = null;
+            if (!AbnfValidationHelper.IsValid(model.CodeChallenge, 43, 128))
+            {
+                // Code verifier is not valid
+                throw new SecurityException("Code challange is not valid");
+            }
 
+            var grant = new Grant
+            {
+                ClientId = client.ClientId,
+                Code = _randomStringGenerator.GetRandomString(15),
+                CodeChallange = model.CodeChallenge,
+                CodeChallangeMethod = model.CodeChallengeMethod,
+                Nonce = model.Nonce,
+                RedirectUri = model.RedirectUri,
+                ResponseType = model.ResponseType,
+                Scope = model.Scope,
+                State = model.State,
+                Expires = DateTime.UtcNow.AddSeconds(client.GrantLifetime)
+            };
+
+            SetSubjectId(user, grant);
+
+            if (client.IssueRefreshToken)
+            {
+                GenerateRefreshToken(grant, client);
+            }
+
+            await _grantStorage.Save(grant);
+
+            return grant.Code;
+        }
+
+        private void GenerateRefreshToken(Grant grant, Client client)
+        {
+            grant.RefreshToken = _randomStringGenerator.GetRandomString(30);
+            grant.RefreshTokenCreated = DateTime.UtcNow;
+            grant.RefreshTokenExpires = DateTime.UtcNow.AddSeconds(client.RefreshTokenLifetime);
+        }
+
+        private static void SetSubjectId(ClaimsPrincipal user, Grant grant)
+        {
             if (!user.Claims.Any(m => m.Type == "sub"))
             {
                 throw new SecurityException("sub claim not found");
@@ -75,33 +113,7 @@ namespace Rinsen.Outback.Grants
                 throw new SecurityException("sub claim empty is not supported");
             }
 
-            if (client.IssueRefreshToken)
-            {
-                refreshToken = _randomStringGenerator.GetRandomString(30);
-            }
-
-            if (!AbnfValidationHelper.IsValid(model.CodeChallenge, 43, 128))
-            {
-                // Code verifier is not valid
-                throw new SecurityException("Code challange is not valid");
-            }
-
-            await _grantStorage.Save(new Grant
-            {
-                ClientId = client.ClientId,
-                Code = code,
-                CodeChallange = model.CodeChallenge,
-                CodeChallangeMethod = model.CodeChallengeMethod,
-                Nonce = model.Nonce,
-                RedirectUri = model.RedirectUri,
-                ResponseType = model.ResponseType,
-                RefreshToken = refreshToken,
-                Scope = model.Scope,
-                State = model.State,
-                SubjectId = subjectId
-            });
-
-            return code;
+            grant.SubjectId = subjectId;
         }
 
         public Task<string> GetCodeForExistingConsent(Client client, ClaimsPrincipal user, AuthorizeModel model)

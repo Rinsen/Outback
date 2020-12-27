@@ -8,9 +8,10 @@ namespace Rinsen.Outback.Clients
         public ClientType ClientType { get; set; }
         public bool ConsentRequired { get; set; }
         public bool IssueRefreshToken { get; set; }
+        public int RefreshTokenLifetime { get; set; }
         public int AccessTokenLifetime { get; set; }
         public int IdentityTokenLifetime { get; set; }
-
+        public int GrantLifetime { get; set; }
         public List<ClientClaim> ClientClaims { get; set; }
 
         public List<string> Secrets { get; set; }
