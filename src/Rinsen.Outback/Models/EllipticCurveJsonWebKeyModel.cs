@@ -1,34 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
-namespace Rinsen.Outback
+namespace Rinsen.Outback.Models
 {
+    public class EllipticCurveJsonWebKeyModelKeys
+    {
+        [JsonPropertyName("keys")]
+        public List<EllipticCurveJsonWebKeyModel> Keys { get; set; }
+    }
+
     public class EllipticCurveJsonWebKeyModel
     {
+        public EllipticCurveJsonWebKeyModel(string keyId, string x, string y, string curve, string signingAlgorithm)
+        {
+            KeyType = "EC";
+            PublicKeyUse = "sig";
+            KeyId = keyId;
+            X = x;
+            Y = y;
+            Curve = curve;
+            SigningAlgorithm = signingAlgorithm;
+        }
+
         [JsonPropertyName("kty")]
-        public string KeyType { get { return "EC"; } }
+        public string KeyType { get; }
 
         [JsonPropertyName("use")]
-        public string PublicKeyUse { get { return "sig"; } }
+        public string PublicKeyUse { get; }
 
         [JsonPropertyName("kid")]
-        public string KeyId { get; set; }
+        public string KeyId { get; }
 
         [JsonPropertyName("x")]
-        public string X { get; set; }
+        public string X { get; }
 
         [JsonPropertyName("y")]
-        public string Y { get; set; }
+        public string Y { get; }
 
         [JsonPropertyName("crv")]
-        public string Curve { get; set; }
+        public string Curve { get; }
 
         [JsonPropertyName("alg")]
-        public string SigningAlgorithm { get; set; }
+        public string SigningAlgorithm { get; }
 
     }
 }

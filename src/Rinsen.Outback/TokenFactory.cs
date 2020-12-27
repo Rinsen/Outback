@@ -15,16 +15,18 @@ namespace Rinsen.Outback
 {
     public class TokenFactory
     {
-        private readonly EllipticCurveJsonWebKeyService _ellipticCurveJsonWebKeyService;
+        private readonly ITokenSigningStorage _tokenSigningStorage;
 
-        public TokenFactory(EllipticCurveJsonWebKeyService ellipticCurveJsonWebKeyService)
+        public TokenFactory(ITokenSigningStorage tokenSigningStorage)
         {
-            _ellipticCurveJsonWebKeyService = ellipticCurveJsonWebKeyService;
+            _tokenSigningStorage = tokenSigningStorage;
         }
 
-        public TokenResponse CreateTokenResponse(ClaimsPrincipal claimsPrincipal, Client client, Grant persistedGrant, string issuer)
+        public async Task<TokenResponse> CreateTokenResponse(ClaimsPrincipal claimsPrincipal, Client client, Grant persistedGrant, string issuer)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
+            var securityKey = await _tokenSigningStorage.GetSigningSecurityKey();
+            var algorithm = await _tokenSigningStorage.GetSigningAlgorithm();
 
             var identity = (ClaimsIdentity)claimsPrincipal.Identity;
             var identityTokenDescriptor = new SecurityTokenDescriptor
@@ -35,7 +37,7 @@ namespace Rinsen.Outback
                 Issuer = issuer,
                 IssuedAt = DateTime.UtcNow,
                 Audience = client.ClientId,
-                SigningCredentials = new SigningCredentials(_ellipticCurveJsonWebKeyService.GetECDsaSecurityKey(), SecurityAlgorithms.EcdsaSha256),
+                SigningCredentials = new SigningCredentials(securityKey, algorithm),
             };
 
             identityTokenDescriptor.Claims = new Dictionary<string, object> { { "nonce", persistedGrant.Nonce } };
@@ -51,7 +53,7 @@ namespace Rinsen.Outback
                 Issuer = issuer,
                 IssuedAt = DateTime.UtcNow,
                 Audience = client.ClientId,
-                SigningCredentials = new SigningCredentials(_ellipticCurveJsonWebKeyService.GetECDsaSecurityKey(), SecurityAlgorithms.EcdsaSha256),
+                SigningCredentials = new SigningCredentials(securityKey, algorithm),
             };
 
             accessTokenDescriptor.Claims = new Dictionary<string, object> { { "client_id", client.ClientId } };
