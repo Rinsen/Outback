@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Rinsen.Outback.Grants;
 
 namespace Rinsen.Outback.Abstractons
 {
     public interface IGrantStorage
     {
-        Task<Grant> GetGrant(string code);
-        Task Save(Grant grant);
+        Task<CodeGrant> GetCodeGrant(string code);
+        Task<PersistedGrant> GetPersistedGrant(string code);
+        Task<RefreshTokenGrant> GetRefreshTokenGrant(string code);
+        Task SaveCodeGrant(CodeGrant codeGrant);
+        Task SavePersistedGrant(PersistedGrant persistedGrant);
+        Task SaveRefreshTokenGrant(RefreshTokenGrant refreshTokenGrant);
     }
 }

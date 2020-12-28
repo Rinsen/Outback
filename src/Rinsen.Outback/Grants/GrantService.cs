@@ -25,16 +25,16 @@ namespace Rinsen.Outback.Grants
             _grantStorage = grantStorage;
         }
 
-        public async Task<Grant> GetGrant(string code, string clientId, string codeVerifier)
+        public async Task<CodeGrant> GetCodeGrant(string code, string clientId, string codeVerifier)
         {
-            var persistedGrant = await _grantStorage.GetGrant(code);
+            var codeGrant = await _grantStorage.GetCodeGrant(code);
 
-            if (persistedGrant.Expires != null && persistedGrant.Expires > DateTime.UtcNow)
+            if (codeGrant.Expires > DateTime.UtcNow)
             {
                 throw new SecurityException("Grant has expired");
             }
 
-            if (persistedGrant.ClientId != clientId)
+            if (codeGrant.ClientId != clientId)
             {
                 throw new SecurityException("Client id not matching");
             }
@@ -50,15 +50,15 @@ namespace Rinsen.Outback.Grants
             var challengeBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));
             var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
 
-            if (codeChallenge != persistedGrant.CodeChallange)
+            if (codeChallenge != codeGrant.CodeChallange)
             {
                 throw new SecurityException("Code verifier is not matching code challenge");
             }
 
-            return persistedGrant;
+            return codeGrant;
         }
 
-        public async Task<string> CreateAndStoreGrant(Client client, ClaimsPrincipal user, AuthorizeModel model)
+        public async Task<string> CreateCodeAndStoreCodeGrant(Client client, ClaimsPrincipal user, AuthorizeModel model)
         {
             if (!AbnfValidationHelper.IsValid(model.CodeChallenge, 43, 128))
             {
@@ -66,7 +66,7 @@ namespace Rinsen.Outback.Grants
                 throw new SecurityException("Code challange is not valid");
             }
 
-            var grant = new Grant
+            var grant = new CodeGrant
             {
                 ClientId = client.ClientId,
                 Code = _randomStringGenerator.GetRandomString(15),
@@ -74,32 +74,21 @@ namespace Rinsen.Outback.Grants
                 CodeChallangeMethod = model.CodeChallengeMethod,
                 Nonce = model.Nonce,
                 RedirectUri = model.RedirectUri,
-                ResponseType = model.ResponseType,
                 Scope = model.Scope,
                 State = model.State,
-                Expires = DateTime.UtcNow.AddSeconds(client.GrantLifetime)
+                Expires = DateTime.UtcNow.AddSeconds(client.GrantLifetime),
+                Created = DateTime.UtcNow,
+                Resolved = null,
             };
 
             SetSubjectId(user, grant);
 
-            if (client.IssueRefreshToken)
-            {
-                GenerateRefreshToken(grant, client);
-            }
-
-            await _grantStorage.Save(grant);
+            await _grantStorage.SaveCodeGrant(grant);
 
             return grant.Code;
         }
 
-        private void GenerateRefreshToken(Grant grant, Client client)
-        {
-            grant.RefreshToken = _randomStringGenerator.GetRandomString(30);
-            grant.RefreshTokenCreated = DateTime.UtcNow;
-            grant.RefreshTokenExpires = DateTime.UtcNow.AddSeconds(client.RefreshTokenLifetime);
-        }
-
-        private static void SetSubjectId(ClaimsPrincipal user, Grant grant)
+        private static void SetSubjectId(ClaimsPrincipal user, CodeGrant grant)
         {
             if (!user.Claims.Any(m => m.Type == "sub"))
             {
@@ -121,7 +110,7 @@ namespace Rinsen.Outback.Grants
             throw new NotImplementedException();
         }
 
-        public Task<Grant> GetGrant(string refreshToken, string clientId)
+        public Task<CodeGrant> GetGrant(string refreshToken, string clientId)
         {
             throw new NotImplementedException();
         }

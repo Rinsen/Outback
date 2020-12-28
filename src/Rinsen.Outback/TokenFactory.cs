@@ -20,7 +20,7 @@ namespace Rinsen.Outback
             _tokenSigningStorage = tokenSigningStorage;
         }
 
-        public async Task<TokenResponse> CreateTokenResponse(ClaimsPrincipal claimsPrincipal, Client client, Grant persistedGrant, string issuer)
+        public async Task<TokenResponse> CreateTokenResponse(ClaimsPrincipal claimsPrincipal, Client client, CodeGrant persistedGrant, string issuer)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var securityKey = await _tokenSigningStorage.GetSigningSecurityKey();
@@ -62,14 +62,18 @@ namespace Rinsen.Outback
 
             if (client.IssueRefreshToken)
             {
-                return new RefreshTokenResponse
-                {
-                    AccessToken = tokenString,
-                    IdentityToken = identityTokenString,
-                    ExpiresIn = client.AccessTokenLifetime,
-                    RefreshToken = persistedGrant.RefreshToken,
-                    TokenType = "Bearer"
-                };
+                // Create refresh token
+
+                throw new NotImplementedException();
+
+                //return new RefreshTokenResponse
+                //{
+                //    AccessToken = tokenString,
+                //    IdentityToken = identityTokenString,
+                //    ExpiresIn = client.AccessTokenLifetime,
+                //    RefreshToken = string.Empty,
+                //    TokenType = "Bearer"
+                //};
             }
 
             return new TokenResponse

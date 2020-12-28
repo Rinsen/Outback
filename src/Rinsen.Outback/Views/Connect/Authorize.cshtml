@@ -1,0 +1,23 @@
+﻿@model Rinsen.Outback.Models.AuthorizeResponse
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Authorization redirect page</title>
+    <base target='_self' />
+</head>
+<body>
+    <form method="post" action="@Model.FormPostUri" name="authForm">
+        <input type="hidden" id="code" name="code" value="@Model.Code">
+        <input type="hidden" id="scope" name="scope" value="@Model.Scope">
+        <input type="hidden" id="session_state" name="session_state" value="@Model.SessionState">
+        <input type="hidden" id="state" name="state" value="@Model.State">
+        <noscript><button>Click to continue</button></noscript>
+    </form>
+    <script>document.forms.authForm.submit();</script>
+</body>
+</html>
+
+ 
