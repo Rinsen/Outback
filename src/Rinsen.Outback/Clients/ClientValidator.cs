@@ -22,12 +22,12 @@ namespace Rinsen.Outback.Clients
 
         public static bool IsRedirectUriValid(Client client, string redirectUri)
         {
-            return client.RedirectUris.Any(r => string.Equals(r, redirectUri));
+            return client.LoginRedirectUris.Any(r => string.Equals(r, redirectUri));
         }
 
         public static bool IsGrantTypeSupported(Client client, string grantType)
         {
-            return client.GrantTypes.Any(gt => string.Equals(gt, grantType));
+            return client.SupportedGrantTypes.Any(gt => string.Equals(gt, grantType));
         }
     }
 }

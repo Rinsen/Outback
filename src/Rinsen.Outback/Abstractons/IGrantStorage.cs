@@ -6,8 +6,8 @@ namespace Rinsen.Outback.Abstractons
     public interface IGrantStorage
     {
         Task<CodeGrant> GetCodeGrant(string code);
-        Task<PersistedGrant> GetPersistedGrant(string code);
-        Task<RefreshTokenGrant> GetRefreshTokenGrant(string code);
+        Task<PersistedGrant> GetPersistedGrant(string clientId, string subjectId);
+        Task<RefreshTokenGrant> GetRefreshTokenGrant(string refreshToken);
         Task SaveCodeGrant(CodeGrant codeGrant);
         Task SavePersistedGrant(PersistedGrant persistedGrant);
         Task SaveRefreshTokenGrant(RefreshTokenGrant refreshTokenGrant);

@@ -76,7 +76,7 @@ namespace Rinsen.Outback.Grants
                 RedirectUri = model.RedirectUri,
                 Scope = model.Scope,
                 State = model.State,
-                Expires = DateTime.UtcNow.AddSeconds(client.GrantLifetime),
+                Expires = DateTime.UtcNow.AddSeconds(client.AuthorityCodeLifetime),
                 Created = DateTime.UtcNow,
                 Resolved = null,
             };
