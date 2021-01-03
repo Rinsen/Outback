@@ -3,7 +3,7 @@ using Rinsen.Outback.Models;
 
 namespace Rinsen.Outback.Abstractons
 {
-    public interface IWellKnownSigningStorage
+    public interface IWellKnownSigningAccessor
     {
         Task<EllipticCurveJsonWebKeyModelKeys> GetEllipticCurveJsonWebKeyModelKeys();
 

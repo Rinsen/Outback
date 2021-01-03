@@ -12,16 +12,16 @@ namespace Rinsen.Outback.Clients
 {
     public class ClientService
     {
-        private readonly IClientStorage _clientStorage;
+        private readonly IClientAccessor _clientAccessor;
 
-        public ClientService(IClientStorage clientStorage)
+        public ClientService(IClientAccessor clientAccessor)
         {
-            _clientStorage = clientStorage;
+            _clientAccessor = clientAccessor;
         }
 
         public async Task<Client> GetClient(AuthorizeModel model)
         {
-            var client = await _clientStorage.GetClient(model.ClientId);
+            var client = await _clientAccessor.GetClient(model.ClientId);
 
             if (!ClientValidator.IsScopeValid(client, model.Scope))
             {
@@ -39,7 +39,7 @@ namespace Rinsen.Outback.Clients
         public async Task<Client> GetClient(ClientIdentity clientIdentity)
         {
             // Validate client secret if needed
-            var client = await _clientStorage.GetClient(clientIdentity.ClientId);
+            var client = await _clientAccessor.GetClient(clientIdentity.ClientId);
 
             switch (client.ClientType)
             {

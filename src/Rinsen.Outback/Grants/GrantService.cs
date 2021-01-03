@@ -16,18 +16,18 @@ namespace Rinsen.Outback.Grants
     public class GrantService
     {
         private readonly RandomStringGenerator _randomStringGenerator;
-        private readonly IGrantStorage _grantStorage;
+        private readonly IGrantAccessor _grantAccessor;
 
         public GrantService(RandomStringGenerator randomStringGenerator,
-            IGrantStorage grantStorage)
+            IGrantAccessor grantAccessor)
         {
             _randomStringGenerator = randomStringGenerator;
-            _grantStorage = grantStorage;
+            _grantAccessor = grantAccessor;
         }
 
         public async Task<CodeGrant> GetCodeGrant(string code, string clientId, string codeVerifier)
         {
-            var codeGrant = await _grantStorage.GetCodeGrant(code);
+            var codeGrant = await _grantAccessor.GetCodeGrant(code);
 
             if (codeGrant.Expires > DateTime.UtcNow)
             {
@@ -83,7 +83,7 @@ namespace Rinsen.Outback.Grants
 
             SetSubjectId(user, grant);
 
-            await _grantStorage.SaveCodeGrant(grant);
+            await _grantAccessor.SaveCodeGrant(grant);
 
             return grant.Code;
         }

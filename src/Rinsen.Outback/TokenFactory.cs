@@ -13,18 +13,18 @@ namespace Rinsen.Outback
 {
     public class TokenFactory
     {
-        private readonly ITokenSigningStorage _tokenSigningStorage;
+        private readonly ITokenSigningAccessor _tokenSigningAccessor;
 
-        public TokenFactory(ITokenSigningStorage tokenSigningStorage)
+        public TokenFactory(ITokenSigningAccessor tokenSigningAccessor)
         {
-            _tokenSigningStorage = tokenSigningStorage;
+            _tokenSigningAccessor = tokenSigningAccessor;
         }
 
         public async Task<TokenResponse> CreateTokenResponse(ClaimsPrincipal claimsPrincipal, Client client, CodeGrant persistedGrant, string issuer)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var securityKey = await _tokenSigningStorage.GetSigningSecurityKey();
-            var algorithm = await _tokenSigningStorage.GetSigningAlgorithm();
+            var securityKey = await _tokenSigningAccessor.GetSigningSecurityKey();
+            var algorithm = await _tokenSigningAccessor.GetSigningAlgorithm();
 
             var identity = (ClaimsIdentity)claimsPrincipal.Identity;
             var identityTokenDescriptor = new SecurityTokenDescriptor

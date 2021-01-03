@@ -11,11 +11,11 @@ namespace Rinsen.Outback.Controllers
     [Route(".well-known")]
     public class WellKnownController : ControllerBase    
     {
-        private readonly IWellKnownSigningStorage _wellKnownSigningStorage;
+        private readonly IWellKnownSigningAccessor _wellKnownSigningAccessor;
 
-        public WellKnownController(IWellKnownSigningStorage wellKnownSigningStorage)
+        public WellKnownController(IWellKnownSigningAccessor wellKnownSigningAccessor)
         {
-            _wellKnownSigningStorage = wellKnownSigningStorage;
+            _wellKnownSigningAccessor = wellKnownSigningAccessor;
         }
 
         [Route("openid-configuration")]
@@ -42,7 +42,7 @@ namespace Rinsen.Outback.Controllers
         [Route("openid-configuration/jwks")]
         public async Task<EllipticCurveJsonWebKeyModelKeys> OpenIdConfigurationJwks()
         {
-            var keyModel = await _wellKnownSigningStorage.GetEllipticCurveJsonWebKeyModelKeys();
+            var keyModel = await _wellKnownSigningAccessor.GetEllipticCurveJsonWebKeyModelKeys();
 
             return keyModel;
         }
