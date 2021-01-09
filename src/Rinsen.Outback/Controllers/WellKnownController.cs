@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Rinsen.Outback.Abstractons;
 using Rinsen.Outback.Models;
 using Rinsen.Outback.WellKnown;
@@ -12,15 +13,24 @@ namespace Rinsen.Outback.Controllers
     public class WellKnownController : ControllerBase    
     {
         private readonly IWellKnownSigningAccessor _wellKnownSigningAccessor;
+        private readonly IAllowedCorsOriginsAccessor _allowedCorsOriginsAccessor;
+        private readonly ILogger<WellKnownController> _logger;
 
-        public WellKnownController(IWellKnownSigningAccessor wellKnownSigningAccessor)
+        public WellKnownController(IWellKnownSigningAccessor wellKnownSigningAccessor,
+            IAllowedCorsOriginsAccessor allowedCorsOriginsAccessor,
+            ILogger<WellKnownController> logger)
         {
             _wellKnownSigningAccessor = wellKnownSigningAccessor;
+            _allowedCorsOriginsAccessor = allowedCorsOriginsAccessor;
+            _logger = logger;
         }
 
+        [HttpGet]
         [Route("openid-configuration")]
-        public OpenIdConfiguration OpenIdConfiguration()
+        public async Task<OpenIdConfiguration> OpenIdConfiguration()
         {
+            await AddCorsHeadersIfRequiredAndSupported();
+
             var host = HttpContext.Request.Host.ToString();
 
             return new OpenIdConfiguration
@@ -37,6 +47,23 @@ namespace Rinsen.Outback.Controllers
                 BackchannelLogoutSessionSupported = false,
                 BackchannelLogoutSupported = false,
             };
+        }
+
+        private async Task AddCorsHeadersIfRequiredAndSupported()
+        {
+            if (Request.Headers.TryGetValue("Origin", out var origin))
+            {
+                var origins = await _allowedCorsOriginsAccessor.GetOrigins();
+
+                if (origins.Contains(origin))
+                {
+                    Response.Headers.Add("Access-Control-Allow-Origin", origin);
+                }
+                else
+                {
+                    _logger.LogInformation("No valid origin found for {origin}", origin);
+                }
+            }
         }
 
         [Route("openid-configuration/jwks")]

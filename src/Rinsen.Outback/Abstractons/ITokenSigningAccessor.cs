@@ -5,7 +5,20 @@ namespace Rinsen.Outback.Abstractons
 {
     public interface ITokenSigningAccessor
     {
-        Task<SecurityKey> GetSigningSecurityKey();
-        Task<string> GetSigningAlgorithm();
+        Task<SecurityKeyWithAlgorithm> GetSigningSecurityKey();
+    }
+
+    public class SecurityKeyWithAlgorithm
+    {
+        public SecurityKeyWithAlgorithm(SecurityKey securityKey, string algorithm)
+        {
+            SecurityKey = securityKey;
+            Algorithm = algorithm;
+        }
+
+        public SecurityKey SecurityKey { get; }
+
+        public string Algorithm { get; }
+
     }
 }

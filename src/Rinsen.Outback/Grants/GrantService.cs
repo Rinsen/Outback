@@ -17,7 +17,7 @@ namespace Rinsen.Outback.Grants
     {
         private readonly RandomStringGenerator _randomStringGenerator;
         private readonly IGrantAccessor _grantAccessor;
-
+        
         public GrantService(RandomStringGenerator randomStringGenerator,
             IGrantAccessor grantAccessor)
         {

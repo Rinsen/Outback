@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Rinsen.Outback;
 using Rinsen.Outback.Clients;
 using Rinsen.Outback.Grants;
@@ -15,15 +16,18 @@ namespace Rinsen.Outback.Controllers
         private readonly GrantService _grantService;
         private readonly ClientService _clientService;
         private readonly TokenFactory _tokenFactory;
+        private readonly ILogger<ConnectController> _logger;
 
         public ConnectController(
             GrantService grantService,
             ClientService clientService,
-            TokenFactory tokenFactory)
+            TokenFactory tokenFactory,
+            ILogger<ConnectController> logger)
         {
             _grantService = grantService;
             _clientService = clientService;
             _tokenFactory = tokenFactory;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -82,7 +86,7 @@ namespace Rinsen.Outback.Controllers
 
                 return model.GrantType switch
                 {
-                    "client_credentials" => await GetTokenForClientCredentials(model, client),
+                    "client_credentials" => await GetTokenForClientCredentials(client),
                     "authorization_code" => await GetTokenForAuthorizationCode(model, client),
                     "refresh_token" => await GetTokenForRefreshToken(model, client),
                     _ => throw new SecurityException($"Grant {model.GrantType} is not supported"),
@@ -92,13 +96,13 @@ namespace Rinsen.Outback.Controllers
             return BadRequest(ModelState);
         }
 
-        
-
-        private Task<IActionResult> GetTokenForClientCredentials(TokenModel model, Client client)
+        private async Task<IActionResult> GetTokenForClientCredentials(Client client)
         {
-            //_tokenFactory.CreateTokenResponse(client)
+            var tokenResponse = await _tokenFactory.CreateTokenResponse(client, HttpContext.Request.Host.ToString());
 
-            throw new NotImplementedException();
+            AddCacheControlHeader();
+
+            return Json(tokenResponse);
         }
 
         private async Task<IActionResult> GetTokenForAuthorizationCode(TokenModel model, Client client)
@@ -112,10 +116,26 @@ namespace Rinsen.Outback.Controllers
             }
 
             var tokenResponse = await _tokenFactory.CreateTokenResponse(User, client, persistedGrant, HttpContext.Request.Host.ToString());
-            
+
+            AddCorsHeaderIfRequiredAndSupported(client);
             AddCacheControlHeader();
 
             return Json(tokenResponse);
+        }
+
+        private void AddCorsHeaderIfRequiredAndSupported(Client client)
+        {
+            if (Request.Headers.TryGetValue("Origin", out var origin))
+            {
+                if (client.AllowedCorsOrigins.Contains(origin))
+                {
+                    Response.Headers.Add("Access-Control-Allow-Origin", origin);
+                }
+                else
+                {
+                    _logger.LogInformation("No valid origin {origin} found for client {clientId}", origin, client.ClientId);
+                }
+            }
         }
 
         private async Task<IActionResult> GetTokenForRefreshToken(TokenModel model, Client client)

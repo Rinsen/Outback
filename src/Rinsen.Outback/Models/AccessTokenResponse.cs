@@ -2,13 +2,10 @@
 
 namespace Rinsen.Outback.Models
 {
-    public class TokenResponse
+    public class AccessTokenResponse
     {
         [JsonPropertyName("access_token")]
         public string AccessToken { get; set; }
-
-        [JsonPropertyName("id_token")]
-        public string IdentityToken { get; set; }
 
         [JsonPropertyName("token_type")]
         public string TokenType { get; set; }

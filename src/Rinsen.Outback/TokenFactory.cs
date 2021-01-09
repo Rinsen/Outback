@@ -20,11 +20,10 @@ namespace Rinsen.Outback
             _tokenSigningAccessor = tokenSigningAccessor;
         }
 
-        public async Task<TokenResponse> CreateTokenResponse(ClaimsPrincipal claimsPrincipal, Client client, CodeGrant persistedGrant, string issuer)
+        public async Task<AccessTokenResponse> CreateTokenResponse(ClaimsPrincipal claimsPrincipal, Client client, CodeGrant persistedGrant, string issuer)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var securityKey = await _tokenSigningAccessor.GetSigningSecurityKey();
-            var algorithm = await _tokenSigningAccessor.GetSigningAlgorithm();
+            var key = await _tokenSigningAccessor.GetSigningSecurityKey();
 
             var identity = (ClaimsIdentity)claimsPrincipal.Identity;
             var identityTokenDescriptor = new SecurityTokenDescriptor
@@ -35,7 +34,7 @@ namespace Rinsen.Outback
                 Issuer = issuer,
                 IssuedAt = DateTime.UtcNow,
                 Audience = client.ClientId,
-                SigningCredentials = new SigningCredentials(securityKey, algorithm),
+                SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
             };
 
             identityTokenDescriptor.Claims = new Dictionary<string, object> { { "nonce", persistedGrant.Nonce } };
@@ -51,7 +50,7 @@ namespace Rinsen.Outback
                 Issuer = issuer,
                 IssuedAt = DateTime.UtcNow,
                 Audience = client.ClientId,
-                SigningCredentials = new SigningCredentials(securityKey, algorithm),
+                SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
             };
 
             accessTokenDescriptor.Claims = new Dictionary<string, object> { { "client_id", client.ClientId } };
@@ -76,7 +75,7 @@ namespace Rinsen.Outback
                 //};
             }
 
-            return new TokenResponse
+            return new IdentityTokenResponse
             {
                 AccessToken = tokenString,
                 IdentityToken = identityTokenString,
@@ -85,5 +84,37 @@ namespace Rinsen.Outback
             };
         }
 
+        internal async Task<AccessTokenResponse> CreateTokenResponse(Client client, string issuer)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = await _tokenSigningAccessor.GetSigningSecurityKey();
+
+            var accessTokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                            new Claim("sub", client.ClientId)
+                }),
+                TokenType = "at+jwt",
+                Expires = DateTime.UtcNow.AddSeconds(client.IdentityTokenLifetime),
+                Issuer = issuer,
+                IssuedAt = DateTime.UtcNow,
+                Audience = client.ClientId,
+                SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
+            };
+
+            accessTokenDescriptor.Claims = new Dictionary<string, object> { { "client_id", client.ClientId } };
+            accessTokenDescriptor.Claims.Add("scope", string.Join(' ', client.Scopes));
+
+            var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(accessToken);
+
+            return new AccessTokenResponse
+            {
+                AccessToken = tokenString,
+                ExpiresIn = client.AccessTokenLifetime,
+                TokenType = "Bearer"
+            };
+        }
     }
 }
