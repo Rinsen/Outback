@@ -25,7 +25,7 @@ namespace Rinsen.Outback.Clients
 
         public List<string> LoginRedirectUris { get; set; }
 
-        public List<string> PostLogoutRedirectUri { get; set; }
+        public List<string> PostLogoutRedirectUris { get; set; }
 
         public List<string> AllowedCorsOrigins { get; set; }
 
