@@ -14,14 +14,17 @@ namespace Rinsen.Outback.Controllers
     {
         private readonly IWellKnownSigningAccessor _wellKnownSigningAccessor;
         private readonly IAllowedCorsOriginsAccessor _allowedCorsOriginsAccessor;
+        private readonly IWellKnownScopeAccessor _wellKnownScopeAccessor;
         private readonly ILogger<WellKnownController> _logger;
 
         public WellKnownController(IWellKnownSigningAccessor wellKnownSigningAccessor,
             IAllowedCorsOriginsAccessor allowedCorsOriginsAccessor,
+            IWellKnownScopeAccessor wellKnownScopeAccessor,
             ILogger<WellKnownController> logger)
         {
             _wellKnownSigningAccessor = wellKnownSigningAccessor;
             _allowedCorsOriginsAccessor = allowedCorsOriginsAccessor;
+            _wellKnownScopeAccessor = wellKnownScopeAccessor;
             _logger = logger;
         }
 
@@ -32,6 +35,7 @@ namespace Rinsen.Outback.Controllers
             await AddCorsHeadersIfRequiredAndSupported();
 
             var host = HttpContext.Request.Host.ToString();
+            var scopes = await _wellKnownScopeAccessor.GetScopes();
 
             return new OpenIdConfiguration
             {
@@ -46,6 +50,7 @@ namespace Rinsen.Outback.Controllers
                 FrontchannelLogoutSupported = false,
                 BackchannelLogoutSessionSupported = false,
                 BackchannelLogoutSupported = false,
+                ScopesSupported = scopes
             };
         }
 
