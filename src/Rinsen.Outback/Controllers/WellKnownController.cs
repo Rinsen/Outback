@@ -4,6 +4,7 @@ using Rinsen.Outback.Abstractons;
 using Rinsen.Outback.Models;
 using Rinsen.Outback.WellKnown;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Rinsen.Outback.Controllers
@@ -14,12 +15,12 @@ namespace Rinsen.Outback.Controllers
     {
         private readonly IWellKnownSigningAccessor _wellKnownSigningAccessor;
         private readonly IAllowedCorsOriginsAccessor _allowedCorsOriginsAccessor;
-        private readonly IWellKnownScopeAccessor _wellKnownScopeAccessor;
+        private readonly IScopeAccessor _wellKnownScopeAccessor;
         private readonly ILogger<WellKnownController> _logger;
 
         public WellKnownController(IWellKnownSigningAccessor wellKnownSigningAccessor,
             IAllowedCorsOriginsAccessor allowedCorsOriginsAccessor,
-            IWellKnownScopeAccessor wellKnownScopeAccessor,
+            IScopeAccessor wellKnownScopeAccessor,
             ILogger<WellKnownController> logger)
         {
             _wellKnownSigningAccessor = wellKnownSigningAccessor;
@@ -50,7 +51,7 @@ namespace Rinsen.Outback.Controllers
                 FrontchannelLogoutSupported = false,
                 BackchannelLogoutSessionSupported = false,
                 BackchannelLogoutSupported = false,
-                ScopesSupported = scopes
+                ScopesSupported = scopes.Where(m => m.ShowInDiscoveryDocument).Select(m => m.ScopeName).ToList()
             };
         }
 
