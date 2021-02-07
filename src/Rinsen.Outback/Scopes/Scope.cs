@@ -8,6 +8,6 @@ namespace Rinsen.Outback.Scopes
 
         public bool ShowInDiscoveryDocument { get; set; }
 
-        public IReadOnlyList<ScopeClaim> Claims { get; set; }
+        public List<ScopeClaim> Claims { get; set; }
     }
 }
