@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Rinsen.Outback.Abstractons;
 using Rinsen.Outback.Models;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 namespace Rinsen.Outback.Controllers
 {
     [ApiController]
+    [AllowAnonymous]
     [Route(".well-known")]
     public class WellKnownController : ControllerBase    
     {
@@ -72,6 +74,7 @@ namespace Rinsen.Outback.Controllers
             }
         }
 
+        [HttpGet]
         [Route("openid-configuration/jwks")]
         public async Task<EllipticCurveJsonWebKeyModelKeys> OpenIdConfigurationJwks()
         {

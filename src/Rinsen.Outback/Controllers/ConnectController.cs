@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Rinsen.Outback.Clients;
 using Rinsen.Outback.Grants;
@@ -67,6 +68,7 @@ namespace Rinsen.Outback.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         [Route("token")]
         public async Task<IActionResult> Token([FromForm] TokenModel model)
         {
