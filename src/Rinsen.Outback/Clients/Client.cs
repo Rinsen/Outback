@@ -8,7 +8,7 @@ namespace Rinsen.Outback.Clients
         public ClientType ClientType { get; set; }
         public bool ConsentRequired { get; set; }
         public bool SaveConsent { get; set; }
-        public bool SavedConsentLifetime { get; set; }
+        public int SavedConsentLifetime { get; set; }
         public bool IssueRefreshToken { get; set; }
         public int RefreshTokenLifetime { get; set; }
         public int AccessTokenLifetime { get; set; }

@@ -10,7 +10,7 @@
         /// Identifier for the End-User at the Issuer.
         /// string
         /// </summary>
-        public const string Sub = "sub";
+        public const string Subject = "sub";
 
         /// <summary>
         /// End-User's full name in displayable form including all name parts, possibly including titles and suffixes, ordered according to the End-User's locale and preferences.
