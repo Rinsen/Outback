@@ -291,3 +291,4 @@ __pycache__/
 
 tempkey.rsa
 /src/Rinsen.InnovationBoost/package-lock.json
+*.development.json
