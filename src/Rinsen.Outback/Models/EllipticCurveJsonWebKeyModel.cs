@@ -6,7 +6,7 @@ namespace Rinsen.Outback.Models
     public class EllipticCurveJsonWebKeyModelKeys
     {
         [JsonPropertyName("keys")]
-        public List<EllipticCurveJsonWebKeyModel> Keys { get; set; }
+        public List<EllipticCurveJsonWebKeyModel> Keys { get; set; } = new List<EllipticCurveJsonWebKeyModel>();
     }
 
     public class EllipticCurveJsonWebKeyModel
