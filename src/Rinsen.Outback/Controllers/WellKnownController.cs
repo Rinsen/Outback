@@ -42,7 +42,7 @@ namespace Rinsen.Outback.Controllers
 
             return new OpenIdConfiguration
             {
-                Issuer = host,
+                Issuer = $"https://{host}",
                 JwksUri = $"https://{host}/.well-known/openid-configuration/jwks",
                 AuthorizationEndpoint = $"https://{host}/connect/authorize",
                 TokenEndpoint = $"https://{host}/connect/token",
