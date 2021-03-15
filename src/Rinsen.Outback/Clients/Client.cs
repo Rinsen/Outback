@@ -31,7 +31,7 @@ namespace Rinsen.Outback.Clients
 
     }
 
-    public enum ClientType
+    public enum ClientType : byte
     {
         Confidential,
         Credentialed,
