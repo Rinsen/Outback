@@ -50,15 +50,12 @@ namespace Rinsen.Outback.Clients
                         throw new SecurityException($"No secret for client {clientIdentity.ClientId}");
                     }
                     
-                    using (var sha256 = SHA256.Create())
-                    {
-                        var secretHash = WebEncoders.Base64UrlEncode(sha256.ComputeHash(Encoding.UTF8.GetBytes(clientIdentity.Secret)));
+                    var secretHash = HashHelper.GetSha256Hash(clientIdentity.Secret);
 
-                        if (!client.Secrets.Any(s => s == secretHash))
-                        {
-                            throw new SecurityException($"No valid secret for client {clientIdentity.ClientId}");
-                        } 
-                    }
+                    if (!client.Secrets.Any(s => s == secretHash))
+                    {
+                        throw new SecurityException($"No valid secret for client {clientIdentity.ClientId}");
+                    } 
 
                     return client;
                 case ClientType.Public:
