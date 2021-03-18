@@ -37,25 +37,25 @@ namespace Rinsen.Outback.WellKnown
         public bool BackchannelLogoutSessionSupported { get; set; }
 
         [JsonPropertyName("scopes_supported")]
-        public List<string> ScopesSupported { get; set; }
+        public List<string> ScopesSupported { get; set; } = new List<string>();
 
         [JsonPropertyName("claims_supported")]
-        public List<object> ClaimsSupported { get; set; }
+        public List<string> ClaimsSupported { get; set; } = new List<string>();
 
         [JsonPropertyName("grant_types_supported")]
-        public List<string> GrantTypesSupported { get; set; }
+        public List<string> GrantTypesSupported { get; set; } = new List<string>();
 
         [JsonPropertyName("response_types_supported")]
-        public List<string> ResponseTypesSupported { get; set; }
+        public List<string> ResponseTypesSupported { get; set; } = new List<string>();
 
         [JsonPropertyName("token_endpoint_auth_methods_supported")]
-        public List<string> TokenEndpointAuthMethodsSupported { get; set; }
+        public List<string> TokenEndpointAuthMethodsSupported { get; set; } = new List<string>();
 
         [JsonPropertyName("subject_types_supported")]
-        public List<string> SubjectTypesSupported { get; set; }
+        public List<string> SubjectTypesSupported { get; set; } = new List<string>();
 
         [JsonPropertyName("code_challenge_methods_supported")]
-        public List<string> CodeChallengeMethodsSupported { get; set; }
+        public List<string> CodeChallengeMethodsSupported { get; set; } = new List<string>();
 
         [JsonPropertyName("request_parameter_supported")]
         public bool RequestParameterSupported { get; set; }
