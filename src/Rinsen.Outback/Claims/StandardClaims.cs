@@ -62,6 +62,34 @@
         public const string SessionId = "sid";
 
         /// <summary>
+        /// Actor.
+        /// string
+        /// RFC8693
+        /// </summary>
+        public const string Actor = "act";
+
+        /// <summary>
+        /// Scope Values.
+        /// string
+        /// RFC8693
+        /// </summary>
+        public const string Scope = "scope";
+
+        /// <summary>
+        /// Client Identifier.
+        /// string
+        /// RFC8693
+        /// </summary>
+        public const string ClientIdentifier = "client_id";
+
+        /// <summary>
+        /// Authorized Actor - the party that is authorized.
+        /// string
+        /// RFC8693
+        /// </summary>
+        public const string AuthorizedActor = "may_act";
+
+        /// <summary>
         /// End-User's full name in displayable form including all name parts, possibly including titles and suffixes, ordered according to the End-User's locale and preferences.
         /// string
         /// OpenID Connect Core 1.0
@@ -192,5 +220,12 @@
         /// OpenID Connect Core 1.0
         /// </summary>
         public const string UpdatedAt = "updated_at";
+
+        /// <summary>
+        /// Value used to associate a Client session with an ID Token
+        /// string 
+        /// OpenID Connect Core 1.0
+        /// </summary>
+        public const string Nonce = "nonce";
     }
 }

@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
 using Rinsen.Outback.Abstractons;
+using Rinsen.Outback.Claims;
 using Rinsen.Outback.Clients;
 using Rinsen.Outback.Grants;
 using Rinsen.Outback.Models;
@@ -37,7 +38,7 @@ namespace Rinsen.Outback
                 SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
             };
 
-            identityTokenDescriptor.Claims = new Dictionary<string, object> { { "nonce", persistedGrant.Nonce } };
+            identityTokenDescriptor.Claims = new Dictionary<string, object> { { StandardClaims.Nonce, persistedGrant.Nonce } };
 
             var identityToken = tokenHandler.CreateToken(identityTokenDescriptor);
             var identityTokenString = tokenHandler.WriteToken(identityToken);
@@ -53,8 +54,8 @@ namespace Rinsen.Outback
                 SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
             };
 
-            accessTokenDescriptor.Claims = new Dictionary<string, object> { { "client_id", client.ClientId } };
-            accessTokenDescriptor.Claims.Add("scope", persistedGrant.Scope);
+            accessTokenDescriptor.Claims = new Dictionary<string, object> { { StandardClaims.ClientIdentifier, client.ClientId } };
+            accessTokenDescriptor.Claims.Add(StandardClaims.Scope, persistedGrant.Scope);
 
             var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);
             var tokenString = tokenHandler.WriteToken(accessToken);
@@ -93,7 +94,7 @@ namespace Rinsen.Outback
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                            new Claim("sub", client.ClientId)
+                            new Claim(StandardClaims.Subject, client.ClientId)
                 }),
                 TokenType = "at+jwt",
                 Expires = DateTime.UtcNow.AddSeconds(client.IdentityTokenLifetime),
@@ -103,8 +104,8 @@ namespace Rinsen.Outback
                 SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
             };
 
-            accessTokenDescriptor.Claims = new Dictionary<string, object> { { "client_id", client.ClientId } };
-            accessTokenDescriptor.Claims.Add("scope", string.Join(' ', client.Scopes));
+            accessTokenDescriptor.Claims = new Dictionary<string, object> { { StandardClaims.ClientIdentifier, client.ClientId } };
+            accessTokenDescriptor.Claims.Add(StandardClaims.Scope, string.Join(' ', client.Scopes));
 
             var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);
             var tokenString = tokenHandler.WriteToken(accessToken);

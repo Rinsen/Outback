@@ -98,7 +98,7 @@ namespace Rinsen.Outback.Controllers
 
         private async Task<IActionResult> GetTokenForClientCredentials(Client client)
         {
-            var tokenResponse = await _tokenFactory.CreateTokenResponse(client, HttpContext.Request.Host.ToString());
+            var tokenResponse = await _tokenFactory.CreateTokenResponse(client, GetIssuer());
 
             AddCacheControlHeader();
 
@@ -115,7 +115,7 @@ namespace Rinsen.Outback.Controllers
                 throw new SecurityException($"Redirect uri '{model.RedirectUri}' did not match granted '{persistedGrant.RedirectUri}' redirect uri");
             }
 
-            var tokenResponse = await _tokenFactory.CreateTokenResponse(User, client, persistedGrant, HttpContext.Request.Host.ToString());
+            var tokenResponse = await _tokenFactory.CreateTokenResponse(User, client, persistedGrant, GetIssuer());
 
             AddCorsHeaderIfRequiredAndSupported(client);
             AddCacheControlHeader();
@@ -148,7 +148,7 @@ namespace Rinsen.Outback.Controllers
                 throw new SecurityException();
             }
 
-            var tokenResponse = await _tokenFactory.CreateTokenResponse(User, client, persistedGrant, HttpContext.Request.Host.ToString());
+            var tokenResponse = await _tokenFactory.CreateTokenResponse(User, client, persistedGrant, GetIssuer());
 
             AddCacheControlHeader();
 
@@ -159,6 +159,11 @@ namespace Rinsen.Outback.Controllers
         {
             Response.Headers.Add("Cache-Control", "no-store");
             Response.Headers.Add("Pragma", "no-cache");
+        }
+
+        private string GetIssuer()
+        {
+            return "https://" + HttpContext.Request.Host.ToString();
         }
 
         // EndSession
