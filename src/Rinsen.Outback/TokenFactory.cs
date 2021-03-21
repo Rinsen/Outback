@@ -38,7 +38,10 @@ namespace Rinsen.Outback
                 SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
             };
 
-            identityTokenDescriptor.Claims = new Dictionary<string, object> { { StandardClaims.Nonce, persistedGrant.Nonce } };
+            if (!string.IsNullOrEmpty(persistedGrant.Nonce))
+            {
+                identityTokenDescriptor.Claims = new Dictionary<string, object> { { StandardClaims.Nonce, persistedGrant.Nonce } };
+            }
 
             var identityToken = tokenHandler.CreateToken(identityTokenDescriptor);
             var identityTokenString = tokenHandler.WriteToken(identityToken);
