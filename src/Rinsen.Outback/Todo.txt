@@ -1,5 +1,4 @@
 ﻿Add error response handling
-Add Client credentials flow
 Content Security Policy (CSP) level 2
 Consent not implemented
 Implement refresh tokens
