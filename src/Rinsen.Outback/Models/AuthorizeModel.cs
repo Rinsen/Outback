@@ -28,6 +28,9 @@ namespace Rinsen.Outback.Models
         [FromQuery(Name = "response_type")]
         public string ResponseType { get; set; }
 
+        [FromQuery(Name = "response_mode")]
+        public string ResponseMode { get; set; }
+
         [FromQuery(Name = "scope")]
         public string Scope { get; set; }
 

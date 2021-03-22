@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Rinsen.Outback.Clients;
 using Rinsen.Outback.Grants;
 using Rinsen.Outback.Models;
+using System;
 using System.Security;
 using System.Threading.Tasks;
 
@@ -44,7 +46,7 @@ namespace Rinsen.Outback.Controllers
 
                     if (string.IsNullOrEmpty(code))
                     {
-                        return View("Consent");
+                        return View("Consent"); 
                     }
                 }
                 else
@@ -53,18 +55,48 @@ namespace Rinsen.Outback.Controllers
                     code = await _grantService.CreateCodeAndStoreCodeGrant(client, User, model);
                 }
 
-                // Return code 
-                return View(new AuthorizeResponse
+                switch (model.ResponseMode)
                 {
-                    Code = code,
-                    FormPostUri = model.RedirectUri,
-                    Scope = model.Scope,
-                    SessionState = null,
-                    State = model.State
-                });
+                    case "form_post":
+                        // Return code in a view that is posted to the client application
+                        // https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html
+                        return View(new AuthorizeResponse
+                        {
+                            Code = code,
+                            FormPostUri = model.RedirectUri,
+                            Scope = model.Scope,
+                            SessionState = null,
+                            State = model.State
+                        });
+                    default:
+                        // Redirect the code response as a 302 Redirect
+                        return Redirect(BuildRedirectUri(model, code));
+                }
             }
 
+            // Return 400 bad request if anything is wrong
+            // https://tools.ietf.org/html/draft-bradley-oauth-open-redirector-00#page-5
+
             return BadRequest(ModelState);
+        }
+
+        private static string BuildRedirectUri(AuthorizeModel model, string code)
+        {
+            var uri = model.RedirectUri;
+
+            uri = QueryHelpers.AddQueryString(uri, "code", code);
+
+            if (!string.IsNullOrEmpty(model.State))
+            {
+                uri = QueryHelpers.AddQueryString(uri, "state", model.State);
+            }
+
+            if (!string.IsNullOrEmpty(model.Scope))
+            {
+                uri = QueryHelpers.AddQueryString(uri, "scope", model.Scope);
+            }
+
+            return uri;
         }
 
         [HttpPost]

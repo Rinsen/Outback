@@ -28,7 +28,7 @@ namespace Rinsen.Outback.Grants
         {
             var codeGrant = await _grantAccessor.GetCodeGrant(code);
 
-            if (codeGrant.Expires > DateTime.UtcNow)
+            if (codeGrant.Expires < DateTime.UtcNow)
             {
                 throw new SecurityException("Grant has expired");
             }
