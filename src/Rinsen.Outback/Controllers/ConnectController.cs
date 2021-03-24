@@ -147,7 +147,7 @@ namespace Rinsen.Outback.Controllers
                 throw new SecurityException($"Redirect uri '{model.RedirectUri}' did not match granted '{persistedGrant.RedirectUri}' redirect uri");
             }
 
-            var tokenResponse = await _tokenFactory.CreateTokenResponse(User, client, persistedGrant, GetIssuer());
+            var tokenResponse = await _tokenFactory.CreateTokenResponse(client, persistedGrant, GetIssuer());
 
             AddCorsHeaderIfRequiredAndSupported(client);
             AddCacheControlHeader();
@@ -180,7 +180,7 @@ namespace Rinsen.Outback.Controllers
                 throw new SecurityException();
             }
 
-            var tokenResponse = await _tokenFactory.CreateTokenResponse(User, client, persistedGrant, GetIssuer());
+            var tokenResponse = await _tokenFactory.CreateTokenResponse(client, persistedGrant, GetIssuer());
 
             AddCacheControlHeader();
 

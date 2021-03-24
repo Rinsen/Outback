@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
@@ -15,21 +16,26 @@ namespace Rinsen.Outback
     public class TokenFactory
     {
         private readonly ITokenSigningAccessor _tokenSigningAccessor;
+        private readonly IUserInfoAccessor _userInfoAccessor;
+        private readonly IScopeAccessor _scopeAccessor;
 
-        public TokenFactory(ITokenSigningAccessor tokenSigningAccessor)
+        public TokenFactory(ITokenSigningAccessor tokenSigningAccessor,
+            IUserInfoAccessor userInfoAccessor,
+            IScopeAccessor scopeAccessor)
         {
             _tokenSigningAccessor = tokenSigningAccessor;
+            _userInfoAccessor = userInfoAccessor;
+            _scopeAccessor = scopeAccessor;
         }
 
-        public async Task<AccessTokenResponse> CreateTokenResponse(ClaimsPrincipal claimsPrincipal, Client client, CodeGrant persistedGrant, string issuer)
+        public async Task<AccessTokenResponse> CreateTokenResponse(Client client, CodeGrant persistedGrant, string issuer)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = await _tokenSigningAccessor.GetSigningSecurityKey();
 
-            var identity = (ClaimsIdentity)claimsPrincipal.Identity;
             var identityTokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = identity,
+                Subject = null,
                 TokenType = null,
                 Expires = DateTime.UtcNow.AddSeconds(client.AccessTokenLifetime),
                 Issuer = issuer,
@@ -38,9 +44,14 @@ namespace Rinsen.Outback
                 SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
             };
 
+            identityTokenDescriptor.Claims = new Dictionary<string, object>
+            {
+                { StandardClaims.Subject, persistedGrant.SubjectId }
+            };
+
             if (!string.IsNullOrEmpty(persistedGrant.Nonce))
             {
-                identityTokenDescriptor.Claims = new Dictionary<string, object> { { StandardClaims.Nonce, persistedGrant.Nonce } };
+                identityTokenDescriptor.Claims.Add(StandardClaims.Nonce, persistedGrant.Nonce);
             }
 
             var identityToken = tokenHandler.CreateToken(identityTokenDescriptor);
@@ -48,7 +59,7 @@ namespace Rinsen.Outback
 
             var accessTokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = identity,
+                Subject = null,
                 TokenType = "at+jwt",
                 Expires = DateTime.UtcNow.AddSeconds(client.IdentityTokenLifetime),
                 Issuer = issuer,
@@ -57,8 +68,36 @@ namespace Rinsen.Outback
                 SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
             };
 
-            accessTokenDescriptor.Claims = new Dictionary<string, object> { { StandardClaims.ClientIdentifier, client.ClientId } };
-            accessTokenDescriptor.Claims.Add(StandardClaims.Scope, persistedGrant.Scope);
+            accessTokenDescriptor.Claims = new Dictionary<string, object> 
+            { 
+                { StandardClaims.ClientIdentifier, client.ClientId },
+                { StandardClaims.Scope, persistedGrant.Scope },
+                { StandardClaims.Subject, persistedGrant.SubjectId }
+            };
+
+            if (client.AddUserInfoClaimsInIdentityToken)
+            {
+                var scopes = persistedGrant.Scope.Split(' ');
+                var claims = await _userInfoAccessor.GetUserInfoClaims(scopes);
+
+                foreach (var claim in claims)
+                {
+                    switch (claim.Key)
+                    {
+                        case StandardClaims.Subject:
+                        case StandardClaims.ClientIdentifier:
+                        case StandardClaims.Scope:
+                        case StandardClaims.IssuedAt:
+                        case StandardClaims.Expiration:
+                        case StandardClaims.Audience:
+                            // Ignore claims already added by the framework
+                            break;
+                        default:
+                            accessTokenDescriptor.Claims.Add(claim.Key, claim.Value);
+                            break;
+                    }
+                }
+            }
 
             var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);
             var tokenString = tokenHandler.WriteToken(accessToken);

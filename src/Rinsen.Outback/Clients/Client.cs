@@ -14,6 +14,7 @@ namespace Rinsen.Outback.Clients
         public int AccessTokenLifetime { get; set; }
         public int IdentityTokenLifetime { get; set; }
         public int AuthorityCodeLifetime { get; set; }
+        public bool AddUserInfoClaimsInIdentityToken { get; set; }
 
         public List<ClientClaim> ClientClaims { get; set; }
 
