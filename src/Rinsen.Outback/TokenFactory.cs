@@ -17,15 +17,13 @@ namespace Rinsen.Outback
     {
         private readonly ITokenSigningAccessor _tokenSigningAccessor;
         private readonly IUserInfoAccessor _userInfoAccessor;
-        private readonly IScopeAccessor _scopeAccessor;
 
         public TokenFactory(ITokenSigningAccessor tokenSigningAccessor,
-            IUserInfoAccessor userInfoAccessor,
-            IScopeAccessor scopeAccessor)
+            IUserInfoAccessor userInfoAccessor
+            )
         {
             _tokenSigningAccessor = tokenSigningAccessor;
             _userInfoAccessor = userInfoAccessor;
-            _scopeAccessor = scopeAccessor;
         }
 
         public async Task<AccessTokenResponse> CreateTokenResponse(Client client, CodeGrant persistedGrant, string issuer)
@@ -54,6 +52,33 @@ namespace Rinsen.Outback
                 identityTokenDescriptor.Claims.Add(StandardClaims.Nonce, persistedGrant.Nonce);
             }
 
+            if (client.AddUserInfoClaimsInIdentityToken)
+            {
+                var scopes = persistedGrant.Scope.Split(' ');
+                var claims = await _userInfoAccessor.GetUserInfoClaims(persistedGrant.SubjectId, scopes);
+
+                foreach (var claim in claims)
+                {
+                    switch (claim.Key)
+                    {
+                        case StandardClaims.Issuer:
+                        case StandardClaims.Subject:
+                        case StandardClaims.Audience:
+                        case StandardClaims.Expiration:
+                        case StandardClaims.IssuedAt:
+                        case StandardClaims.AuthenticationTime:
+                        case StandardClaims.Nonce:
+                        case StandardClaims.AuthenticationContextClassReference:
+                        case StandardClaims.AuthorizedParty:
+                            // Ignore OpenId standard claims
+                            break;
+                        default:
+                            identityTokenDescriptor.Claims.Add(claim.Key, claim.Value);
+                            break;
+                    }
+                }
+            }
+
             var identityToken = tokenHandler.CreateToken(identityTokenDescriptor);
             var identityTokenString = tokenHandler.WriteToken(identityToken);
 
@@ -74,30 +99,6 @@ namespace Rinsen.Outback
                 { StandardClaims.Scope, persistedGrant.Scope },
                 { StandardClaims.Subject, persistedGrant.SubjectId }
             };
-
-            if (client.AddUserInfoClaimsInIdentityToken)
-            {
-                var scopes = persistedGrant.Scope.Split(' ');
-                var claims = await _userInfoAccessor.GetUserInfoClaims(scopes);
-
-                foreach (var claim in claims)
-                {
-                    switch (claim.Key)
-                    {
-                        case StandardClaims.Subject:
-                        case StandardClaims.ClientIdentifier:
-                        case StandardClaims.Scope:
-                        case StandardClaims.IssuedAt:
-                        case StandardClaims.Expiration:
-                        case StandardClaims.Audience:
-                            // Ignore claims already added by the framework
-                            break;
-                        default:
-                            accessTokenDescriptor.Claims.Add(claim.Key, claim.Value);
-                            break;
-                    }
-                }
-            }
 
             var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);
             var tokenString = tokenHandler.WriteToken(accessToken);

@@ -78,6 +78,8 @@ namespace Rinsen.Outback.Controllers
         [Route("openid-configuration/jwks")]
         public async Task<EllipticCurveJsonWebKeyModelKeys> OpenIdConfigurationJwks()
         {
+            await AddCorsHeadersIfRequiredAndSupported();
+
             var keyModel = await _wellKnownSigningAccessor.GetEllipticCurveJsonWebKeyModelKeys();
 
             return keyModel;

@@ -5,6 +5,6 @@ namespace Rinsen.Outback.Abstractons
 {
     public interface IUserInfoAccessor
     {
-        Task<Dictionary<string, string>> GetUserInfoClaims(IEnumerable<string> scopes);
+        Task<Dictionary<string, string>> GetUserInfoClaims(string subjectId, IEnumerable<string> scopes);
     }
 }
