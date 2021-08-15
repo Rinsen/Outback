@@ -18,5 +18,12 @@ namespace Rinsen.Outback
             services.AddScoped<ClientService>();
             services.AddScoped<TokenFactory>();
         }
+
+        public static IMvcBuilder AddRinsenOutbackControllers(this IMvcBuilder mvcBuilder)
+        {
+            mvcBuilder.AddApplicationPart(typeof(Client).Assembly);
+
+            return mvcBuilder;
+        }
     }
 }
