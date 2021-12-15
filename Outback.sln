@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rinsen.Outback", "src\Rinsen.Outback\Rinsen.Outback.csproj", "{17AEEB6D-3E92-4CF4-8D05-FEEAFA3AEB35}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleServer", "sample\SampleServer\SampleServer.csproj", "{32705B38-9225-4D49-9718-E14E384E8276}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,12 +31,17 @@ Global
 		{17AEEB6D-3E92-4CF4-8D05-FEEAFA3AEB35}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17AEEB6D-3E92-4CF4-8D05-FEEAFA3AEB35}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17AEEB6D-3E92-4CF4-8D05-FEEAFA3AEB35}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32705B38-9225-4D49-9718-E14E384E8276}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32705B38-9225-4D49-9718-E14E384E8276}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32705B38-9225-4D49-9718-E14E384E8276}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32705B38-9225-4D49-9718-E14E384E8276}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{17AEEB6D-3E92-4CF4-8D05-FEEAFA3AEB35} = {7DEA85E7-1A8C-4CD8-851C-93DA06876478}
+		{32705B38-9225-4D49-9718-E14E384E8276} = {F783FC19-6629-4B4C-B319-6F52963522BB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E647C73B-6B19-4B4F-97EC-8D3ECE787B91}

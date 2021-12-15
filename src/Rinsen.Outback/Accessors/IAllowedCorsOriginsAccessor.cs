@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Rinsen.Outback.Abstractons
+namespace Rinsen.Outback.Accessors
 {
     public interface IAllowedCorsOriginsAccessor
     {

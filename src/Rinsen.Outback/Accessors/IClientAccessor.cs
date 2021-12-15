@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Rinsen.Outback.Clients;
 
-namespace Rinsen.Outback.Abstractons
+namespace Rinsen.Outback.Accessors
 {
     public interface IClientAccessor
     {

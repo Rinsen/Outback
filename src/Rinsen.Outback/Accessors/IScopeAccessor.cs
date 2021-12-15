@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Rinsen.Outback.Scopes;
 
-namespace Rinsen.Outback.Abstractons
+namespace Rinsen.Outback.Accessors
 {
     public interface IScopeAccessor
     {

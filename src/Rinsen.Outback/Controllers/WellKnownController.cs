@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Rinsen.Outback.Abstractons;
+using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Models;
 using Rinsen.Outback.WellKnown;
 using System.Collections.Generic;

@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Rinsen.Outback.Abstractons
+namespace Rinsen.Outback.Accessors
 {
     public interface ITokenSigningAccessor
     {

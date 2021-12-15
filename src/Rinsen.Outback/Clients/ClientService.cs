@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
-using Rinsen.Outback.Abstractons;
+using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Models;
 
 namespace Rinsen.Outback.Clients
