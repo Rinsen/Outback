@@ -106,14 +106,35 @@ namespace Rinsen.Outback.Controllers
         {
             if (ModelState.IsValid)
             {
-                var clientIdentity = ClientIdentityHelper.GetClientIdentity(model, Request.Headers);
+                ClientIdentity clientIdentity;
+                try
+                {
+                    clientIdentity = ClientIdentityHelper.GetClientIdentity(model, Request.Headers);
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Failed to get client credentials");
 
-                var client = await _clientService.GetClient(clientIdentity);
+                    return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+                }
+
+                Client client;
+                try
+                {
+                    client = await _clientService.GetClient(clientIdentity);
+                }
+                catch (Exception)
+                {
+                    _logger.LogError("Client {clientId} is not found", model.ClientId);
+
+                    return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidClient });
+                }
 
                 if (!ClientValidator.IsGrantTypeSupported(client, model.GrantType))
                 {
-                    // Client does not support grant type
-                    throw new SecurityException();
+                    _logger.LogError("Grant is not supported {grantType} for client {clientId}", model.GrantType, client.ClientId);
+
+                    return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
                 }
 
                 return model.GrantType switch
@@ -121,11 +142,11 @@ namespace Rinsen.Outback.Controllers
                     "client_credentials" => await GetTokenForClientCredentials(client),
                     "authorization_code" => await GetTokenForAuthorizationCode(model, client),
                     "refresh_token" => await GetTokenForRefreshToken(model, client),
-                    _ => throw new SecurityException($"Grant {model.GrantType} is not supported"),
+                    _ => BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant })
                 };
             }
 
-            return BadRequest(ModelState);
+            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
         }
 
         private async Task<IActionResult> GetTokenForClientCredentials(Client client)
@@ -139,12 +160,25 @@ namespace Rinsen.Outback.Controllers
 
         private async Task<IActionResult> GetTokenForAuthorizationCode(TokenModel model, Client client)
         {
-            var persistedGrant = await _grantService.GetCodeGrant(model.Code, client.ClientId, model.CodeVerifier);
+            CodeGrant persistedGrant;
+            try
+            {
+                persistedGrant = await _grantService.GetCodeGrant(model.Code, client.ClientId, model.CodeVerifier);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to resolve grant for client {ClientId}", client.ClientId);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
+            }
+            
 
             // Validate return url if provided
             if (!string.Equals(persistedGrant.RedirectUri, model.RedirectUri))
             {
-                throw new SecurityException($"Redirect uri '{model.RedirectUri}' did not match granted '{persistedGrant.RedirectUri}' redirect uri");
+                _logger.LogError("Redirect uri '{RedirectUri}' did not match granted '{GrantedRedirectUri}' redirect uri", model.RedirectUri, persistedGrant.RedirectUri);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
             }
 
             var tokenResponse = await _tokenFactory.CreateTokenResponse(client, persistedGrant, GetIssuer());
@@ -165,19 +199,32 @@ namespace Rinsen.Outback.Controllers
                 }
                 else
                 {
-                    _logger.LogInformation("No valid origin {origin} found for client {clientId}", origin, client.ClientId);
+                    _logger.LogError("No valid origin {origin} found for client {clientId}", origin, client.ClientId);
                 }
             }
         }
 
         private async Task<IActionResult> GetTokenForRefreshToken(TokenModel model, Client client)
         {
-            var persistedGrant = await _grantService.GetGrant(model.RefreshToken, client.ClientId);
+            CodeGrant persistedGrant;
+            try
+            {
+                persistedGrant = await _grantService.GetGrant(model.RefreshToken, client.ClientId);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to resolve grant for client {ClientId} with {RefreshToken}", client.ClientId, model.RefreshToken);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
+            }
+
 
             // Validate return url if provided
             if (!ClientValidator.IsRedirectUriValid(client, model.RedirectUri))
             {
-                throw new SecurityException();
+                _logger.LogError("Redirect uri '{RedirectUri}' did not match granted '{GrantedRedirectUri}' redirect uri", model.RedirectUri, persistedGrant.RedirectUri);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
             }
 
             var tokenResponse = await _tokenFactory.CreateTokenResponse(client, persistedGrant, GetIssuer());

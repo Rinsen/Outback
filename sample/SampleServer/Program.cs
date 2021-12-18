@@ -1,7 +1,15 @@
+﻿using Rinsen.Outback;
+using Rinsen.Outback.Accessors;
+using SampleServer.InMemoryAccessors;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+AddServices(builder.Services);
+
+builder.Services.AddRinsenOutback();
+builder.Services.AddControllersWithViews()
+    .AddRinsenOutbackControllers();
 
 var app = builder.Build();
 
@@ -25,3 +33,16 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+static void AddServices(IServiceCollection services)
+{
+    services.AddSingleton<IAllowedCorsOriginsAccessor, AllowedCorsOriginsAccessor>();
+    services.AddSingleton<IClientAccessor, ClientAccessor>();
+    services.AddSingleton<IGrantAccessor, GrantAccessor>();
+    services.AddSingleton<IScopeAccessor, ScopeAccessor>();
+    services.AddSingleton<ITokenSigningAccessor, SigningAccessor>();
+    services.AddSingleton<IWellKnownSigningAccessor, SigningAccessor>();
+    services.AddSingleton<IUserInfoAccessor, UserInfoAccessor>();
+}
+
+public partial class Program { }
