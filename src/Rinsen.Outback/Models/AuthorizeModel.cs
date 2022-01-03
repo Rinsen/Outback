@@ -14,7 +14,6 @@ namespace Rinsen.Outback.Models
         [FromQuery(Name = "code_challenge")]
         public string CodeChallenge { get; set; }
 
-        [Required]
         [FromQuery(Name = "code_challenge_method")]
         public string CodeChallengeMethod { get; set; }
 
@@ -44,6 +43,11 @@ namespace Rinsen.Outback.Models
             if (ResponseType != "code")
             {
                 validationResult.Add(new ValidationResult($"response_type {ResponseType} is not supported", new[] { nameof(ResponseType) }));
+            }
+
+            if (string.IsNullOrEmpty(CodeChallengeMethod))
+            {
+                CodeChallengeMethod = "S256";
             }
 
             if (CodeChallengeMethod != "S256")

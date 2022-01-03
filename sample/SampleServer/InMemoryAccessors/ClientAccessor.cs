@@ -35,6 +35,32 @@ namespace SampleServer.InMemoryAccessors
                             "client_credentials"
                         }
                     });
+                case "PKCEWebClientId":
+                    return Task.FromResult(new Client
+                    {
+                        AccessTokenLifetime = 100,
+                        ClientId = clientId,
+                        ClientType = ClientType.Confidential,
+                        ClientClaims = new List<ClientClaim>(),
+                        ConsentRequired = false,
+                        IdentityTokenLifetime = 300,
+                        IssueRefreshToken = false,
+                        PostLogoutRedirectUris = new List<string>(),
+                        LoginRedirectUris = new List<string> { "https://my.domain" },
+                        Secrets = new List<string>
+                        {
+                            HashHelper.GetSha256Hash("pwd")
+                        },
+                        Scopes = new List<string>
+                        {
+                            "openid",
+                            "profile"
+                        },
+                        SupportedGrantTypes = new List<string>
+                        {
+                            "client_credentials"
+                        }
+                    });
                 default:
                     throw new Exception($"No client for client id '{clientId}' found");
             }

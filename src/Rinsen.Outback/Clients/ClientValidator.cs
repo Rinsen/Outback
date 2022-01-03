@@ -7,6 +7,11 @@ namespace Rinsen.Outback.Clients
     {
         public static bool IsScopeValid(Client client, string requestScopes)
         {
+            if (string.IsNullOrEmpty(requestScopes))
+            {
+                return false;
+            }
+
             var scopes = requestScopes.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var scope in scopes)
@@ -22,6 +27,16 @@ namespace Rinsen.Outback.Clients
 
         public static bool IsRedirectUriValid(Client client, string redirectUri)
         {
+            if (string.IsNullOrEmpty(redirectUri))
+            {
+                if (client.LoginRedirectUris.Count == 1)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
             return client.LoginRedirectUris.Any(r => string.Equals(r, redirectUri));
         }
 

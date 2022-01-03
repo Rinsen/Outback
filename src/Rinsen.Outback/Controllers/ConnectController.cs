@@ -6,7 +6,7 @@ using Rinsen.Outback.Clients;
 using Rinsen.Outback.Grants;
 using Rinsen.Outback.Models;
 using System;
-using System.Security;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Rinsen.Outback.Controllers
@@ -39,6 +39,20 @@ namespace Rinsen.Outback.Controllers
             {
                 var client = await _clientService.GetClient(model);
 
+                if (!ClientValidator.IsScopeValid(client, model.Scope))
+                {
+                    _logger.LogWarning("Client scopes {Scope} is not valid for client {ClientId}", model.Scope, client.ClientId);
+
+                    return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidScope });
+                }
+
+                if (!ClientValidator.IsRedirectUriValid(client, model.RedirectUri))
+                {
+                    _logger.LogWarning("Redirect uri {RedirectUri} is not valid for {ClientId}", model.RedirectUri, client.ClientId);
+
+                    return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+                }
+
                 string code;
                 if (client.ConsentRequired)
                 {
@@ -53,6 +67,12 @@ namespace Rinsen.Outback.Controllers
                 {
                     // Generate and store grant
                     code = await _grantService.CreateCodeAndStoreCodeGrant(client, User, model);
+                }
+
+                // If no redirect_uri is provided but the client have only one redirect uri we use that uri (2.3.3).
+                if (string.IsNullOrEmpty(model.RedirectUri))
+                {
+                    model.RedirectUri = client.LoginRedirectUris.Single();
                 }
 
                 switch (model.ResponseMode)
@@ -74,10 +94,11 @@ namespace Rinsen.Outback.Controllers
                 }
             }
 
-            // Return 400 bad request if anything is wrong
-            // https://tools.ietf.org/html/draft-bradley-oauth-open-redirector-00#page-5
+            var errorString = string.Join("; ", ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage));
 
-            return BadRequest(ModelState);
+            _logger.LogWarning("Model validation failed for {ClientId} with errors {Errors}", model.ClientId, errorString);
+
+            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
         }
 
         private static string BuildRedirectUri(AuthorizeModel model, string code)

@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Logging;
 using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Models;
 
@@ -13,25 +14,18 @@ namespace Rinsen.Outback.Clients
     public class ClientService
     {
         private readonly IClientAccessor _clientAccessor;
+        private readonly ILogger<ClientService> _logger;
 
-        public ClientService(IClientAccessor clientAccessor)
+        public ClientService(IClientAccessor clientAccessor,
+            ILogger<ClientService> logger)
         {
             _clientAccessor = clientAccessor;
+            _logger = logger;
         }
 
         public async Task<Client> GetClient(AuthorizeModel model)
         {
             var client = await _clientAccessor.GetClient(model.ClientId);
-
-            if (!ClientValidator.IsScopeValid(client, model.Scope))
-            {
-                throw new SecurityException();
-            }
-
-            if (!ClientValidator.IsRedirectUriValid(client, model.RedirectUri))
-            {
-                throw new SecurityException();
-            }
 
             return client;
         }
@@ -47,20 +41,26 @@ namespace Rinsen.Outback.Clients
                 case ClientType.Credentialed:
                     if (string.IsNullOrEmpty(clientIdentity.Secret))
                     {
-                        throw new SecurityException($"No secret for client {clientIdentity.ClientId}");
+                        _logger.LogWarning("Secret is required for client {ClientId}", clientIdentity.ClientId);
+
+                        throw new SecurityException($"Secret is required for client {clientIdentity.ClientId}");
                     }
                     
                     var secretHash = HashHelper.GetSha256Hash(clientIdentity.Secret);
 
                     if (!client.Secrets.Any(s => s == secretHash))
                     {
-                        throw new SecurityException($"No valid secret for client {clientIdentity.ClientId}");
+                        _logger.LogWarning("No valid secret provided for client {ClientId}", clientIdentity.ClientId);
+
+                        throw new SecurityException($"No valid secret provided for client {clientIdentity.ClientId}");
                     } 
 
                     return client;
                 case ClientType.Public:
                     return client;
             }
+
+            _logger.LogWarning("Client {ClientId} not found", clientIdentity.ClientId);
 
             throw new Exception($"Client '{clientIdentity.ClientId}' not found");
         }
