@@ -25,7 +25,7 @@ namespace Rinsen.Outback.Tests
         /// </summary>
         /// <returns></returns>
         [Fact]
-        public async Task VerifyBasicPkceCodeFlow()
+        public async Task VerifyBasicAuthorizationCodeGrantFlow()
         {
             // Arrange
             var application = new WebApplicationFactory<Program>()
@@ -40,7 +40,8 @@ namespace Rinsen.Outback.Tests
 
             var encodedClientIdAndSecret = Base64UrlEncoder.Encode("PKCEWebClientId:pwd");
             using var sha256 = SHA256.Create();
-            var challengeBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes("abcdefghijklmnopqrstuvqyz"));
+            var codeVerifier = "abcdefghijklmnopqrstuvqyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~0123456789";
+            var challengeBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));
             var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
             var uri = "connect/authorize";
             uri = QueryHelpers.AddQueryString(uri, "response_type", "code");
@@ -51,12 +52,36 @@ namespace Rinsen.Outback.Tests
             var client = application.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false }); ;
 
             // Act
-            var response = await client.GetAsync(uri);
+            var authorizeGetResponse = await client.GetAsync(uri);
+            var authorizeGetResponseContent = await authorizeGetResponse.Content.ReadAsStringAsync();
+            var locationUri = authorizeGetResponse.Headers.Location;
+            var queryParameters = QueryHelpers.ParseQuery(locationUri?.Query);
 
-            var result = await response.Content.ReadAsStringAsync();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", encodedClientIdAndSecret);
+
+            var formContent = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("grant_type", "authorization_code"),
+                new KeyValuePair<string, string>("code", queryParameters["code"][0]),
+                new KeyValuePair<string, string>("code_verifier", codeVerifier),
+            });
+            var response = await client.PostAsync("connect/token", formContent);
+            var tokenResponse = await client.PostAsync("connect/token", formContent);
+            var tokenResponseContent = await tokenResponse.Content.ReadAsStringAsync();
 
             // Assert
-            Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal(System.Net.HttpStatusCode.Redirect, authorizeGetResponse.StatusCode);
+            Assert.Equal(0, authorizeGetResponseContent.Length);
+            Assert.NotNull(locationUri);
+            Assert.Equal("my.domain", locationUri?.Host);
+            Assert.Equal("https", locationUri?.Scheme);
+            Assert.Equal("/signin-oidc", locationUri?.AbsolutePath);
+            Assert.True(queryParameters.ContainsKey("code"));
+            Assert.Equal(20, queryParameters["code"][0].Length);
+            Assert.True(queryParameters.ContainsKey("scope"));
+            Assert.Equal("openid", queryParameters["scope"][0]);
+
+            //Assert.Equal(System.Net.HttpStatusCode.Redirect, );
 
         }
     }

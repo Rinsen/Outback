@@ -182,6 +182,28 @@ namespace Rinsen.Outback.Controllers
         private async Task<IActionResult> GetTokenForAuthorizationCode(TokenModel model, Client client)
         {
             CodeGrant persistedGrant;
+            if (string.IsNullOrEmpty(model.Code))
+            {
+                _logger.LogError("No code for client {ClientId}", client.ClientId);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+            }
+
+            if (string.IsNullOrEmpty(model.CodeVerifier))
+            {
+                _logger.LogError("No code verifier for client {ClientId}", client.ClientId);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+            }
+
+            if (!AbnfValidationHelper.IsValid(model.CodeVerifier, 43, 128))
+            {
+                // Code verifier is not valid
+                _logger.LogError("Code verifier is not ABNF valid for client {ClientId} with code verifier {CodewVerifier}", client.ClientId, model.CodeVerifier);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+            }
+
             try
             {
                 persistedGrant = await _grantService.GetCodeGrant(model.Code, client.ClientId, model.CodeVerifier);

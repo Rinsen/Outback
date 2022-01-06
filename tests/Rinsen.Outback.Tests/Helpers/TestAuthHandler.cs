@@ -12,6 +12,9 @@ using Rinsen.Outback.Claims;
 
 namespace Rinsen.Outback.Tests.Helpers
 {
+    /// <summary>
+    /// https://docs.microsoft.com/en-us/aspnet/core/test/integration-tests#mock-authentication
+    /// </summary>
     public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,

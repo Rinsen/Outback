@@ -38,12 +38,6 @@ namespace Rinsen.Outback.Grants
                 throw new SecurityException("Client id not matching");
             }
 
-            if (!AbnfValidationHelper.IsValid(codeVerifier, 43, 128))
-            {
-                // Code verifier is not valid
-                throw new SecurityException("Code verifier is not valid");
-            }
-
             // Validate code
             using var sha256 = SHA256.Create();
             var challengeBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));

@@ -10,10 +10,22 @@ namespace Rinsen.Outback.Clients
         public bool SaveConsent { get; set; }
         public int SavedConsentLifetime { get; set; }
         public bool IssueRefreshToken { get; set; }
+        /// <summary>
+        /// Lifetime in seconds
+        /// </summary>
         public int RefreshTokenLifetime { get; set; }
+        /// <summary>
+        /// Lifetime in seconds
+        /// </summary>
         public int AccessTokenLifetime { get; set; }
+        /// <summary>
+        /// Lifetime in seconds
+        /// </summary>
         public int IdentityTokenLifetime { get; set; }
-        public int AuthorityCodeLifetime { get; set; }
+        /// <summary>
+        /// Lifetime in seconds, maximum recommended value is 600 but default is 60 seconds
+        /// </summary>
+        public int AuthorityCodeLifetime { get; set; } = 60;
         public bool AddUserInfoClaimsInIdentityToken { get; set; }
 
         public List<ClientClaim> ClientClaims { get; set; }

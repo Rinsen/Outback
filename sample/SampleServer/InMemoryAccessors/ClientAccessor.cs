@@ -46,7 +46,7 @@ namespace SampleServer.InMemoryAccessors
                         IdentityTokenLifetime = 300,
                         IssueRefreshToken = false,
                         PostLogoutRedirectUris = new List<string>(),
-                        LoginRedirectUris = new List<string> { "https://my.domain" },
+                        LoginRedirectUris = new List<string> { "https://my.domain/signin-oidc" },
                         Secrets = new List<string>
                         {
                             HashHelper.GetSha256Hash("pwd")
@@ -58,7 +58,7 @@ namespace SampleServer.InMemoryAccessors
                         },
                         SupportedGrantTypes = new List<string>
                         {
-                            "client_credentials"
+                            "authorization_code"
                         }
                     });
                 default:
