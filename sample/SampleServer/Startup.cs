@@ -17,12 +17,13 @@ namespace SampleServer
 
         public void ConfigureServices(IServiceCollection services)
         {
+            var signingAccessor = new SigningAccessor();
             services.AddSingleton<IAllowedCorsOriginsAccessor, AllowedCorsOriginsAccessor>();
             services.AddSingleton<IClientAccessor, ClientAccessor>();
             services.AddSingleton<IGrantAccessor, GrantAccessor>();
             services.AddSingleton<IScopeAccessor, ScopeAccessor>();
-            services.AddSingleton<ITokenSigningAccessor, SigningAccessor>();
-            services.AddSingleton<IWellKnownSigningAccessor, SigningAccessor>();
+            services.AddSingleton<ITokenSigningAccessor>(signingAccessor);
+            services.AddSingleton<IWellKnownSigningAccessor>(signingAccessor);
             services.AddSingleton<IUserInfoAccessor, UserInfoAccessor>();
 
             services.AddRinsenOutback();
