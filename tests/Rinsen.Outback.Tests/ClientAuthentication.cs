@@ -53,7 +53,7 @@ namespace Rinsen.Outback.Tests
 
             // Assert
             Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
-            var result = await response.Content.ReadAsStringAsync();
+            Assert.Equal("{\"error\":\"invalid_request\"}", await response.Content.ReadAsStringAsync());
 
         }
     }

@@ -1,8 +1,7 @@
-﻿using System.Net.Http.Json;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
-using Rinsen.Outback.WellKnown;
+using Rinsen.Outback.Tests.Helpers;
+using SampleServer;
 using Xunit;
 
 namespace Rinsen.Outback.Tests
@@ -22,15 +21,11 @@ namespace Rinsen.Outback.Tests
             var client = application.CreateClient();
             
             // Act
-            var response = await client.GetAsync(".well-known/openid-configuration");
+            var openIdConfigurationModel = await client.GetOpenIdConfiguration();
 
-            // Assert
-            response.EnsureSuccessStatusCode(); // Status Code 200-299
 
-            var result = await response.Content.ReadFromJsonAsync<OpenIdConfiguration>();
-
-            Assert.NotNull(result);
-            Assert.Equal("https://localhost", result?.Issuer);
+            Assert.NotNull(openIdConfigurationModel);
+            Assert.Equal("https://localhost", openIdConfigurationModel?.Issuer);
             
         }
     }
