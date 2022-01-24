@@ -14,15 +14,15 @@ namespace Rinsen.Outback.Controllers
     [Route("connect")]
     public class ConnectController : Controller
     {
-        private readonly GrantService _grantService;
-        private readonly ClientService _clientService;
-        private readonly TokenFactory _tokenFactory;
+        private readonly IGrantService _grantService;
+        private readonly IClientService _clientService;
+        private readonly ITokenFactory _tokenFactory;
         private readonly ILogger<ConnectController> _logger;
 
         public ConnectController(
-            GrantService grantService,
-            ClientService clientService,
-            TokenFactory tokenFactory,
+            IGrantService grantService,
+            IClientService clientService,
+            ITokenFactory tokenFactory,
             ILogger<ConnectController> logger)
         {
             _grantService = grantService;
@@ -56,7 +56,7 @@ namespace Rinsen.Outback.Controllers
                 string code;
                 if (client.ConsentRequired)
                 {
-                    code = await _grantService.GetCodeForExistingConsent(client, User, model);
+                    code = await _grantService.GetCodeForExistingConsentAsync(client, User, model);
 
                     if (string.IsNullOrEmpty(code))
                     {
@@ -66,7 +66,7 @@ namespace Rinsen.Outback.Controllers
                 else
                 {
                     // Generate and store grant
-                    code = await _grantService.CreateCodeAndStoreCodeGrant(client, User, model);
+                    code = await _grantService.CreateCodeAndStoreCodeGrantAsync(client, User, model);
                 }
 
                 // If no redirect_uri is provided but the client have only one redirect uri we use that uri (2.3.3).
@@ -160,9 +160,9 @@ namespace Rinsen.Outback.Controllers
 
                 return model.GrantType switch
                 {
-                    "client_credentials" => await GetTokenForClientCredentials(client),
-                    "authorization_code" => await GetTokenForAuthorizationCode(model, client),
-                    "refresh_token" => await GetTokenForRefreshToken(model, client),
+                    "authorization_code" => await GetTokenForAuthorizationCodeGrant(model, client),
+                    "client_credentials" => await GetTokenForClientCredentialsGrant(client),
+                    "refresh_token" => await GetTokenForRefreshTokenGrant(model, client),
                     _ => BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant })
                 };
             }
@@ -170,16 +170,16 @@ namespace Rinsen.Outback.Controllers
             return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
         }
 
-        private async Task<IActionResult> GetTokenForClientCredentials(Client client)
+        private async Task<IActionResult> GetTokenForClientCredentialsGrant(Client client)
         {
-            var tokenResponse = await _tokenFactory.CreateTokenResponse(client, GetIssuer());
+            var tokenResponse = await _tokenFactory.CreateTokenResponseAsync(client, GetIssuer());
 
             AddCacheControlHeader();
 
             return Json(tokenResponse);
         }
 
-        private async Task<IActionResult> GetTokenForAuthorizationCode(TokenModel model, Client client)
+        private async Task<IActionResult> GetTokenForAuthorizationCodeGrant(TokenModel model, Client client)
         {
             CodeGrant persistedGrant;
             if (string.IsNullOrEmpty(model.Code))
@@ -206,7 +206,7 @@ namespace Rinsen.Outback.Controllers
 
             try
             {
-                persistedGrant = await _grantService.GetCodeGrant(model.Code, client.ClientId, model.CodeVerifier);
+                persistedGrant = await _grantService.GetCodeGrantAsync(model.Code, client.ClientId, model.CodeVerifier);
             }
             catch (Exception e)
             {
@@ -214,7 +214,6 @@ namespace Rinsen.Outback.Controllers
 
                 return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
             }
-            
 
             // Validate return url if provided
             if (!string.Equals(persistedGrant.RedirectUri, model.RedirectUri))
@@ -224,7 +223,17 @@ namespace Rinsen.Outback.Controllers
                 return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
             }
 
-            var tokenResponse = await _tokenFactory.CreateTokenResponse(client, persistedGrant, GetIssuer());
+            AccessTokenResponse tokenResponse;
+            if (client.IssueRefreshToken)
+            {
+                var refreshToken = await _grantService.CreateRefreshTokenAsync(client, persistedGrant);
+
+                tokenResponse = await _tokenFactory.CreateTokenResponseAsync(client, persistedGrant, refreshToken, GetIssuer());
+            }
+            else
+            {
+                tokenResponse = await _tokenFactory.CreateTokenResponseAsync(client, persistedGrant, GetIssuer());
+            }
 
             AddCorsHeaderIfRequiredAndSupported(client);
             AddCacheControlHeader();
@@ -247,12 +256,12 @@ namespace Rinsen.Outback.Controllers
             }
         }
 
-        private async Task<IActionResult> GetTokenForRefreshToken(TokenModel model, Client client)
+        private async Task<IActionResult> GetTokenForRefreshTokenGrant(TokenModel model, Client client)
         {
-            CodeGrant persistedGrant;
+            RefreshTokenGrant refreshTokenGrant;
             try
             {
-                persistedGrant = await _grantService.GetGrant(model.RefreshToken, client.ClientId);
+                refreshTokenGrant = await _grantService.GetRefreshTokenGrantAsync(model.RefreshToken, client.ClientId);
             }
             catch (Exception e)
             {
@@ -261,16 +270,9 @@ namespace Rinsen.Outback.Controllers
                 return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
             }
 
+            var refreshToken = await _grantService.CreateNewRefreshTokenAsync(client, refreshTokenGrant);
 
-            // Validate return url if provided
-            if (!ClientValidator.IsRedirectUriValid(client, model.RedirectUri))
-            {
-                _logger.LogError("Redirect uri '{RedirectUri}' did not match granted '{GrantedRedirectUri}' redirect uri", model.RedirectUri, persistedGrant.RedirectUri);
-
-                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
-            }
-
-            var tokenResponse = await _tokenFactory.CreateTokenResponse(client, persistedGrant, GetIssuer());
+            var tokenResponse = await _tokenFactory.CreateTokenResponseAsync(client, refreshTokenGrant, refreshToken, GetIssuer());
 
             AddCacheControlHeader();
 

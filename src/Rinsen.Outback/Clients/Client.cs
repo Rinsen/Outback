@@ -9,7 +9,16 @@ namespace Rinsen.Outback.Clients
         public bool ConsentRequired { get; set; }
         public bool SaveConsent { get; set; }
         public int SavedConsentLifetime { get; set; }
+        
+        /// <summary>
+        /// Controls if an refresh_token is added to the Token response
+        /// </summary>
         public bool IssueRefreshToken { get; set; }
+        
+        /// <summary>
+        /// Controls if an id_token is added to the Token response
+        /// </summary>
+        public bool IssueIdentityToken { get; set; }
         /// <summary>
         /// Lifetime in seconds
         /// </summary>

@@ -8,7 +8,7 @@ namespace SampleServer.InMemoryAccessors
     {
         private readonly ConcurrentDictionary<string, CodeGrant> _persistedGrants = new ConcurrentDictionary<string, CodeGrant>();
 
-        public Task<CodeGrant> GetCodeGrant(string code)
+        public Task<CodeGrant> GetCodeGrantAsync(string code)
         {
             var codeGrant = _persistedGrants.GetValueOrDefault(code);
 
@@ -20,29 +20,29 @@ namespace SampleServer.InMemoryAccessors
             return Task.FromResult(codeGrant);
         }
 
-        public Task<PersistedGrant> GetPersistedGrant(string clientId, Guid subjectId)
+        public Task<PersistedGrant> GetPersistedGrantAsync(string clientId, Guid subjectId)
         {
             throw new NotImplementedException();
         }
 
-        public Task<RefreshTokenGrant> GetRefreshTokenGrant(string refreshToken)
+        public Task<RefreshTokenGrant> GetRefreshTokenGrantAsync(string refreshToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task SaveCodeGrant(CodeGrant codeGrant)
+        public Task SaveCodeGrantAsync(CodeGrant codeGrant)
         {
             _persistedGrants.TryAdd(codeGrant.Code, codeGrant);
 
             return Task.CompletedTask;
         }
 
-        public Task SavePersistedGrant(PersistedGrant persistedGrant)
+        public Task SavePersistedGrantAsync(PersistedGrant persistedGrant)
         {
             throw new NotImplementedException();
         }
 
-        public Task SaveRefreshTokenGrant(RefreshTokenGrant refreshTokenGrant)
+        public Task SaveRefreshTokenGrantAsync(RefreshTokenGrant refreshTokenGrant)
         {
             throw new NotImplementedException();
         }

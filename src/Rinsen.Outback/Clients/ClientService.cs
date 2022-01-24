@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Security;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Models;
 
 namespace Rinsen.Outback.Clients
 {
-    public class ClientService
+    internal class ClientService : IClientService
     {
         private readonly IClientAccessor _clientAccessor;
         private readonly ILogger<ClientService> _logger;
@@ -45,7 +42,7 @@ namespace Rinsen.Outback.Clients
 
                         throw new SecurityException($"Secret is required for client {clientIdentity.ClientId}");
                     }
-                    
+
                     var secretHash = HashHelper.GetSha256Hash(clientIdentity.Secret);
 
                     if (!client.Secrets.Any(s => s == secretHash))
@@ -53,7 +50,7 @@ namespace Rinsen.Outback.Clients
                         _logger.LogWarning("No valid secret provided for client {ClientId}", clientIdentity.ClientId);
 
                         throw new SecurityException($"No valid secret provided for client {clientIdentity.ClientId}");
-                    } 
+                    }
 
                     return client;
                 case ClientType.Public:

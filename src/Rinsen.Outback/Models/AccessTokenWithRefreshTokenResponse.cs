@@ -2,8 +2,11 @@
 
 namespace Rinsen.Outback.Models
 {
-    public class RefreshTokenResponse : AccessTokenResponse
+    public class AccessTokenWithRefreshTokenResponse : AccessTokenResponse
     {
+        /// <summary>
+        /// refresh_token
+        /// </summary>
         [JsonPropertyName("refresh_token")]
         public string RefreshToken { get; set; }
     }

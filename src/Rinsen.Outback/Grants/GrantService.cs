@@ -12,11 +12,11 @@ using Rinsen.Outback.Models;
 
 namespace Rinsen.Outback.Grants
 {
-    public class GrantService
+    internal class GrantService : IGrantService
     {
         private readonly RandomStringGenerator _randomStringGenerator;
         private readonly IGrantAccessor _grantAccessor;
-        
+
         public GrantService(RandomStringGenerator randomStringGenerator,
             IGrantAccessor grantAccessor)
         {
@@ -24,9 +24,9 @@ namespace Rinsen.Outback.Grants
             _grantAccessor = grantAccessor;
         }
 
-        public async Task<CodeGrant> GetCodeGrant(string code, string clientId, string codeVerifier)
+        public async Task<CodeGrant> GetCodeGrantAsync(string code, string clientId, string codeVerifier)
         {
-            var codeGrant = await _grantAccessor.GetCodeGrant(code);
+            var codeGrant = await _grantAccessor.GetCodeGrantAsync(code);
 
             if (codeGrant.Expires < DateTime.UtcNow)
             {
@@ -51,7 +51,7 @@ namespace Rinsen.Outback.Grants
             return codeGrant;
         }
 
-        public async Task<string> CreateCodeAndStoreCodeGrant(Client client, ClaimsPrincipal user, AuthorizeModel model)
+        public async Task<string> CreateCodeAndStoreCodeGrantAsync(Client client, ClaimsPrincipal user, AuthorizeModel model)
         {
             if (!AbnfValidationHelper.IsValid(model.CodeChallenge, 43, 128))
             {
@@ -70,13 +70,12 @@ namespace Rinsen.Outback.Grants
                 Scope = model.Scope,
                 State = model.State,
                 Expires = DateTime.UtcNow.AddSeconds(client.AuthorityCodeLifetime),
-                Created = DateTime.UtcNow,
-                Resolved = null,
+                Created = DateTime.UtcNow
             };
 
             SetSubjectId(user, grant);
 
-            await _grantAccessor.SaveCodeGrant(grant);
+            await _grantAccessor.SaveCodeGrantAsync(grant);
 
             return grant.Code;
         }
@@ -98,14 +97,62 @@ namespace Rinsen.Outback.Grants
             grant.SubjectId = subjectId;
         }
 
-        public Task<string> GetCodeForExistingConsent(Client client, ClaimsPrincipal user, AuthorizeModel model)
+        public Task<string> GetCodeForExistingConsentAsync(Client client, ClaimsPrincipal user, AuthorizeModel model)
         {
             throw new NotImplementedException();
         }
 
-        public Task<CodeGrant> GetGrant(string refreshToken, string clientId)
+        public async Task<RefreshTokenGrant> GetRefreshTokenGrantAsync(string refreshToken, string clientId)
         {
-            throw new NotImplementedException();
+            var refreshTokenGrant = await _grantAccessor.GetRefreshTokenGrantAsync(refreshToken);
+
+            if (refreshTokenGrant == default)
+            {
+                throw new SecurityException($"No RefreshToken found");
+            }
+
+            if (!string.Equals(refreshTokenGrant.ClientId, clientId))
+            {
+                throw new SecurityException($"RefreshToken is not valid for client");
+            }
+
+            return refreshTokenGrant;
+        }
+
+        public async Task<string> CreateRefreshTokenAsync(Client client, CodeGrant persistedGrant)
+        {
+            var refreshToken = _randomStringGenerator.GetRandomString(40);
+            var refreshTokenGrant = new RefreshTokenGrant
+            {
+                ClientId = client.ClientId,
+                Created = DateTime.UtcNow,
+                Expires = DateTime.UtcNow.AddSeconds(client.RefreshTokenLifetime),
+                RefreshToken = refreshToken,
+                Scope = persistedGrant.Scope,
+                SubjectId = persistedGrant.SubjectId,
+            };
+
+            await _grantAccessor.SaveRefreshTokenGrantAsync(refreshTokenGrant);
+
+            return refreshToken;
+        }
+
+        public async Task<string> CreateNewRefreshTokenAsync(Client client, RefreshTokenGrant refreshTokenGrant)
+        {
+            var refreshToken = _randomStringGenerator.GetRandomString(40);
+            var newRefreshTokenGrant = new RefreshTokenGrant
+            {
+                ClientId = client.ClientId,
+                Created = DateTime.UtcNow,
+                Expires = DateTime.UtcNow.AddSeconds(client.RefreshTokenLifetime),
+                RefreshToken = refreshToken,
+                Scope = refreshTokenGrant.Scope,
+                SubjectId = refreshTokenGrant.SubjectId,
+            };
+
+            await _grantAccessor.SaveRefreshTokenGrantAsync(newRefreshTokenGrant);
+
+            return refreshToken;
         }
     }
 }

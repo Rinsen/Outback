@@ -48,6 +48,9 @@ namespace Rinsen.Outback.Tests
             var code = await GetCodeAsync(codeVerifier, client);
 
             var tokenResponse = await GetTokenResponse(client, codeVerifier, code);
+
+            if (tokenResponse == null)
+                throw new Exception("Token response is null");
             
             var accessToken = await ValidateToken(client, tokenResponse.AccessToken);
             var identityToken = await ValidateToken(client, tokenResponse.IdentityToken);

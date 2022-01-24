@@ -14,8 +14,6 @@ namespace Rinsen.Outback.Grants
 
         public DateTime Created { get; set; }
 
-        public DateTime? Resolved { get; set; }
-
         public DateTime Expires { get; set; }
     }
 }
