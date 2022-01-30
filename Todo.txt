@@ -1,0 +1,3 @@
+﻿Content Security Policy (CSP) level 2 for form_post result in authorize endpoint
+Consent not implemented
+Logout

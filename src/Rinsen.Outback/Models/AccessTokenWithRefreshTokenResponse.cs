@@ -1,13 +1,12 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Rinsen.Outback.Models
+namespace Rinsen.Outback.Models;
+
+public class AccessTokenWithRefreshTokenResponse : AccessTokenResponse
 {
-    public class AccessTokenWithRefreshTokenResponse : AccessTokenResponse
-    {
-        /// <summary>
-        /// refresh_token
-        /// </summary>
-        [JsonPropertyName("refresh_token")]
-        public string RefreshToken { get; set; }
-    }
+    /// <summary>
+    /// refresh_token
+    /// </summary>
+    [JsonPropertyName("refresh_token")]
+    public string RefreshToken { get; set; } = string.Empty;
 }

@@ -1,11 +1,10 @@
 ﻿using System.Threading.Tasks;
 using Rinsen.Outback.Models;
 
-namespace Rinsen.Outback.Clients
+namespace Rinsen.Outback.Clients;
+
+public interface IClientService
 {
-    public interface IClientService
-    {
-        Task<Client> GetClient(AuthorizeModel model);
-        Task<Client> GetClient(ClientIdentity clientIdentity);
-    }
+    Task<Client> GetClient(AuthorizeModel model);
+    Task<Client> GetClient(ClientIdentity clientIdentity);
 }

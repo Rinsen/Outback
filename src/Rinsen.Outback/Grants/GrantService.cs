@@ -8,151 +8,151 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
 using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Clients;
+using Rinsen.Outback.Helpers;
 using Rinsen.Outback.Models;
 
-namespace Rinsen.Outback.Grants
+namespace Rinsen.Outback.Grants;
+
+internal class GrantService : IGrantService
 {
-    internal class GrantService : IGrantService
+    private readonly RandomStringGenerator _randomStringGenerator;
+    private readonly IGrantAccessor _grantAccessor;
+
+    public GrantService(RandomStringGenerator randomStringGenerator,
+        IGrantAccessor grantAccessor)
     {
-        private readonly RandomStringGenerator _randomStringGenerator;
-        private readonly IGrantAccessor _grantAccessor;
+        _randomStringGenerator = randomStringGenerator;
+        _grantAccessor = grantAccessor;
+    }
 
-        public GrantService(RandomStringGenerator randomStringGenerator,
-            IGrantAccessor grantAccessor)
+    public async Task<CodeGrant> GetCodeGrantAsync(string code, string clientId, string codeVerifier)
+    {
+        var codeGrant = await _grantAccessor.GetCodeGrantAsync(code);
+
+        if (codeGrant.Expires < DateTime.UtcNow)
         {
-            _randomStringGenerator = randomStringGenerator;
-            _grantAccessor = grantAccessor;
+            throw new SecurityException("Grant has expired");
         }
 
-        public async Task<CodeGrant> GetCodeGrantAsync(string code, string clientId, string codeVerifier)
+        if (codeGrant.ClientId != clientId)
         {
-            var codeGrant = await _grantAccessor.GetCodeGrantAsync(code);
-
-            if (codeGrant.Expires < DateTime.UtcNow)
-            {
-                throw new SecurityException("Grant has expired");
-            }
-
-            if (codeGrant.ClientId != clientId)
-            {
-                throw new SecurityException("Client id not matching");
-            }
-
-            // Validate code
-            using var sha256 = SHA256.Create();
-            var challengeBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));
-            var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
-
-            if (codeChallenge != codeGrant.CodeChallange)
-            {
-                throw new SecurityException("Code verifier is not matching code challenge");
-            }
-
-            return codeGrant;
+            throw new SecurityException("Client id not matching");
         }
 
-        public async Task<string> CreateCodeAndStoreCodeGrantAsync(Client client, ClaimsPrincipal user, AuthorizeModel model)
+        // Validate code
+        using var sha256 = SHA256.Create();
+        var challengeBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));
+        var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
+
+        if (codeChallenge != codeGrant.CodeChallange)
         {
-            if (!AbnfValidationHelper.IsValid(model.CodeChallenge, 43, 128))
-            {
-                // Code verifier is not valid
-                throw new SecurityException("Code challange is not valid");
-            }
-
-            var grant = new CodeGrant
-            {
-                ClientId = client.ClientId,
-                Code = _randomStringGenerator.GetRandomString(15),
-                CodeChallange = model.CodeChallenge,
-                CodeChallangeMethod = model.CodeChallengeMethod,
-                Nonce = model.Nonce,
-                RedirectUri = model.RedirectUri,
-                Scope = model.Scope,
-                State = model.State,
-                Expires = DateTime.UtcNow.AddSeconds(client.AuthorityCodeLifetime),
-                Created = DateTime.UtcNow
-            };
-
-            SetSubjectId(user, grant);
-
-            await _grantAccessor.SaveCodeGrantAsync(grant);
-
-            return grant.Code;
+            throw new SecurityException("Code verifier is not matching code challenge");
         }
 
-        private static void SetSubjectId(ClaimsPrincipal user, CodeGrant grant)
+        return codeGrant;
+    }
+
+    public async Task<string> CreateCodeAndStoreCodeGrantAsync(Client client, ClaimsPrincipal user, AuthorizeModel model)
+    {
+        if (!AbnfValidationHelper.IsValid(model.CodeChallenge, 43, 128))
         {
-            if (!user.Claims.Any(m => m.Type == "sub"))
-            {
-                throw new SecurityException("sub claim not found");
-            }
-
-            var subjectId = user.FindFirstValue("sub");
-
-            if (string.IsNullOrEmpty(subjectId))
-            {
-                throw new SecurityException("sub claim empty is not supported");
-            }
-
-            grant.SubjectId = subjectId;
+            // Code verifier is not valid
+            throw new SecurityException("Code challange is not valid");
         }
 
-        public Task<string> GetCodeForExistingConsentAsync(Client client, ClaimsPrincipal user, AuthorizeModel model)
+        var grant = new CodeGrant
         {
-            throw new NotImplementedException();
+            ClientId = client.ClientId,
+            Code = _randomStringGenerator.GetRandomString(15),
+            CodeChallange = model.CodeChallenge,
+            CodeChallangeMethod = model.CodeChallengeMethod,
+            Nonce = model.Nonce,
+            RedirectUri = model.RedirectUri,
+            Scope = model.Scope,
+            State = model.State,
+            Expires = DateTime.UtcNow.AddSeconds(client.AuthorityCodeLifetime),
+            Created = DateTime.UtcNow
+        };
+
+        SetSubjectId(user, grant);
+
+        await _grantAccessor.SaveCodeGrantAsync(grant);
+
+        return grant.Code;
+    }
+
+    private static void SetSubjectId(ClaimsPrincipal user, CodeGrant grant)
+    {
+        if (!user.Claims.Any(m => m.Type == "sub"))
+        {
+            throw new SecurityException("sub claim not found");
         }
 
-        public async Task<RefreshTokenGrant> GetRefreshTokenGrantAsync(string refreshToken, string clientId)
+        var subjectId = user.FindFirstValue("sub");
+
+        if (string.IsNullOrEmpty(subjectId))
         {
-            var refreshTokenGrant = await _grantAccessor.GetRefreshTokenGrantAsync(refreshToken);
-
-            if (refreshTokenGrant == default)
-            {
-                throw new SecurityException($"No RefreshToken found");
-            }
-
-            if (!string.Equals(refreshTokenGrant.ClientId, clientId))
-            {
-                throw new SecurityException($"RefreshToken is not valid for client");
-            }
-
-            return refreshTokenGrant;
+            throw new SecurityException("sub claim empty is not supported");
         }
 
-        public async Task<string> CreateRefreshTokenAsync(Client client, CodeGrant persistedGrant)
+        grant.SubjectId = subjectId;
+    }
+
+    public Task<string> GetCodeForExistingConsentAsync(Client client, ClaimsPrincipal user, AuthorizeModel model)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<RefreshTokenGrant> GetRefreshTokenGrantAsync(string refreshToken, string clientId)
+    {
+        var refreshTokenGrant = await _grantAccessor.GetRefreshTokenGrantAsync(refreshToken);
+
+        if (refreshTokenGrant == default)
         {
-            var refreshToken = _randomStringGenerator.GetRandomString(40);
-            var refreshTokenGrant = new RefreshTokenGrant
-            {
-                ClientId = client.ClientId,
-                Created = DateTime.UtcNow,
-                Expires = DateTime.UtcNow.AddSeconds(client.RefreshTokenLifetime),
-                RefreshToken = refreshToken,
-                Scope = persistedGrant.Scope,
-                SubjectId = persistedGrant.SubjectId,
-            };
-
-            await _grantAccessor.SaveRefreshTokenGrantAsync(refreshTokenGrant);
-
-            return refreshToken;
+            throw new SecurityException($"No RefreshToken found");
         }
 
-        public async Task<string> CreateNewRefreshTokenAsync(Client client, RefreshTokenGrant refreshTokenGrant)
+        if (!string.Equals(refreshTokenGrant.ClientId, clientId))
         {
-            var refreshToken = _randomStringGenerator.GetRandomString(40);
-            var newRefreshTokenGrant = new RefreshTokenGrant
-            {
-                ClientId = client.ClientId,
-                Created = DateTime.UtcNow,
-                Expires = DateTime.UtcNow.AddSeconds(client.RefreshTokenLifetime),
-                RefreshToken = refreshToken,
-                Scope = refreshTokenGrant.Scope,
-                SubjectId = refreshTokenGrant.SubjectId,
-            };
-
-            await _grantAccessor.SaveRefreshTokenGrantAsync(newRefreshTokenGrant);
-
-            return refreshToken;
+            throw new SecurityException($"RefreshToken is not valid for client");
         }
+
+        return refreshTokenGrant;
+    }
+
+    public async Task<string> CreateRefreshTokenAsync(Client client, CodeGrant persistedGrant)
+    {
+        var refreshToken = _randomStringGenerator.GetRandomString(40);
+        var refreshTokenGrant = new RefreshTokenGrant
+        {
+            ClientId = client.ClientId,
+            Created = DateTime.UtcNow,
+            Expires = DateTime.UtcNow.AddSeconds(client.RefreshTokenLifetime),
+            RefreshToken = refreshToken,
+            Scope = persistedGrant.Scope,
+            SubjectId = persistedGrant.SubjectId,
+        };
+
+        await _grantAccessor.SaveRefreshTokenGrantAsync(refreshTokenGrant);
+
+        return refreshToken;
+    }
+
+    public async Task<string> CreateNewRefreshTokenAsync(Client client, RefreshTokenGrant refreshTokenGrant)
+    {
+        var refreshToken = _randomStringGenerator.GetRandomString(40);
+        var newRefreshTokenGrant = new RefreshTokenGrant
+        {
+            ClientId = client.ClientId,
+            Created = DateTime.UtcNow,
+            Expires = DateTime.UtcNow.AddSeconds(client.RefreshTokenLifetime),
+            RefreshToken = refreshToken,
+            Scope = refreshTokenGrant.Scope,
+            SubjectId = refreshTokenGrant.SubjectId,
+        };
+
+        await _grantAccessor.SaveRefreshTokenGrantAsync(newRefreshTokenGrant);
+
+        return refreshToken;
     }
 }

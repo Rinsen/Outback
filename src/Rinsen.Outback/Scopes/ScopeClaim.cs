@@ -1,8 +1,7 @@
-﻿namespace Rinsen.Outback.Scopes
-{
-    public class ScopeClaim
-    {
-        public string ClaimType { get; set; }
+﻿namespace Rinsen.Outback.Scopes;
 
-    }
+public class ScopeClaim
+{
+    public string ClaimType { get; set; } = string.Empty;
+
 }

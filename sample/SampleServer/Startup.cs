@@ -48,8 +48,6 @@ namespace SampleServer
 
             app.UseAuthentication();
 
-            ExtensionPointForTestMiddleware(app);
-
             app.UseAuthorization();
 
             app.UseEndpoints(routes =>
@@ -58,13 +56,6 @@ namespace SampleServer
                     name: "default",
                     pattern: "{controller=Identity}/{action=Index}");
             });
-
-
-        }
-
-        protected virtual void ExtensionPointForTestMiddleware(IApplicationBuilder app)
-        {
-            
         }
     }
 }

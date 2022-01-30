@@ -1,19 +1,18 @@
 ﻿using System;
 
-namespace Rinsen.Outback.Grants
+namespace Rinsen.Outback.Grants;
+
+public class RefreshTokenGrant
 {
-    public class RefreshTokenGrant
-    {
-        public string ClientId { get; set; }
+    public string ClientId { get; set; } = string.Empty;
 
-        public string SubjectId { get; set; }
+    public string SubjectId { get; set; } = string.Empty;
 
-        public string RefreshToken { get; set; }
+    public string RefreshToken { get; set; } = string.Empty;
 
-        public string Scope { get; set; }
+    public string Scope { get; set; } = string.Empty;
 
-        public DateTime Created { get; set; }
+    public DateTime Created { get; set; }
 
-        public DateTime Expires { get; set; }
-    }
+    public DateTime Expires { get; set; }
 }

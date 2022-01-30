@@ -1,16 +1,15 @@
-﻿namespace Rinsen.Outback.Models
+﻿namespace Rinsen.Outback.Models;
+
+public class AuthorizeResponse
 {
-    public class AuthorizeResponse
-    {
-        public string Code { get; set; }
+    public string Code { get; set; } = string.Empty;
 
-        public string Scope { get; set; }
+    public string Scope { get; set; } = string.Empty;
 
-        public string State { get; set; }
+    public string State { get; set; } = string.Empty;
 
-        public string SessionState { get; set; }
+    public string? SessionState { get; set; } = null;
 
-        public string FormPostUri { get; set; }
+    public string FormPostUri { get; set; } = string.Empty;
 
-    }
 }

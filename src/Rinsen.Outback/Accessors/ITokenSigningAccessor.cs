@@ -1,24 +1,23 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Rinsen.Outback.Accessors
+namespace Rinsen.Outback.Accessors;
+
+public interface ITokenSigningAccessor
 {
-    public interface ITokenSigningAccessor
+    Task<SecurityKeyWithAlgorithm> GetSigningSecurityKey();
+}
+
+public class SecurityKeyWithAlgorithm
+{
+    public SecurityKeyWithAlgorithm(SecurityKey securityKey, string algorithm)
     {
-        Task<SecurityKeyWithAlgorithm> GetSigningSecurityKey();
+        SecurityKey = securityKey;
+        Algorithm = algorithm;
     }
 
-    public class SecurityKeyWithAlgorithm
-    {
-        public SecurityKeyWithAlgorithm(SecurityKey securityKey, string algorithm)
-        {
-            SecurityKey = securityKey;
-            Algorithm = algorithm;
-        }
+    public SecurityKey SecurityKey { get; }
 
-        public SecurityKey SecurityKey { get; }
+    public string Algorithm { get; }
 
-        public string Algorithm { get; }
-
-    }
 }

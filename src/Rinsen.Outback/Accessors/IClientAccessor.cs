@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 using Rinsen.Outback.Clients;
 
-namespace Rinsen.Outback.Accessors
+namespace Rinsen.Outback.Accessors;
+
+public interface IClientAccessor
 {
-    public interface IClientAccessor
-    {
-        Task<Client> GetClient(string clientId);
-    }
+    Task<Client> GetClient(string clientId);
 }
