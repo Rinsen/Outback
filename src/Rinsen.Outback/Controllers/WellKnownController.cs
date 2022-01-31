@@ -38,7 +38,7 @@ public class WellKnownController : ControllerBase
         await AddCorsHeadersIfRequiredAndSupported();
 
         var host = HttpContext.Request.Host.ToString();
-        var scopes = await _wellKnownScopeAccessor.GetScopes();
+        var scopes = await _wellKnownScopeAccessor.GetScopesAsync();
 
         return new OpenIdConfiguration
         {

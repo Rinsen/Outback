@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Rinsen.Outback.Clients;
 using Rinsen.Outback.Grants;
 using Rinsen.Outback.Helpers;
+using Rinsen.Outback.JwtTokens;
 using Rinsen.Outback.Models;
 using System;
 using System.Linq;
@@ -17,13 +18,14 @@ public class ConnectController : Controller
 {
     private readonly IGrantService _grantService;
     private readonly IClientService _clientService;
-    private readonly ITokenFactory _tokenFactory;
+    private readonly ITokenService _tokenFactory;
     private readonly ILogger<ConnectController> _logger;
 
     public ConnectController(
         IGrantService grantService,
         IClientService clientService,
-        ITokenFactory tokenFactory,
+        ITokenService tokenFactory,
+        
         ILogger<ConnectController> logger)
     {
         _grantService = grantService;

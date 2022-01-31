@@ -6,6 +6,8 @@ namespace Rinsen.Outback.Accessors;
 
 public interface IScopeAccessor
 {
-    Task<List<Scope>> GetScopes();
+    Task<List<Scope>> GetScopesAsync();
+
+    Task<List<Scope>> GetScopesAsync(IReadOnlyList<string> scopes);
 
 }

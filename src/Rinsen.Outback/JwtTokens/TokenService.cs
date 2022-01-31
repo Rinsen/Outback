@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Claims;
@@ -10,19 +13,22 @@ using Rinsen.Outback.Clients;
 using Rinsen.Outback.Grants;
 using Rinsen.Outback.Models;
 
-namespace Rinsen.Outback.Helpers;
+namespace Rinsen.Outback.JwtTokens;
 
-internal class TokenFactory : ITokenFactory
+internal class TokenService : ITokenService
 {
     private readonly ITokenSigningAccessor _tokenSigningAccessor;
     private readonly IUserInfoAccessor _userInfoAccessor;
+    private readonly IScopeAccessor _scopeAccessor;
 
-    public TokenFactory(ITokenSigningAccessor tokenSigningAccessor,
-        IUserInfoAccessor userInfoAccessor
+    public TokenService(ITokenSigningAccessor tokenSigningAccessor,
+        IUserInfoAccessor userInfoAccessor,
+        IScopeAccessor scopeAccessor
         )
     {
         _tokenSigningAccessor = tokenSigningAccessor;
         _userInfoAccessor = userInfoAccessor;
+        _scopeAccessor = scopeAccessor;
     }
 
     public Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, CodeGrant persistedGrant, string issuer)
@@ -32,9 +38,9 @@ internal class TokenFactory : ITokenFactory
 
     public async Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, CodeGrant persistedGrant, string? refreshToken, string issuer)
     {
-        var tokenHandler = new JwtSecurityTokenHandler();
+        var tokenHandler = new JsonWebTokenHandler();
         var key = await _tokenSigningAccessor.GetSigningSecurityKey();
-        var accessTokenString = CreateAccessToken(client, persistedGrant.Scope, persistedGrant.SubjectId, issuer, tokenHandler, key);
+        var accessTokenString = await CreateAccessToken(client, persistedGrant.Scope, persistedGrant.SubjectId, issuer, tokenHandler, key);
 
         if (client.IssueRefreshToken && client.IssueIdentityToken)
         {
@@ -92,8 +98,10 @@ internal class TokenFactory : ITokenFactory
         }
     }
 
-    private static string CreateAccessToken(Client client, string scope, string subjectId, string issuer, JwtSecurityTokenHandler tokenHandler, SecurityKeyWithAlgorithm key)
+    private async Task<string> CreateAccessToken(Client client, string scope, string subjectId, string issuer, JsonWebTokenHandler tokenHandler, SecurityKeyWithAlgorithm key)
     {
+        var audience = await GetAudience(client);
+
         var accessTokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = null,
@@ -101,7 +109,7 @@ internal class TokenFactory : ITokenFactory
             Expires = DateTime.UtcNow.AddSeconds(client.IdentityTokenLifetime),
             Issuer = issuer,
             IssuedAt = DateTime.UtcNow,
-            Audience = client.ClientId,
+            Audience = audience,
             SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
         };
 
@@ -112,13 +120,10 @@ internal class TokenFactory : ITokenFactory
                 { StandardClaims.Subject, subjectId }
             };
 
-        var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);
-        var accessTokenString = tokenHandler.WriteToken(accessToken);
-
-        return accessTokenString;
+        return tokenHandler.CreateToken(accessTokenDescriptor);
     }
 
-    private async Task<string> CreateIdentityToken(Client client, string subjectId, string? nonce, string scope, string issuer, JwtSecurityTokenHandler tokenHandler, SecurityKeyWithAlgorithm key)
+    private async Task<string> CreateIdentityToken(Client client, string subjectId, string? nonce, string scope, string issuer, JsonWebTokenHandler tokenHandler, SecurityKeyWithAlgorithm key)
     {
         var identityTokenDescriptor = new SecurityTokenDescriptor
         {
@@ -168,15 +173,15 @@ internal class TokenFactory : ITokenFactory
             }
         }
 
-        var identityToken = tokenHandler.CreateToken(identityTokenDescriptor);
-        var identityTokenString = tokenHandler.WriteToken(identityToken);
-        return identityTokenString;
+        return tokenHandler.CreateToken(identityTokenDescriptor);
     }
 
     public async Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, string issuer)
     {
-        var tokenHandler = new JwtSecurityTokenHandler();
+        var tokenHandler = new JsonWebTokenHandler();
         var key = await _tokenSigningAccessor.GetSigningSecurityKey();
+
+        var audience = await GetAudience(client);
 
         var accessTokenDescriptor = new SecurityTokenDescriptor
         {
@@ -188,7 +193,7 @@ internal class TokenFactory : ITokenFactory
             Expires = DateTime.UtcNow.AddSeconds(client.IdentityTokenLifetime),
             Issuer = issuer,
             IssuedAt = DateTime.UtcNow,
-            Audience = client.ClientId,
+            Audience = audience,
             SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
         };
 
@@ -199,14 +204,34 @@ internal class TokenFactory : ITokenFactory
             };
 
         var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);
-        var tokenString = tokenHandler.WriteToken(accessToken);
-
+        
         return new AccessTokenResponse
         {
-            AccessToken = tokenString,
+            AccessToken = accessToken,
             ExpiresIn = client.AccessTokenLifetime,
             TokenType = "Bearer"
         };
+    }
+
+    private async Task<string> GetAudience(Client client)
+    {
+        var scopes = await _scopeAccessor.GetScopesAsync(client.Scopes);
+
+        var audiences = scopes.Select(m => m.Audience).Distinct().ToList();
+
+        if (!audiences.Any())
+        {
+            return "[]";
+        }
+
+        if (audiences.Count == 1)
+        {
+            return audiences[0];
+        }
+
+        var audience = string.Join(", ", audiences);
+        
+        return audience;
     }
 
     public async Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, RefreshTokenGrant refreshTokenGrant, string refreshToken, string issuer)
@@ -221,9 +246,9 @@ internal class TokenFactory : ITokenFactory
             throw new Exception($"No refresh token defined for client {client.ClientId}");
         }
 
-        var tokenHandler = new JwtSecurityTokenHandler();
+        var tokenHandler = new JsonWebTokenHandler();
         var key = await _tokenSigningAccessor.GetSigningSecurityKey();
-        var accessTokenString = CreateAccessToken(client, refreshTokenGrant.Scope, refreshTokenGrant.SubjectId, issuer, tokenHandler, key);
+        var accessTokenString = await CreateAccessToken(client, refreshTokenGrant.Scope, refreshTokenGrant.SubjectId, issuer, tokenHandler, key);
 
         if (client.IssueIdentityToken)
         {

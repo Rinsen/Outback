@@ -9,6 +9,8 @@
     <base target='_self' />
 </head>
 <body>
+    @if (Model != null)
+    {
     <form method="post" action="@Model.FormPostUri" name="authForm">
         <input type="hidden" id="code" name="code" value="@Model.Code">
         <input type="hidden" id="scope" name="scope" value="@Model.Scope">
@@ -16,7 +18,12 @@
         <input type="hidden" id="state" name="state" value="@Model.State">
         <noscript><button>Click to continue</button></noscript>
     </form>
-    <script>document.forms.authForm.submit();</script>
+        <script>document.forms.authForm.submit();</script>
+    }
+    else
+    {
+        <p>Failed to load code</p>
+    }
 </body>
 </html>
 

@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.IdentityModel.Tokens;
+using Rinsen.Outback.Tests.Helpers;
 using SampleServer;
 using Xunit;
 
@@ -73,12 +74,17 @@ namespace Rinsen.Outback.Tests
 
             // Assert
             response.EnsureSuccessStatusCode();
+            var tokenResponse = await response.Content.ReadFromJsonAsync<TokenResponse>();
 
-            var result = await response.Content.ReadFromJsonAsync<TokenResponse>();
+            if (tokenResponse == null)
+            {
+                throw new System.Exception("Null token response");
+            }
 
-            Assert.NotNull(result);
-            Assert.Equal(100, result?.ExpiresIn);
-            Assert.Equal("Bearer", result?.TokenType);
+            var accessToken = await JwtValidationHelper.ValidateToken(client, tokenResponse.AccessToken, "MessagingServer", "https://localhost");
+
+            Assert.Equal(100, tokenResponse.ExpiresIn);
+            Assert.Equal("Bearer", tokenResponse.TokenType);
         }
     }
 }

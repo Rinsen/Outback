@@ -1,18 +1,18 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Rinsen.Outback.Clients;
+﻿using Rinsen.Outback.Clients;
 using Rinsen.Outback.Grants;
 using Rinsen.Outback.Helpers;
+using Rinsen.Outback.JwtTokens;
 
-namespace Rinsen.Outback;
+namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ExtensionMethods
 {
     public static void AddRinsenOutback(this IServiceCollection services)
     {
         services.AddSingleton<RandomStringGenerator>();
-        services.AddScoped<GrantService>();
-        services.AddScoped<ClientService>();
-        services.AddScoped<TokenFactory>();
+        services.AddScoped<IGrantService, GrantService>();
+        services.AddScoped<IClientService, ClientService>();
+        services.AddScoped<ITokenService, TokenService>();
     }
 
     public static IMvcBuilder AddRinsenOutbackControllers(this IMvcBuilder mvcBuilder)

@@ -27,8 +27,7 @@ namespace SampleServer.InMemoryAccessors
                         },
                         Scopes = new List<string>
                         {
-                            "openid",
-                            "profile"
+                            "messaging"
                         },
                         SupportedGrantTypes = new List<string>
                         {
@@ -44,6 +43,7 @@ namespace SampleServer.InMemoryAccessors
                         ClientClaims = new List<ClientClaim>(),
                         ConsentRequired = false,
                         IdentityTokenLifetime = 300,
+                        IssueIdentityToken = true,
                         IssueRefreshToken = false,
                         PostLogoutRedirectUris = new List<string>(),
                         LoginRedirectUris = new List<string> { "https://my.domain/signin-oidc" },
@@ -54,7 +54,8 @@ namespace SampleServer.InMemoryAccessors
                         Scopes = new List<string>
                         {
                             "openid",
-                            "profile"
+                            "profile",
+                            "messaging"
                         },
                         SupportedGrantTypes = new List<string>
                         {

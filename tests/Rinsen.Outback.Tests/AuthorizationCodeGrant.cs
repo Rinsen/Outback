@@ -44,23 +44,24 @@ namespace Rinsen.Outback.Tests
 
             var client = application.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false }); ;
 
+            var clientId = "PKCEWebClientId";
             var codeVerifier = "abcdefghijklmnopqrstuvqyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~0123456789";
-            var code = await GetCodeAsync(codeVerifier, client);
+            var code = await GetCodeAsync(codeVerifier, client, clientId);
 
             var tokenResponse = await GetTokenResponse(client, codeVerifier, code);
 
             if (tokenResponse == null)
                 throw new Exception("Token response is null");
             
-            var accessToken = await ValidateToken(client, tokenResponse.AccessToken);
-            var identityToken = await ValidateToken(client, tokenResponse.IdentityToken);
+            var accessToken = await JwtValidationHelper.ValidateToken(client, tokenResponse.AccessToken, new List<string> { "OutbackAS", "MessagingServer" }, "https://localhost");
+            var identityToken = await JwtValidationHelper.ValidateToken(client, tokenResponse.IdentityToken, clientId, "https://localhost");
 
             Assert.Equal(8, accessToken.Claims.Count());
             Assert.Equal("PKCEWebClientId", accessToken.Claims.Single(m => m.Type == "client_id").Value);
             Assert.Equal("openid", accessToken.Claims.Single(m => m.Type == "scope").Value);
             Assert.Equal("Test user", accessToken.Claims.Single(m => m.Type == "sub").Value);
             Assert.Equal("https://localhost", accessToken.Claims.Single(m => m.Type == "iss").Value);
-            Assert.Equal("PKCEWebClientId", accessToken.Claims.Single(m => m.Type == "aud").Value);
+            Assert.Equal("OutbackAS", accessToken.Claims.Single(m => m.Type == "aud").Value);
             Assert.Single(accessToken.Claims, m => m.Type == "exp");
             Assert.Single(accessToken.Claims, m => m.Type == "nbf");
             Assert.Single(accessToken.Claims, m => m.Type == "iat");
@@ -72,36 +73,6 @@ namespace Rinsen.Outback.Tests
             Assert.Single(identityToken.Claims, m => m.Type == "exp");
             Assert.Single(identityToken.Claims, m => m.Type == "nbf");
             Assert.Single(identityToken.Claims, m => m.Type == "iat");
-        }
-
-        private static async Task<JwtSecurityToken> ValidateToken(HttpClient client, string token)
-        {
-            var key = await client.GetJsonWebKey();
-            var securityKey = new JsonWebKey()
-            {
-                KeyId = key.KeyId,
-                Kty = key.KeyType,
-                Alg = key.SigningAlgorithm,
-                X = key.X,
-                Y = key.Y,
-                Crv = key.Curve,
-            };
-
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidAudience = "PKCEWebClientId",
-                ValidIssuer = "https://localhost",
-                ValidateIssuerSigningKey = true,
-
-                IssuerSigningKey = securityKey,
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ClockSkew = TimeSpan.Zero
-            }, out var securityToken);
-
-            return (JwtSecurityToken)securityToken;
         }
 
         private static async Task<AccessTokenResponse?> GetTokenResponse(HttpClient client, string codeVerifier, string code)
@@ -122,14 +93,14 @@ namespace Rinsen.Outback.Tests
             return await tokenResponse.Content.ReadFromJsonAsync<AccessTokenResponse>();
         }
 
-        private async Task<string> GetCodeAsync(string codeVerifier, HttpClient client)
+        private async Task<string> GetCodeAsync(string codeVerifier, HttpClient client, string clientId)
         {
             using var sha256 = SHA256.Create();
             var challengeBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));
             var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
             var uri = "connect/authorize";
             uri = QueryHelpers.AddQueryString(uri, "response_type", "code");
-            uri = QueryHelpers.AddQueryString(uri, "client_id", "PKCEWebClientId");
+            uri = QueryHelpers.AddQueryString(uri, "client_id", clientId);
             uri = QueryHelpers.AddQueryString(uri, "code_challenge", codeChallenge);
             uri = QueryHelpers.AddQueryString(uri, "scope", "openid");
 

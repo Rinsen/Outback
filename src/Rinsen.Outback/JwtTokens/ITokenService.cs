@@ -3,9 +3,9 @@ using Rinsen.Outback.Clients;
 using Rinsen.Outback.Grants;
 using Rinsen.Outback.Models;
 
-namespace Rinsen.Outback.Helpers;
+namespace Rinsen.Outback.JwtTokens;
 
-public interface ITokenFactory
+public interface ITokenService
 {
     Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, string issuer);
 

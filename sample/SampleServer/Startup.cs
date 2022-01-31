@@ -26,6 +26,13 @@ namespace SampleServer
             services.AddSingleton<IWellKnownSigningAccessor>(signingAccessor);
             services.AddSingleton<IUserInfoAccessor, UserInfoAccessor>();
 
+            services.AddAuthentication()
+                .AddJwtBearer(options =>
+                {
+                    options.Audience = "";
+                    options.Authority = "";
+                });
+
             services.AddRinsenOutback();
             services.AddControllersWithViews()
                 .AddRinsenOutbackControllers();
