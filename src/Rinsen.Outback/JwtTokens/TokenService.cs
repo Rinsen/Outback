@@ -229,7 +229,7 @@ internal class TokenService : ITokenService
             return audiences[0];
         }
 
-        var audience = string.Join(", ", audiences);
+        var audience = "[\"" + string.Join("\", \"", audiences) + "\"]";
         
         return audience;
     }

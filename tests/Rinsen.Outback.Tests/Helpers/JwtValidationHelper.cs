@@ -29,6 +29,8 @@ namespace Rinsen.Outback.Tests.Helpers
             IdentityModelEventSource.ShowPII = true;
             //JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
             var tokenHandler = new JsonWebTokenHandler();
+https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/blob/dev/src/Microsoft.IdentityModel.JsonWebTokens/JsonWebToken.cs
+            var a = tokenHandler.ReadToken(token);
             var tokenValidationResult = tokenHandler.ValidateToken(token, new TokenValidationParameters
             {
                 ValidAudiences = validAudiences,
