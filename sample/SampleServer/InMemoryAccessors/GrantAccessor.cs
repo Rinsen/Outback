@@ -20,7 +20,7 @@ namespace SampleServer.InMemoryAccessors
             return Task.FromResult(codeGrant);
         }
 
-        public Task<PersistedGrant> GetPersistedGrantAsync(string clientId, Guid subjectId)
+        public Task<PersistedGrant> GetPersistedGrantAsync(string clientId, string subjectId)
         {
             throw new NotImplementedException();
         }

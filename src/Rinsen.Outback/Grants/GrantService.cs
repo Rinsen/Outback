@@ -29,7 +29,7 @@ internal class GrantService : IGrantService
     {
         var codeGrant = await _grantAccessor.GetCodeGrantAsync(code);
 
-        if (codeGrant.Expires < DateTime.UtcNow)
+        if (codeGrant.Expires < DateTimeOffset.UtcNow)
         {
             throw new SecurityException("Grant has expired");
         }
@@ -70,8 +70,8 @@ internal class GrantService : IGrantService
             RedirectUri = model.RedirectUri,
             Scope = model.Scope,
             State = model.State,
-            Expires = DateTime.UtcNow.AddSeconds(client.AuthorityCodeLifetime),
-            Created = DateTime.UtcNow
+            Expires = DateTimeOffset.UtcNow.AddSeconds(client.AuthorityCodeLifetime),
+            Created = DateTimeOffset.UtcNow
         };
 
         SetSubjectId(user, grant);
@@ -126,8 +126,8 @@ internal class GrantService : IGrantService
         var refreshTokenGrant = new RefreshTokenGrant
         {
             ClientId = client.ClientId,
-            Created = DateTime.UtcNow,
-            Expires = DateTime.UtcNow.AddSeconds(client.RefreshTokenLifetime),
+            Created = DateTimeOffset.UtcNow,
+            Expires = DateTimeOffset.UtcNow.AddSeconds(client.RefreshTokenLifetime),
             RefreshToken = refreshToken,
             Scope = persistedGrant.Scope,
             SubjectId = persistedGrant.SubjectId,
@@ -144,8 +144,8 @@ internal class GrantService : IGrantService
         var newRefreshTokenGrant = new RefreshTokenGrant
         {
             ClientId = client.ClientId,
-            Created = DateTime.UtcNow,
-            Expires = DateTime.UtcNow.AddSeconds(client.RefreshTokenLifetime),
+            Created = DateTimeOffset.UtcNow,
+            Expires = DateTimeOffset.UtcNow.AddSeconds(client.RefreshTokenLifetime),
             RefreshToken = refreshToken,
             Scope = refreshTokenGrant.Scope,
             SubjectId = refreshTokenGrant.SubjectId,

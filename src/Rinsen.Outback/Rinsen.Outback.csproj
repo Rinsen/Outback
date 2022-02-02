@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
       <RazorCompileOnBuild>true</RazorCompileOnBuild>
-      <Version>0.0.2</Version>
+      <Version>0.0.3</Version>
       <Title>Rinsen Outback</Title>
       <Description>OAuth 2.1 and OpenId Connect library</Description>
       <Copyright>© Fredrik Rinsén</Copyright>

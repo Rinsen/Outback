@@ -7,7 +7,7 @@ namespace Rinsen.Outback.Accessors;
 public interface IGrantAccessor
 {
     Task<CodeGrant> GetCodeGrantAsync(string code);
-    Task<PersistedGrant> GetPersistedGrantAsync(string clientId, Guid subjectId);
+    Task<PersistedGrant> GetPersistedGrantAsync(string clientId, string subjectId);
     Task<RefreshTokenGrant> GetRefreshTokenGrantAsync(string refreshToken);
     Task SaveCodeGrantAsync(CodeGrant codeGrant);
     Task SavePersistedGrantAsync(PersistedGrant persistedGrant);

@@ -10,7 +10,7 @@ public class PersistedGrant
 
     public string Scope { get; set; } = string.Empty;
 
-    public DateTime Created { get; set; }
+    public DateTimeOffset Created { get; set; }
 
-    public DateTime Expires { get; set; }
+    public DateTimeOffset Expires { get; set; }
 }
