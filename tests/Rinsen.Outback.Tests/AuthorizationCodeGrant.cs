@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -53,26 +51,28 @@ namespace Rinsen.Outback.Tests
             if (tokenResponse == null)
                 throw new Exception("Token response is null");
             
-            var accessToken = await JwtValidationHelper.ValidateToken(client, tokenResponse.AccessToken, new List<string> { "OutbackAS", "MessagingServer" }, "https://localhost");
+            var accessToken = await JwtValidationHelper.ValidateToken(client, tokenResponse.AccessToken, "OutbackAS", "https://localhost");
             var identityToken = await JwtValidationHelper.ValidateToken(client, tokenResponse.IdentityToken, clientId, "https://localhost");
 
             Assert.Equal(8, accessToken.Claims.Count());
-            Assert.Equal("PKCEWebClientId", accessToken.Claims.Single(m => m.Type == "client_id").Value);
-            Assert.Equal("openid", accessToken.Claims.Single(m => m.Type == "scope").Value);
-            Assert.Equal("Test user", accessToken.Claims.Single(m => m.Type == "sub").Value);
-            Assert.Equal("https://localhost", accessToken.Claims.Single(m => m.Type == "iss").Value);
-            Assert.Equal("OutbackAS", accessToken.Claims.Single(m => m.Type == "aud").Value);
-            Assert.Single(accessToken.Claims, m => m.Type == "exp");
-            Assert.Single(accessToken.Claims, m => m.Type == "nbf");
-            Assert.Single(accessToken.Claims, m => m.Type == "iat");
+            Assert.Equal("PKCEWebClientId", accessToken.Claims.Single(m => m.Key == "client_id").Value);
+            Assert.Equal("openid", accessToken.Claims.Single(m => m.Key == "scope").Value);
+            Assert.Equal("Test user", accessToken.Claims.Single(m => m.Key == "sub").Value);
+            Assert.Equal("https://localhost", accessToken.Claims.Single(m => m.Key == "iss").Value);
+            var audienceClaim = accessToken.Claims.Single(m => m.Key == "aud");
+            Assert.Contains((List<object>)audienceClaim.Value, m => m as string == "OutbackAS");
+            Assert.Contains((List<object>)audienceClaim.Value, m => m as string == "MessagingServer");
+            Assert.Single(accessToken.Claims, m => m.Key == "exp");
+            Assert.Single(accessToken.Claims, m => m.Key == "nbf");
+            Assert.Single(accessToken.Claims, m => m.Key == "iat");
 
             Assert.Equal(6, identityToken.Claims.Count());
-            Assert.Equal("Test user", identityToken.Claims.Single(m => m.Type == "sub").Value);
-            Assert.Equal("https://localhost", identityToken.Claims.Single(m => m.Type == "iss").Value);
-            Assert.Equal("PKCEWebClientId", identityToken.Claims.Single(m => m.Type == "aud").Value);
-            Assert.Single(identityToken.Claims, m => m.Type == "exp");
-            Assert.Single(identityToken.Claims, m => m.Type == "nbf");
-            Assert.Single(identityToken.Claims, m => m.Type == "iat");
+            Assert.Equal("Test user", identityToken.Claims.Single(m => m.Key == "sub").Value);
+            Assert.Equal("https://localhost", identityToken.Claims.Single(m => m.Key == "iss").Value);
+            Assert.Equal("PKCEWebClientId", identityToken.Claims.Single(m => m.Key == "aud").Value);
+            Assert.Single(identityToken.Claims, m => m.Key == "exp");
+            Assert.Single(identityToken.Claims, m => m.Key == "nbf");
+            Assert.Single(identityToken.Claims, m => m.Key == "iat");
         }
 
         private static async Task<AccessTokenResponse?> GetTokenResponse(HttpClient client, string codeVerifier, string code)

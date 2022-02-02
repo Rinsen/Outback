@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -100,7 +98,7 @@ internal class TokenService : ITokenService
 
     private async Task<string> CreateAccessToken(Client client, string scope, string subjectId, string issuer, JsonWebTokenHandler tokenHandler, SecurityKeyWithAlgorithm key)
     {
-        var audience = await GetAudience(client);
+        var audiences = await GetAudience(client);
 
         var accessTokenDescriptor = new SecurityTokenDescriptor
         {
@@ -109,7 +107,6 @@ internal class TokenService : ITokenService
             Expires = DateTime.UtcNow.AddSeconds(client.IdentityTokenLifetime),
             Issuer = issuer,
             IssuedAt = DateTime.UtcNow,
-            Audience = audience,
             SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
         };
 
@@ -119,6 +116,11 @@ internal class TokenService : ITokenService
                 { StandardClaims.Scope, scope },
                 { StandardClaims.Subject, subjectId }
             };
+
+        if (audiences.Any())
+        {
+            accessTokenDescriptor.Claims.Add(StandardClaims.Audience, audiences);
+        }
 
         return tokenHandler.CreateToken(accessTokenDescriptor);
     }
@@ -181,7 +183,7 @@ internal class TokenService : ITokenService
         var tokenHandler = new JsonWebTokenHandler();
         var key = await _tokenSigningAccessor.GetSigningSecurityKey();
 
-        var audience = await GetAudience(client);
+        var audiences = await GetAudience(client);
 
         var accessTokenDescriptor = new SecurityTokenDescriptor
         {
@@ -193,7 +195,7 @@ internal class TokenService : ITokenService
             Expires = DateTime.UtcNow.AddSeconds(client.IdentityTokenLifetime),
             Issuer = issuer,
             IssuedAt = DateTime.UtcNow,
-            Audience = audience,
+            Audience = audiences[0],
             SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
         };
 
@@ -202,6 +204,11 @@ internal class TokenService : ITokenService
                 { StandardClaims.ClientIdentifier, client.ClientId },
                 { StandardClaims.Scope, string.Join(' ', client.Scopes) }
             };
+
+        if (audiences.Any())
+        {
+            accessTokenDescriptor.Claims.Add(StandardClaims.Audience, audiences);
+        }
 
         var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);
         
@@ -213,25 +220,11 @@ internal class TokenService : ITokenService
         };
     }
 
-    private async Task<string> GetAudience(Client client)
+    private async Task<IReadOnlyList<string>> GetAudience(Client client)
     {
         var scopes = await _scopeAccessor.GetScopesAsync(client.Scopes);
 
-        var audiences = scopes.Select(m => m.Audience).Distinct().ToList();
-
-        if (!audiences.Any())
-        {
-            return "[]";
-        }
-
-        if (audiences.Count == 1)
-        {
-            return audiences[0];
-        }
-
-        var audience = "[\"" + string.Join("\", \"", audiences) + "\"]";
-        
-        return audience;
+        return scopes.Select(m => m.Audience).Distinct().ToList();
     }
 
     public async Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, RefreshTokenGrant refreshTokenGrant, string refreshToken, string issuer)

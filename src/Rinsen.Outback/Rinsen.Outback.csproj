@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
       <RazorCompileOnBuild>true</RazorCompileOnBuild>
-      <Version>0.0.1</Version>
+      <Version>0.0.2</Version>
       <Title>Rinsen Outback</Title>
       <Description>OAuth 2.1 and OpenId Connect library</Description>
       <Copyright>© Fredrik Rinsén</Copyright>
@@ -15,8 +15,6 @@
       <RepositoryType>git</RepositoryType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.1" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.15.0" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="6.15.0" />
   </ItemGroup>
   <ItemGroup>

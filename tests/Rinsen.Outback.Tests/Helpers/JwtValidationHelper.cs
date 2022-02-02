@@ -13,7 +13,7 @@ namespace Rinsen.Outback.Tests.Helpers
 {
     internal class JwtValidationHelper
     {
-        public static async Task<JwtSecurityToken> ValidateToken(HttpClient client, string token, List<string> validAudiences, string validIssuer)
+        public static async Task<TokenValidationResult> ValidateToken(HttpClient client, string token, List<string> validAudiences, string validIssuer)
         {
             var key = await client.GetJsonWebKey();
             var securityKey = new JsonWebKey()
@@ -27,10 +27,7 @@ namespace Rinsen.Outback.Tests.Helpers
             };
 
             IdentityModelEventSource.ShowPII = true;
-            //JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
             var tokenHandler = new JsonWebTokenHandler();
-https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/blob/dev/src/Microsoft.IdentityModel.JsonWebTokens/JsonWebToken.cs
-            var a = tokenHandler.ReadToken(token);
             var tokenValidationResult = tokenHandler.ValidateToken(token, new TokenValidationParameters
             {
                 ValidAudiences = validAudiences,
@@ -41,11 +38,11 @@ https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-do
                 ValidateAudience = true,
                 ClockSkew = TimeSpan.Zero
             });
-
-            return (JwtSecurityToken)null;
+            
+            return tokenValidationResult;
         }
 
-        public static async Task<JwtSecurityToken> ValidateToken(HttpClient client, string token, string validAudience, string validIssuer)
+        public static async Task<TokenValidationResult> ValidateToken(HttpClient client, string token, string validAudience, string validIssuer)
         {
             var key = await client.GetJsonWebKey();
             var securityKey = new JsonWebKey()
@@ -59,21 +56,19 @@ https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-do
             };
 
             IdentityModelEventSource.ShowPII = true;
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+            var tokenHandler = new JsonWebTokenHandler();
+            var tokenValidationResult = tokenHandler.ValidateToken(token, new TokenValidationParameters
             {
                 ValidAudience = validAudience,
                 ValidIssuer = validIssuer,
                 ValidateIssuerSigningKey = true,
-
                 IssuerSigningKey = securityKey,
                 ValidateIssuer = true,
                 ValidateAudience = true,
                 ClockSkew = TimeSpan.Zero
-            }, out var securityToken);
+            });
 
-            return (JwtSecurityToken)securityToken;
+            return tokenValidationResult;
         }
     }
 }
