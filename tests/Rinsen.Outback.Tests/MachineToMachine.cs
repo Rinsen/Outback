@@ -85,6 +85,7 @@ namespace Rinsen.Outback.Tests
 
             Assert.Equal(100, tokenResponse.ExpiresIn);
             Assert.Equal("Bearer", tokenResponse.TokenType);
+            Assert.Contains(accessToken.Claims, m => m.Key == "extra_claim" && (string)m.Value == "with value");
         }
     }
 }

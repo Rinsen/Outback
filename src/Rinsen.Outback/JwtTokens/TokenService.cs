@@ -122,6 +122,14 @@ internal class TokenService : ITokenService
             accessTokenDescriptor.Claims.Add(StandardClaims.Audience, audiences);
         }
 
+        if (client.ClientClaims.Any())
+        {
+            foreach (var claim in client.ClientClaims)
+            {
+                accessTokenDescriptor.Claims.Add(claim.Type, claim.Value);
+            }
+        }
+
         return tokenHandler.CreateToken(accessTokenDescriptor);
     }
 
@@ -208,6 +216,14 @@ internal class TokenService : ITokenService
         if (audiences.Any())
         {
             accessTokenDescriptor.Claims.Add(StandardClaims.Audience, audiences);
+        }
+
+        if (client.ClientClaims.Any())
+        {
+            foreach (var claim in client.ClientClaims)
+            {
+                accessTokenDescriptor.Claims.Add(claim.Type, claim.Value);
+            }
         }
 
         var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);

@@ -14,13 +14,12 @@ namespace SampleServer.InMemoryAccessors
                     return Task.FromResult(new Client
                     {
                         AccessTokenLifetime = 100,
+                        ClientClaims = new List<ClientClaim> { new ClientClaim { Type = "extra_claim", Value = "with value" } },
                         ClientId = clientId,
                         ClientType = ClientType.Confidential,
-                        ClientClaims = new List<ClientClaim>(),
                         ConsentRequired = false,
                         IdentityTokenLifetime = 300,
                         IssueRefreshToken = false,
-                        PostLogoutRedirectUris = new List<string>(),
                         Secrets = new List<string>
                         {
                             HashHelper.GetSha256Hash("pwd")
@@ -40,12 +39,10 @@ namespace SampleServer.InMemoryAccessors
                         AccessTokenLifetime = 100,
                         ClientId = clientId,
                         ClientType = ClientType.Confidential,
-                        ClientClaims = new List<ClientClaim>(),
                         ConsentRequired = false,
                         IdentityTokenLifetime = 300,
                         IssueIdentityToken = true,
                         IssueRefreshToken = false,
-                        PostLogoutRedirectUris = new List<string>(),
                         LoginRedirectUris = new List<string> { "https://my.domain/signin-oidc" },
                         Secrets = new List<string>
                         {
