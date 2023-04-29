@@ -56,7 +56,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: src/Rinsen.Outback.App.Installation/Dockerfile
+          file: src/OutbackApp/Rinsen.Outback.App.Installation/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ghcr.io/rinsen/outbackappinstallation
           labels: ${{ steps.meta.outputs.labels }}
