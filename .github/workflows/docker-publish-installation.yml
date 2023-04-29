@@ -17,7 +17,7 @@ env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository }}Installation
 
 
 jobs:
@@ -58,5 +58,5 @@ jobs:
           context: .
           file: src/OutbackApp/Rinsen.Outback.App.Installation/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ghcr.io/rinsen/outbackappinstallation
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
