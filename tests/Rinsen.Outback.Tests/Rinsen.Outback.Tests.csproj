@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\sample\SampleServer\SampleServer.csproj" />
-    <ProjectReference Include="..\..\src\Rinsen.Outback\Rinsen.Outback.csproj" />
+    <ProjectReference Include="..\..\src\Outback\Rinsen.Outback\Rinsen.Outback.csproj" />
   </ItemGroup>
 
 </Project>

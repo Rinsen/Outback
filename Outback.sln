@@ -18,11 +18,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Todo.txt = Todo.txt
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rinsen.Outback", "src\Rinsen.Outback\Rinsen.Outback.csproj", "{17AEEB6D-3E92-4CF4-8D05-FEEAFA3AEB35}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleServer", "sample\SampleServer\SampleServer.csproj", "{32705B38-9225-4D49-9718-E14E384E8276}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rinsen.Outback.Tests", "tests\Rinsen.Outback.Tests\Rinsen.Outback.Tests.csproj", "{AA9E31CE-6D76-4D07-8429-F5E80E198323}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rinsen.Outback", "src\Outback\Rinsen.Outback\Rinsen.Outback.csproj", "{98496E6A-F699-47F3-BBBD-AD0ACCF956D0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Outback", "Outback", "{AD846596-BE77-4E25-8048-1B871FDBBC34}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OutbackApp", "OutbackApp", "{CF887350-04E4-4C4C-8DE5-65A12EB02413}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rinsen.IdentityProvider", "src\OutbackApp\Rinsen.IdentityProvider\Rinsen.IdentityProvider.csproj", "{7E564D12-DB89-490F-8539-8471C7964785}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rinsen.Outback.App", "src\OutbackApp\Rinsen.Outback.App\Rinsen.Outback.App.csproj", "{D2602965-29BB-4DE7-A2DC-BFD4AD8F5235}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rinsen.Outback.App.Installation", "src\OutbackApp\Rinsen.Outback.App.Installation\Rinsen.Outback.App.Installation.csproj", "{9FF6AF1F-B608-4006-8F6E-5751663677DD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rinsen.IdentityProvider.Tests", "tests\Rinsen.IdentityProvider.Tests\Rinsen.IdentityProvider.Tests.csproj", "{9A33E969-571A-42CD-9D76-D29EB8B907F1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,10 +42,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{17AEEB6D-3E92-4CF4-8D05-FEEAFA3AEB35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{17AEEB6D-3E92-4CF4-8D05-FEEAFA3AEB35}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{17AEEB6D-3E92-4CF4-8D05-FEEAFA3AEB35}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{17AEEB6D-3E92-4CF4-8D05-FEEAFA3AEB35}.Release|Any CPU.Build.0 = Release|Any CPU
 		{32705B38-9225-4D49-9718-E14E384E8276}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{32705B38-9225-4D49-9718-E14E384E8276}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32705B38-9225-4D49-9718-E14E384E8276}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -42,14 +50,40 @@ Global
 		{AA9E31CE-6D76-4D07-8429-F5E80E198323}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA9E31CE-6D76-4D07-8429-F5E80E198323}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA9E31CE-6D76-4D07-8429-F5E80E198323}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98496E6A-F699-47F3-BBBD-AD0ACCF956D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98496E6A-F699-47F3-BBBD-AD0ACCF956D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98496E6A-F699-47F3-BBBD-AD0ACCF956D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98496E6A-F699-47F3-BBBD-AD0ACCF956D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E564D12-DB89-490F-8539-8471C7964785}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E564D12-DB89-490F-8539-8471C7964785}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E564D12-DB89-490F-8539-8471C7964785}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E564D12-DB89-490F-8539-8471C7964785}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2602965-29BB-4DE7-A2DC-BFD4AD8F5235}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2602965-29BB-4DE7-A2DC-BFD4AD8F5235}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2602965-29BB-4DE7-A2DC-BFD4AD8F5235}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2602965-29BB-4DE7-A2DC-BFD4AD8F5235}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FF6AF1F-B608-4006-8F6E-5751663677DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FF6AF1F-B608-4006-8F6E-5751663677DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FF6AF1F-B608-4006-8F6E-5751663677DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FF6AF1F-B608-4006-8F6E-5751663677DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A33E969-571A-42CD-9D76-D29EB8B907F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A33E969-571A-42CD-9D76-D29EB8B907F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A33E969-571A-42CD-9D76-D29EB8B907F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A33E969-571A-42CD-9D76-D29EB8B907F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{17AEEB6D-3E92-4CF4-8D05-FEEAFA3AEB35} = {7DEA85E7-1A8C-4CD8-851C-93DA06876478}
 		{32705B38-9225-4D49-9718-E14E384E8276} = {F783FC19-6629-4B4C-B319-6F52963522BB}
 		{AA9E31CE-6D76-4D07-8429-F5E80E198323} = {2A179564-1E28-4918-BE16-494C31BFD9F2}
+		{98496E6A-F699-47F3-BBBD-AD0ACCF956D0} = {AD846596-BE77-4E25-8048-1B871FDBBC34}
+		{AD846596-BE77-4E25-8048-1B871FDBBC34} = {7DEA85E7-1A8C-4CD8-851C-93DA06876478}
+		{CF887350-04E4-4C4C-8DE5-65A12EB02413} = {7DEA85E7-1A8C-4CD8-851C-93DA06876478}
+		{7E564D12-DB89-490F-8539-8471C7964785} = {CF887350-04E4-4C4C-8DE5-65A12EB02413}
+		{D2602965-29BB-4DE7-A2DC-BFD4AD8F5235} = {CF887350-04E4-4C4C-8DE5-65A12EB02413}
+		{9FF6AF1F-B608-4006-8F6E-5751663677DD} = {CF887350-04E4-4C4C-8DE5-65A12EB02413}
+		{9A33E969-571A-42CD-9D76-D29EB8B907F1} = {2A179564-1E28-4918-BE16-494C31BFD9F2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E647C73B-6B19-4B4F-97EC-8D3ECE787B91}

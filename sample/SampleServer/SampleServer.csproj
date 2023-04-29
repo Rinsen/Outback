@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Rinsen.Outback\Rinsen.Outback.csproj" />
+    <ProjectReference Include="..\..\src\Outback\Rinsen.Outback\Rinsen.Outback.csproj" />
   </ItemGroup>
 
 </Project>
