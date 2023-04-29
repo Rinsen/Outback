@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using OtpNet;
+using Rinsen.IdentityProvider.Exceptions;
 using System;
 using System.Linq;
 using System.Security.Cryptography;
@@ -142,7 +143,7 @@ public class LocalAccountService : ILocalAccountService
 
         await _localAccountStorage.UpdateFailedLoginCountAsync(localAccount);
 
-        throw new UnauthorizedAccessException("Invalid password");
+        throw new InvalidPasswordException("Invalid password");
     }
 
     public Task<LocalAccount> GetLocalAccountAsync(Guid identityId)

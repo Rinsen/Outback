@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using OtpNet;
+using Rinsen.IdentityProvider.Exceptions;
 using Rinsen.IdentityProvider.LocalAccounts;
 using Rinsen.Outback.Claims;
 using System;
@@ -50,20 +51,21 @@ public class LoginService : ILoginService
         {
             localAccount = await _localAccountService.GetLocalAccountAsync(email, password);
         }
-        catch (UnauthorizedAccessException e)
+        catch (InvalidPasswordException e)
         {
-            _log.LogWarning(e, $"Login failed for email {email}", email);
+            _log.LogWarning(e, "Login failed for email {email}", email);
+
+            return LoginResult.Failure();
+        }
+        catch (AccountNotFoundException e)
+        {
+            _log.LogWarning(e, "Login failed for email {email}", email);
 
             return LoginResult.Failure();
         }
 
-        if (localAccount == null)
-        {
-            return LoginResult.Failure();
-        }
-
-        if (localAccount.TwoFactorAppNotificationEnabled is not null || localAccount.TwoFactorEmailEnabled is not null
-            || localAccount.TwoFactorSmsEnabled is not null || localAccount.TwoFactorTotpEnabled is not null)
+        if (localAccount is not null && (localAccount.TwoFactorAppNotificationEnabled is not null || localAccount.TwoFactorEmailEnabled is not null
+            || localAccount.TwoFactorSmsEnabled is not null || localAccount.TwoFactorTotpEnabled is not null))
         {
             string keyCode = string.Empty;
             if (localAccount.TwoFactorEmailEnabled is object || localAccount.TwoFactorSmsEnabled is object)
@@ -86,6 +88,11 @@ public class LoginService : ILoginService
             return LoginResult.RequireTwoFactor(twoFactorAuthenticationSession.SessionId, localAccount.TwoFactorEmailEnabled is object, localAccount.TwoFactorSmsEnabled is object, localAccount.TwoFactorTotpEnabled is object, localAccount.TwoFactorAppNotificationEnabled is object);
         }
 
+        if (localAccount is null)
+        {
+            return LoginResult.Failure();
+        }
+
         return await PrivateLogin(host, rememberMe, localAccount);
     }
 
@@ -101,7 +108,7 @@ public class LoginService : ILoginService
         }
         else
         {
-            throw new Exception("Two factor auth session not found");
+            throw new TwoFactorAuthSessionNotFoundException("Two factor auth session not found");
         }
     }
 
@@ -112,7 +119,7 @@ public class LoginService : ILoginService
 
         if (localAccount.TwoFactorTotpEnabled is null || localAccount.SharedTotpSecret is null)
         {
-            throw new Exception("Totp is not enabled for this local account");
+            throw new TotpIsNotEnabledForThisAccountException("Totp is not enabled for this local account");
         }
 
         var totp = new Totp(localAccount.SharedTotpSecret);
@@ -125,7 +132,7 @@ public class LoginService : ILoginService
             return loginResult;
         }
 
-        throw new Exception("Totp key not valid");
+        throw new TotpKeyNotValidException("Totp key not valid");
     }
 
     private async Task<LoginResult> PrivateLogin(string host, bool rememberMe, LocalAccount localAccount)

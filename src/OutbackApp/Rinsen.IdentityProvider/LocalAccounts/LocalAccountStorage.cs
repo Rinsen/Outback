@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Data.SqlClient;
 using System.Threading.Tasks;
+using Rinsen.IdentityProvider.Exceptions;
 
 namespace Rinsen.IdentityProvider.LocalAccounts;
 
@@ -210,7 +211,7 @@ public class LocalAccountStorage : ILocalAccountStorage
             return MapLocalAccountFromReader(reader);
         }
 
-        throw new Exception($"Identity {identityId} not found");
+        throw new AccountNotFoundException($"Identity {identityId} not found");
     }
 
     private static LocalAccount MapLocalAccountFromReader(SqlDataReader reader)
