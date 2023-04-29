@@ -7,8 +7,8 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["src/OutbackApp/Rinsen.Outback.App/Rinsen.Outback.App.csproj", "src/Rinsen.Outback.App/"]
-COPY ["src/OutbackApp/Rinsen.IdentityProvider/Rinsen.IdentityProvider.csproj", "src/Rinsen.IdentityProvider/"]
+COPY ["src/OutbackApp/Rinsen.Outback.App/Rinsen.Outback.App.csproj", "src/OutbackApp/Rinsen.Outback.App/"]
+COPY ["src/OutbackApp/Rinsen.IdentityProvider/Rinsen.IdentityProvider.csproj", "src/OutbackApp/Rinsen.IdentityProvider/"]
 RUN dotnet restore "src/OutbackApp/Rinsen.Outback.App/Rinsen.Outback.App.csproj"
 COPY . .
 WORKDIR "/src/src/OutbackApp/Rinsen.Outback.App"
