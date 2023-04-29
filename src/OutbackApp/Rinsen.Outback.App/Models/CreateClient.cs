@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Rinsen.Outback.Clients;
 
-namespace Rinsen.Outback.Gui.Models;
+namespace Rinsen.Outback.App.Models;
 
 public class CreateClient
 {

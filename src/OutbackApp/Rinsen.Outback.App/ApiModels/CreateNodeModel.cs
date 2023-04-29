@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Rinsen.Outback.Gui.ApiModels;
+namespace Rinsen.Outback.App.ApiModels;
 
 public class CreateNodeModel
 {

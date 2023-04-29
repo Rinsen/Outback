@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Rinsen.IdentityProvider.Outback;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace Rinsen.Outback.Gui.ApiControllers;
+namespace Rinsen.Outback.App.ApiControllers;
 
 [ApiController]
 [Route("api/[controller]")]

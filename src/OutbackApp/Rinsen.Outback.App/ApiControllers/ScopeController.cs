@@ -4,12 +4,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rinsen.IdentityProvider.Outback;
 using Rinsen.IdentityProvider.Outback.Entities;
-using Rinsen.Outback.Gui.ApiModels;
+using Rinsen.Outback.App.ApiModels;
 using Swashbuckle.AspNetCore.Annotations;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace Rinsen.Outback.Gui.ApiControllers;
+namespace Rinsen.Outback.App.ApiControllers;
 
 [Route("Outback/api/[controller]")]
 [Authorize(Policy = "AdminsOnly")]

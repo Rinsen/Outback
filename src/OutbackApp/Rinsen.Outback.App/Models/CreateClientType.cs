@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Rinsen.Outback.Gui.Models;
+namespace Rinsen.Outback.App.Models;
 
 public class CreateClientType
 {

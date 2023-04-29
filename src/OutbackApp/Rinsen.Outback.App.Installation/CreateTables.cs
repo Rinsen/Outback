@@ -6,7 +6,7 @@ using Rinsen.IdentityProvider.LocalAccounts;
 using Rinsen.IdentityProvider.Settings;
 using System.Collections.Generic;
 
-namespace Rinsen.Outback.Gui.Installation;
+namespace Rinsen.Outback.App.Installation;
 
 public class CreateTables : DatabaseVersion
 {

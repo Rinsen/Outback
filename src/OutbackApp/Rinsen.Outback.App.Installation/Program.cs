@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Rinsen.DatabaseInstaller;
 
-namespace Rinsen.Outback.Gui.Installation;
+namespace Rinsen.Outback.App.Installation;
 
 class Program
 {

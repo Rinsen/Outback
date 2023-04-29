@@ -7,17 +7,17 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["src/Rinsen.Outback.Gui/Rinsen.Outback.Gui.csproj", "src/Rinsen.Outback.Gui/"]
-COPY ["src/Rinsen.IdentityProvider/Rinsen.IdentityProvider.csproj", "src/Rinsen.IdentityProvider/"]
-RUN dotnet restore "src/Rinsen.Outback.Gui/Rinsen.Outback.Gui.csproj"
+COPY ["src/OutbackApp/Rinsen.Outback.App/Rinsen.Outback.App.csproj", "src/Rinsen.Outback.App/"]
+COPY ["src/OutbackApp/Rinsen.IdentityProvider/Rinsen.IdentityProvider.csproj", "src/Rinsen.IdentityProvider/"]
+RUN dotnet restore "src/OutbackApp/Rinsen.Outback.App/Rinsen.Outback.App.csproj"
 COPY . .
-WORKDIR "/src/src/Rinsen.Outback.Gui"
-RUN dotnet build "Rinsen.Outback.Gui.csproj" -c Release -o /app
+WORKDIR "/src/src/OutbackApp/Rinsen.Outback.App"
+RUN dotnet build "Rinsen.Outback.App.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Rinsen.Outback.Gui.csproj" -c Release -o /app
+RUN dotnet publish "Rinsen.Outback.App.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app .
-ENTRYPOINT ["dotnet", "Rinsen.Outback.Gui.dll"]
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Rinsen.Outback.App.dll"]

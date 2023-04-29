@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Rinsen.Outback.Gui.Models;
+namespace Rinsen.Outback.App.Models;
 
 public class LoggerModel
 {

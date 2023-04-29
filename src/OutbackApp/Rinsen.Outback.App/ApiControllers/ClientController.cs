@@ -7,10 +7,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rinsen.IdentityProvider.Outback;
 using Rinsen.IdentityProvider.Outback.Entities;
-using Rinsen.Outback.Gui.Models;
+using Rinsen.Outback.App.Models;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace Rinsen.Outback.Gui.ApiControllers;
+namespace Rinsen.Outback.App.ApiControllers;
 
 [ApiController]
 [Route("Outback/api/[controller]")]

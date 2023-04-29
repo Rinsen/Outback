@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Rinsen.Outback.Gui;
+namespace Rinsen.Outback.App;
 
 public class Program
 {

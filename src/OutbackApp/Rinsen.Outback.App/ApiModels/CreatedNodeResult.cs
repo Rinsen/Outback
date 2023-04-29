@@ -1,4 +1,4 @@
-﻿namespace Rinsen.Outback.Gui.ApiModels;
+﻿namespace Rinsen.Outback.App.ApiModels;
 
 public class CreatedNodeResult
 {

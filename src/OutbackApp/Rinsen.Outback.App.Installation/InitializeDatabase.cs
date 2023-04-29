@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Rinsen.DatabaseInstaller;
 
-namespace Rinsen.Outback.Gui.Installation;
+namespace Rinsen.Outback.App.Installation;
 
 public class InitializeDatabase : DatabaseVersion
 {

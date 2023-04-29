@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Rinsen.IdentityProvider;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace Rinsen.Outback.Gui.ApiControllers;
+namespace Rinsen.Outback.App.ApiControllers;
 
 [ApiController]
 [Route("Outback/api/[controller]")]

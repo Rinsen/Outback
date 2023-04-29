@@ -17,11 +17,9 @@ using Microsoft.AspNetCore.DataProtection;
 using Rinsen.IdentityProvider.Configurations;
 using Microsoft.OpenApi.Models;
 using System;
-using NJsonSchema.Generation;
-using NJsonSchema;
 using System.IdentityModel.Tokens.Jwt;
 
-namespace Rinsen.Outback.Gui;
+namespace Rinsen.Outback.App;
 
 public class Startup
 {

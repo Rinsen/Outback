@@ -7,7 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Rinsen.IdentityProvider;
 using Rinsen.Outback.Claims;
 
-namespace Rinsen.Outback.Gui.Controllers;
+namespace Rinsen.Outback.App.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

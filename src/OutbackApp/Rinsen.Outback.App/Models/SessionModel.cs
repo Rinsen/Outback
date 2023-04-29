@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Rinsen.Outback.Gui.Models;
+namespace Rinsen.Outback.App.Models;
 
 public class SessionModel
 {

@@ -2,7 +2,7 @@
 using Rinsen.DatabaseInstaller;
 using Rinsen.IdentityProvider.Outback.Entities;
 
-namespace Rinsen.Outback.Gui.Installation;
+namespace Rinsen.Outback.App.Installation;
 
 public class OutbackTableInstallation : DatabaseVersion
 {

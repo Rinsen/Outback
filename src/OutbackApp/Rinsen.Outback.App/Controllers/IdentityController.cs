@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Rinsen.IdentityProvider;
 using Rinsen.IdentityProvider.AuditLogging;
 using Rinsen.IdentityProvider.LocalAccounts;
-using Rinsen.Outback.Gui.Models;
+using Rinsen.Outback.App.Models;
 using Rinsen.Outback.Claims;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using UAParser;
 
-namespace Rinsen.Outback.Gui.Controllers;
+namespace Rinsen.Outback.App.Controllers;
 
 public class IdentityController : Controller
 {

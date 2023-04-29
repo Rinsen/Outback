@@ -3,9 +3,9 @@
 //using Microsoft.AspNetCore.Authorization;
 //using Microsoft.AspNetCore.Mvc;
 //using Rinsen.IdentityProvider;
-//using Rinsen.Outback.Gui.ApiModels;
+//using Rinsen.Outback.Api.ApiModels;
 
-//namespace Rinsen.Outback.Gui.ApiControllers
+//namespace Rinsen.Outback.Api.ApiControllers
 //{
 //    [ApiController]
 //    [Authorize(AuthenticationSchemes = "Bearer", Policy = "CreateNode")]
