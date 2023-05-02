@@ -1,0 +1,72 @@
+<div class="mat-elevation-z8 client-list-container">
+  <div *ngIf="createClientOpen">
+    <h2>Create new client</h2>
+    <form class="create-client-form">
+      <mat-form-field class="example-full-width" appearance="fill">
+        <mat-label>Name</mat-label>
+        <input matInput placeholder="Name" [(ngModel)]="newClient.clientName" name="clientName">
+      </mat-form-field>
+      <mat-form-field class="example-full-width" appearance="fill">
+        <mat-label>Description</mat-label>
+        <input matInput placeholder="Description" [(ngModel)]="newClient.description" name="clientDescription">
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Client family</mat-label>
+        <mat-select [(value)]="newClient.familyId">
+          <mat-option *ngFor="let family of families" [value]="family.id">{{family.name}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Client type</mat-label>
+        <mat-select [(value)]="selectedClientType">
+          <mat-option value="confidential">Confidential</mat-option>
+          <mat-option value="credentialed">Credentialed</mat-option>
+          <mat-option value="public">Public</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </form>
+    <div class="button-row">
+      <button mat-raised-button color="primary" (click)="saveClient()">Save</button>
+      <button mat-raised-button (click)="cancelCreateClient()">Cancel</button>
+    </div>
+  </div>
+  <div class="button-row">
+    <button mat-raised-button color="primary" (click)="beginCreateClient()">Create</button>
+    <button mat-raised-button>Delete</button>
+  </div>
+  <table mat-table class="full-width-table" matSort aria-label="Elements">
+    <!-- Id Column -->
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Id</th>
+      <td mat-cell *matCellDef="let row">{{row.id}}</td>
+    </ng-container>
+
+    <!-- Name Column -->
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+      <td mat-cell *matCellDef="let row">{{row.name}}</td>
+    </ng-container>
+
+    <!-- Description Column -->
+    <ng-container matColumnDef="description">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Description</th>
+      <td mat-cell *matCellDef="let row">{{row.description}}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="rowClicked(row)" class="client-list-row"></tr>
+  </table>
+  <div class="spinner-container" *ngIf="dataSource.loading$ | async">
+    <mat-spinner></mat-spinner>
+  </div>
+  <mat-paginator #paginator
+      [length]="dataSource?.data?.length"
+      [pageIndex]="0"
+      [pageSize]="100"
+      [pageSizeOptions]="[50, 100, 200]">
+  </mat-paginator>
+
+</div>
+
+
+

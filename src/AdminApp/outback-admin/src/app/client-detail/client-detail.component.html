@@ -1,0 +1,162 @@
+<div class="edit-client-container">
+  <div *ngIf="client.id !== 0">
+        <h1>Edit {{client.name}}</h1>
+        <button mat-raised-button color="primary" (click)="onSaveClient()">Save</button>
+                
+        <div class="form-container">
+          <p>
+            <mat-form-field appearance="fill">
+              <mat-label>Name</mat-label>
+              <input matInput [(ngModel)]="client.name">
+            </mat-form-field>
+          </p>
+          <p>
+            <mat-form-field appearance="fill">
+              <mat-label>Description</mat-label>
+              <input matInput [(ngModel)]="client.description">
+            </mat-form-field>
+          </p>
+          <p>
+            Client id {{client.clientId}}
+          </p>
+          <p>
+            <mat-slide-toggle [(ngModel)]="client.active">Is active</mat-slide-toggle>
+          </p>
+          <p>
+            <label id="clien-type-radio-group-label">Client type</label>
+            <mat-radio-group
+              aria-labelledby="clien-type-radio-group-label"
+              class="clien-type-radio-group"
+              [(ngModel)]="client.clientType">
+              <mat-radio-button [value]="0" class="clien-type-radio-button">
+                Confidential
+              </mat-radio-button>
+              <mat-radio-button [value]="2" class="clien-type-radio-button">
+                Public
+              </mat-radio-button>
+              <mat-radio-button [value]="1" class="clien-type-radio-button">
+                Credentialed
+              </mat-radio-button>
+            </mat-radio-group>
+          </p>
+          <p>
+            <mat-slide-toggle [(ngModel)]="client.consentRequired">Consent required</mat-slide-toggle>
+          </p>
+          <p>
+            <mat-slide-toggle [(ngModel)]="client.saveConsent">Save consent</mat-slide-toggle>
+          </p>
+          <p>
+            <mat-slide-toggle [(ngModel)]="client.addUserInfoClaimsInIdentityToken">Add user info claims in IdentityToken</mat-slide-toggle>
+          </p>
+          <p>
+            <mat-slide-toggle [(ngModel)]="client.issueIdentityToken">Issue IdentityToken</mat-slide-toggle>
+          </p>
+          <p>
+            <mat-slide-toggle [(ngModel)]="client.issueRefreshToken">Issue RefreshToken</mat-slide-toggle>
+          </p>
+          <p>
+            <mat-form-field appearance="fill">
+              <mat-label>Saved consent lifetime</mat-label>
+              <input matInput [(ngModel)]="client.savedConsentLifetime">
+            </mat-form-field>
+          </p>
+          <p>
+            <mat-form-field appearance="fill">
+              <mat-label>RefreshToken lifetime</mat-label>
+              <input matInput [(ngModel)]="client.refreshTokenLifetime">
+            </mat-form-field>
+          </p>
+          <p>
+            <mat-form-field appearance="fill">
+              <mat-label>AccessToken lifetime</mat-label>
+              <input matInput [(ngModel)]="client.accessTokenLifetime">
+            </mat-form-field>
+          </p>
+          <p>
+            <mat-form-field appearance="fill">
+              <mat-label>IdentityToken lifetime</mat-label>
+              <input matInput [(ngModel)]="client.identityTokenLifetime">
+            </mat-form-field>
+          </p>
+          <p>
+            <mat-form-field appearance="fill">
+              <mat-label>AuthorityCode lifetime</mat-label>
+              <input matInput [(ngModel)]="client.authorityCodeLifetime">
+            </mat-form-field>
+          </p>
+          <mat-divider></mat-divider>
+          <h2>Redirect uris</h2>
+          <table style="width: 5em;">
+            <thead>
+              <tr>
+                <th>Url</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let uri of client.loginRedirectUris">
+                <td>
+                  <mat-form-field appearance="fill">
+                    <mat-label>Name</mat-label>
+                    <input matInput [(ngModel)]="uri.loginRedirectUri">
+                  </mat-form-field>
+                </td>
+                <td>
+                  <mat-form-field appearance="fill">
+                    <mat-label>Description</mat-label>
+                    <input matInput [(ngModel)]="uri.description">
+                  </mat-form-field>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p><button mat-raised-button color="primary" (click)="onAddLoginRedirectUri()">Add uri</button></p>
+        </div>
+        <mat-divider></mat-divider>
+        <h2>Scopes</h2>
+        <div>
+          <button mat-raised-button color="primary" *ngIf="!editScopesOpen" (click)="openEditScope()">Edit scopes</button>
+          <div *ngIf="editScopesOpen">
+            <button mat-raised-button color="primary" (click)="closeEditScope()">Close</button>
+            <table *ngIf="scopes.length !== 0">
+              <thead>
+                <tr>
+                  <th>Scope</th>
+                  <th>Description</th>
+                  <th>Add</th>
+                  <th>Remove</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let scope of scopes">
+                  <td>
+                    {{scope.displayName}}
+                  </td>
+                  <td>
+                    {{scope.description}}
+                  </td>
+                  <td>
+                    <button mat-raised-button (click)="addScopeToClient(scope.id)">Add</button>
+                  </td>
+                  <td>
+                    <button mat-raised-button (click)="removeScopeToClient(scope.id)">Remove</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <table mat-table [dataSource]="dataSource">
+            <ng-container matColumnDef="scopeName">
+              <th mat-header-cell *matHeaderCellDef>Name</th>
+              <td mat-cell *matCellDef="let row">{{row.scope.displayName}}</td>
+            </ng-container>
+            <ng-container matColumnDef="scopeDescription">
+              <th mat-header-cell *matHeaderCellDef>Description</th>
+              <td mat-cell *matCellDef="let row">{{row.scope.description}}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+  </div>
+</div>

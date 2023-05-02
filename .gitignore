@@ -292,4 +292,4 @@ __pycache__/
 tempkey.rsa
 /src/Rinsen.InnovationBoost/package-lock.json
 *.development.json
-/angular/rinsen-innovationboost-admin/.angular/cache
+.angular/

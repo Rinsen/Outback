@@ -1,0 +1,30 @@
+.form-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.clien-type-radio-group {
+  display: flex;
+  flex-direction: row;
+  margin: 15px 0;
+}
+
+.clien-type-radio-button {
+  margin: 5px;
+}
+
+.edit-client-container {
+  padding:20px 50px
+}
+@media (max-width: 599px)
+{
+  .edit-client-container
+  {
+    padding-left:15px;
+    padding-right:15px
+  }
+}
+
+table {
+  width: 100%;
+}

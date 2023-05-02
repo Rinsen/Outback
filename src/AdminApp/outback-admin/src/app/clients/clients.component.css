@@ -1,0 +1,34 @@
+.full-width-table {
+  width: 100%;
+}
+
+.client-list-container {
+  padding:20px 30px
+}
+
+.client-list-row {
+  cursor: pointer;
+}
+
+.button-row {
+  display: table-cell;
+  width: 490px;
+  padding: 0 8px 8px;
+}
+
+.button-row .mat-button-base {
+  margin: 8px 8px 8px 0;
+}
+
+@media (max-width: 599px)
+{
+  .client-list-container
+  {
+    padding-left:15px;
+    padding-right:15px
+  }
+}
+
+.mat-form-field {
+  padding-right: 8px;
+}
