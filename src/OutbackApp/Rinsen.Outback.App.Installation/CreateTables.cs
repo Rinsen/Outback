@@ -11,7 +11,7 @@ namespace Rinsen.Outback.App.Installation;
 public class CreateTables : DatabaseVersion
 {
     public CreateTables()
-    : base(2)
+    : base(1)
     { }
 
     public override void AddDbChanges(List<IDbChange> dbChangeList)
