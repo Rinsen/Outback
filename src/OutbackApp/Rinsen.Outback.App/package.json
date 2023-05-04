@@ -4,7 +4,7 @@
   "private": true,
   "devDependencies": {},
   "dependencies": {
-    "bootstrap": "4.6.2",
+    "bootstrap": "5.2.3",
     "bootstrap-icons": "1.10.5",
     "jquery": "3.6.4",
     "jquery-validation": "1.19.5"
