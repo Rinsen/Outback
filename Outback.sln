@@ -36,13 +36,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rinsen.Outback.App.Installa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rinsen.IdentityProvider.Tests", "tests\Rinsen.IdentityProvider.Tests\Rinsen.IdentityProvider.Tests.csproj", "{9A33E969-571A-42CD-9D76-D29EB8B907F1}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{ABC400F5-1CCA-4641-88C7-05AE1154F562}"
-	ProjectSection(SolutionItems) = preProject
-		.github\workflows\docker-publish-installation.yml = .github\workflows\docker-publish-installation.yml
-		.github\workflows\docker-publish.yml = .github\workflows\docker-publish.yml
-		.github\workflows\ng-docker-publish.yml = .github\workflows\ng-docker-publish.yml
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
