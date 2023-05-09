@@ -9,6 +9,7 @@ using Rinsen.Outback.JwtTokens;
 using Rinsen.Outback.Models;
 using System;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Rinsen.Outback.Controllers;
@@ -166,11 +167,17 @@ public class ConnectController : Controller
                 "authorization_code" => await GetTokenForAuthorizationCodeGrantAsync(model, client),
                 "client_credentials" => await GetTokenForClientCredentialsGrantAsync(client),
                 "refresh_token" => await GetTokenForRefreshTokenGrantAsync(model, client),
+                "urn:ietf:params:oauth:grant-type:device_code" => await GetTokenForDeviceAuthorizationGrant(model, client),
                 _ => BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant })
             };
         }
 
         return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+    }
+
+    private async Task<IActionResult> GetTokenForDeviceAuthorizationGrant(TokenModel model, Client client)
+    {
+        throw new NotImplementedException();
     }
 
     private async Task<IActionResult> GetTokenForClientCredentialsGrantAsync(Client client)

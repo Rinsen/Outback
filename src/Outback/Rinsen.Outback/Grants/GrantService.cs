@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -154,5 +156,53 @@ internal class GrantService : IGrantService
         await _grantAccessor.SaveRefreshTokenGrantAsync(newRefreshTokenGrant);
 
         return refreshToken;
+    }
+
+    public async Task<DeviceAuthorizationGrant> GetDeviceAuthorizationGrantAsync(Client client)
+    {
+        var deviceCode = _randomStringGenerator.GetRandomString(40);
+        var userCode = GetUserCode(12);
+
+        var deviceAuthorizationGrant = new DeviceAuthorizationGrant
+        {
+            ClientId = client.ClientId,
+            DeviceCode = deviceCode,
+            Interval = 5,
+            SubjectId = null,
+            UserCode = userCode,
+            UserCodeExpiration = DateTimeOffset.UtcNow.AddSeconds(client.DeviceCodeUserCompletionLifetime)
+        };
+
+        await _grantAccessor.SaveDeviceAuthorizationGrantAsync(deviceAuthorizationGrant);
+
+        return deviceAuthorizationGrant;
+    }
+
+    private string GetUserCode(int length)
+    {
+        const string sourceString = "BCDFGHJKLMNPQRSTVWXZ";
+
+        byte[] randomBytes = new byte[length];
+
+        using var randomNumberGenerator = RandomNumberGenerator.Create();
+
+        randomNumberGenerator.GetBytes(randomBytes);
+
+        var result = new StringBuilder(length + 2); // Ewwww
+
+        var count = 0;
+        foreach (byte b in randomBytes)
+        {
+            if (count == 4 || count == 9) // Ewwww
+            {
+                result.Append('-');
+                count++;
+            }
+
+            result.Append(sourceString[b % sourceString.Length]);
+            count++;
+        }
+
+        return result.ToString();
     }
 }

@@ -6,7 +6,8 @@ namespace SampleServer.InMemoryAccessors
 {
     public class GrantAccessor : IGrantAccessor
     {
-        private readonly ConcurrentDictionary<string, CodeGrant> _persistedGrants = new ConcurrentDictionary<string, CodeGrant>();
+        private readonly ConcurrentDictionary<string, CodeGrant> _persistedGrants = new();
+        private readonly ConcurrentDictionary<string, DeviceAuthorizationGrant> _persistedDeviceAuthorizationGrant = new();
 
         public Task<CodeGrant> GetCodeGrantAsync(string code)
         {
@@ -18,6 +19,11 @@ namespace SampleServer.InMemoryAccessors
             }
 
             return Task.FromResult(codeGrant);
+        }
+
+        public Task<DeviceAuthorizationGrant> GetDeviceAuthorizationGrantAsync(string deviceCode)
+        {
+            throw new NotImplementedException();
         }
 
         public Task<PersistedGrant> GetPersistedGrantAsync(string clientId, string subjectId)
@@ -33,6 +39,13 @@ namespace SampleServer.InMemoryAccessors
         public Task SaveCodeGrantAsync(CodeGrant codeGrant)
         {
             _persistedGrants.TryAdd(codeGrant.Code, codeGrant);
+
+            return Task.CompletedTask;
+        }
+
+        public Task SaveDeviceAuthorizationGrantAsync(DeviceAuthorizationGrant deviceAuthorizationGrant)
+        {
+            _persistedDeviceAuthorizationGrant.TryAdd(deviceAuthorizationGrant.DeviceCode, deviceAuthorizationGrant);
 
             return Task.CompletedTask;
         }

@@ -1,4 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Data.Common;
+using System.Net;
+using System.Reflection.Metadata;
+using System.Runtime.Intrinsics.X86;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.VisualBasic;
+using Rinsen.Outback.Clients;
+using static System.Collections.Specialized.BitVector32;
 
 namespace Rinsen.Outback.Models;
 
@@ -89,5 +97,42 @@ public static class ErrorResponses
     /// malformed, or exceeds the scope granted by the resource owner.
     /// </summary>
     public const string InvalidScope = "invalid_scope";
+
+    /// <summary>
+    /// <para>Only for Device Authorization Grant (rfc8628)</para>
+    /// The authorization request is still pending as the end user hasn't
+    /// yet completed the user-interaction steps(Section 3.3).  The
+    /// client SHOULD repeat the access token request to the token
+    /// endpoint(a process known as polling).  Before each new request,
+    /// the client MUST wait at least the number of seconds specified by
+    /// the "interval" parameter of the device authorization response(see
+    /// Section 3.2), or 5 seconds if none was provided, and respect any
+    /// increase in the polling interval required by the "slow_down"
+    /// error.
+    /// </summary>
+    public const string AuthorizationPending = "authorization_pending";
+
+    /// <summary>
+    /// <para>Only for Device Authorization Grant (rfc8628)</para>
+    /// A variant of "authorization_pending", the authorization request is
+    /// still pending and polling should continue, but the interval MUST
+    /// be increased by 5 seconds for this and all subsequent requests.
+    /// </summary>
+    public const string SlowDown = "slow_down";
+
+    /// <summary>
+    /// <para>Only for Device Authorization Grant (rfc8628)</para>
+    /// The authorization request was denied.
+    /// </summary>
+    public const string AccessDenied = "access_denied";
+
+    /// <summary>
+    /// <para>Only for Device Authorization Grant (rfc8628)</para>
+    /// The "device_code" has expired, and the device authorization
+    /// session has concluded.The client MAY commence a new device
+    /// authorization request but SHOULD wait for user interaction before
+    /// restarting to avoid unnecessary polling.
+    /// </summary>
+    public const string ExpiredToken = "expired_token";
 
 }

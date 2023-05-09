@@ -14,9 +14,14 @@ public class OpenIdConfiguration
     [JsonPropertyName("authorization_endpoint")]
     public string AuthorizationEndpoint { get; set; } = string.Empty;
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    [JsonPropertyName("device_authorization_endpoint")]
+    public string DeviceAuthorizationEndpoint { get; set; } = string.Empty;
+
     [JsonPropertyName("token_endpoint")]
     public string TokenEndpoint { get; set; } = string.Empty;
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     [JsonPropertyName("end_session_endpoint")]
     public string EndSessionEndpoint { get; set; } = string.Empty;
 

@@ -36,7 +36,6 @@ internal class ClientService : IClientService
         switch (client.ClientType)
         {
             case ClientType.Confidential:
-            case ClientType.Credentialed:
                 if (string.IsNullOrEmpty(clientIdentity.Secret))
                 {
                     _logger.LogWarning("Secret is required for client {ClientId}", clientIdentity.ClientId);

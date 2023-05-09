@@ -51,6 +51,11 @@ public class GrantAccessor : IGrantAccessor
         };
     }
 
+    public Task<DeviceAuthorizationGrant> GetDeviceAuthorizationGrantAsync(string deviceCode)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<PersistedGrant> GetPersistedGrantAsync(string clientId, string subjectId)
     {
         var subjectIdGuid = Guid.Parse(subjectId);
@@ -129,6 +134,11 @@ public class GrantAccessor : IGrantAccessor
         await _outbackDbContext.CodeGrants.AddAsync(outbackCodeGrant);
 
         await _outbackDbContext.SaveChangesAsync();
+    }
+
+    public Task SaveDeviceAuthorizationGrantAsync(DeviceAuthorizationGrant deviceAuthorizationGrant)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task SavePersistedGrantAsync(PersistedGrant persistedGrant)

@@ -59,6 +59,30 @@ namespace SampleServer.InMemoryAccessors
                             "authorization_code"
                         }
                     });
+                case "DeviceAuthorizationClientId":
+                    return Task.FromResult(new Client
+                    {
+                        AccessTokenLifetime = 100,
+                        ClientId = clientId,
+                        ClientType = ClientType.Public,
+                        ConsentRequired = false,
+                        IdentityTokenLifetime = 300,
+                        IssueIdentityToken = true,
+                        IssueRefreshToken = false,
+                        LoginRedirectUris = new List<string>(),
+                        Secrets = new List<string>(),
+                        DeviceCodeUserCompletionLifetime = 100,
+                        Scopes = new List<string>
+                        {
+                            "openid",
+                            "profile",
+                            "messaging"
+                        },
+                        SupportedGrantTypes = new List<string>
+                        {
+                            "urn:ietf:params:oauth:grant-type:device_code"
+                        }
+                    });
                 default:
                     throw new Exception($"No client for client id '{clientId}' found");
             }
