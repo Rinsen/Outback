@@ -9,6 +9,8 @@ public interface ITokenService
 {
     Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, string issuer);
 
+    Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, DeviceAuthorizationGrant deviceAuthorizationGrant, string issuer);
+
     Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, CodeGrant persistedGrant, string issuer);
 
     Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, CodeGrant persistedGrant, string refreshToken, string issuer);

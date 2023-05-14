@@ -158,7 +158,7 @@ internal class GrantService : IGrantService
         return refreshToken;
     }
 
-    public async Task<DeviceAuthorizationGrant> GetDeviceAuthorizationGrantAsync(Client client)
+    public async Task<DeviceAuthorizationGrant> GetDeviceAuthorizationGrantAsync(Client client, string scope)
     {
         var deviceCode = _randomStringGenerator.GetRandomString(40);
         var userCode = GetUserCode(12);
@@ -169,6 +169,7 @@ internal class GrantService : IGrantService
             DeviceCode = deviceCode,
             Interval = 5,
             SubjectId = null,
+            Scope = scope,
             UserCode = userCode,
             UserCodeExpiration = DateTimeOffset.UtcNow.AddSeconds(client.DeviceCodeUserCompletionLifetime)
         };

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Clients;
 using Rinsen.Outback.Grants;
@@ -16,12 +18,15 @@ namespace Rinsen.Outback.Controllers
     {
         private readonly IClientAccessor _clientAccessor;
         private readonly IGrantService _grantService;
+        private readonly ILogger<DeviceAuthorizationController> _logger;
 
         public DeviceAuthorizationController(IClientAccessor clientAccessor,
-            IGrantService grantService)
+            IGrantService grantService,
+            ILogger<DeviceAuthorizationController> logger)
         {
             _clientAccessor = clientAccessor;
             _grantService = grantService;
+            _logger = logger;
         }
 
 
@@ -35,10 +40,28 @@ namespace Rinsen.Outback.Controllers
 
                 if (!client.SupportedGrantTypes.Any(g => g == "urn:ietf:params:oauth:grant-type:device_code"))
                 {
+                    _logger.LogWarning("Client {ClientId} does not support device authorization code grant", deviceAuthorizationModel.ClientId);
+
                     return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
                 }
 
-                var deviceAuthorizationGrantRequest = await _grantService.GetDeviceAuthorizationGrantAsync(client);
+                var scope = string.Empty;
+                if (string.IsNullOrEmpty(deviceAuthorizationModel.Scope))
+                {
+                    scope = string.Join(' ', client.Scopes);
+                }
+                else if (!ClientValidator.IsScopeValid(client, deviceAuthorizationModel.Scope))
+                {
+                    _logger.LogWarning("Client scopes {Scope} is not valid for client {ClientId}", deviceAuthorizationModel.Scope, client.ClientId);
+
+                    return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidScope });
+                }
+                else
+                {
+                    scope = deviceAuthorizationModel.Scope;
+                }
+
+                var deviceAuthorizationGrantRequest = await _grantService.GetDeviceAuthorizationGrantAsync(client, scope);
 
                 if (deviceAuthorizationGrantRequest == default)
                 {

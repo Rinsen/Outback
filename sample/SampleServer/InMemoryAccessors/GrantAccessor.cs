@@ -23,7 +23,14 @@ namespace SampleServer.InMemoryAccessors
 
         public Task<DeviceAuthorizationGrant> GetDeviceAuthorizationGrantAsync(string deviceCode)
         {
-            throw new NotImplementedException();
+            var deviceGrant = _persistedDeviceAuthorizationGrant.GetValueOrDefault(deviceCode);
+
+            if (deviceGrant == default)
+            {
+                throw new Exception("Device grant not found");
+            }
+
+            return Task.FromResult(deviceGrant);
         }
 
         public Task<PersistedGrant> GetPersistedGrantAsync(string clientId, string subjectId)

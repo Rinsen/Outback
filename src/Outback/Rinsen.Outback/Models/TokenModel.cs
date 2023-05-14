@@ -47,4 +47,10 @@ public class TokenModel
     /// </summary>
     [BindProperty(Name = "code_verifier")]
     public string CodeVerifier { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Binds from device_code in Device Access Token Request
+    /// </summary>
+    [BindProperty(Name = "device_code")]
+    public string DeviceCode { get; set; } = string.Empty;
 }

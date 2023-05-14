@@ -13,6 +13,6 @@ public interface IGrantService
     Task<CodeGrant> GetCodeGrantAsync(string code, string clientId, string codeVerifier);
     Task<RefreshTokenGrant> GetRefreshTokenGrantAsync(string refreshToken, string clientId);
     Task<string> CreateNewRefreshTokenAsync(Client client, RefreshTokenGrant refreshTokenGrant);
-    Task<DeviceAuthorizationGrant> GetDeviceAuthorizationGrantAsync(Client client);
+    Task<DeviceAuthorizationGrant> GetDeviceAuthorizationGrantAsync(Client client, string scope);
 
 }

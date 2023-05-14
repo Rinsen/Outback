@@ -15,6 +15,11 @@ namespace Rinsen.Outback.Grants
         public string? SubjectId { get; set; } = string.Empty;
 
         /// <summary>
+        /// Is set to true if this device authorization grant request is rejected.
+        /// </summary>
+        public bool AccessIsRejected { get; set; } = false;
+
+        /// <summary>
         /// The device verification code.
         /// </summary>
         public string DeviceCode { get; set; } = string.Empty;
@@ -23,6 +28,11 @@ namespace Rinsen.Outback.Grants
         /// The end-user verification code.
         /// </summary>
         public string UserCode { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Requested scopes authorized in this Grant if accepted.
+        /// </summary>
+        public string Scope { get; set; } = string.Empty;
 
         /// <summary>
         /// The lifetime of the "DeviceCode" and "UserCode".

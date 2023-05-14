@@ -236,6 +236,26 @@ internal class TokenService : ITokenService
         };
     }
 
+    public async Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, DeviceAuthorizationGrant deviceAuthorizationGrant, string issuer)
+    {
+        if (string.IsNullOrEmpty(deviceAuthorizationGrant.SubjectId))
+        {
+            throw new Exception("Subject is required to create a token response");
+        }
+
+        var tokenHandler = new JsonWebTokenHandler();
+        var key = await _tokenSigningAccessor.GetSigningSecurityKey();
+
+        var accessTokenString = await CreateAccessToken(client, deviceAuthorizationGrant.Scope, deviceAuthorizationGrant.SubjectId, issuer, tokenHandler, key);
+
+        return new AccessTokenResponse
+        {
+            AccessToken = accessTokenString,
+            ExpiresIn = client.AccessTokenLifetime,
+            TokenType = "Bearer"
+        };
+    }
+
     private async Task<IReadOnlyList<string>> GetAudience(Client client)
     {
         var scopes = await _scopeAccessor.GetScopesAsync(client.Scopes);

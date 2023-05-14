@@ -75,8 +75,7 @@ namespace SampleServer.InMemoryAccessors
                         Scopes = new List<string>
                         {
                             "openid",
-                            "profile",
-                            "messaging"
+                            "profile"
                         },
                         SupportedGrantTypes = new List<string>
                         {

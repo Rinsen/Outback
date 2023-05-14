@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Clients;
 using Rinsen.Outback.Grants;
 using Rinsen.Outback.Helpers;
@@ -20,18 +21,20 @@ public class ConnectController : Controller
     private readonly IGrantService _grantService;
     private readonly IClientService _clientService;
     private readonly ITokenService _tokenFactory;
+    private readonly IGrantAccessor _grantAccessor;
     private readonly ILogger<ConnectController> _logger;
 
     public ConnectController(
         IGrantService grantService,
         IClientService clientService,
         ITokenService tokenFactory,
-        
+        IGrantAccessor grantAccessor,
         ILogger<ConnectController> logger)
     {
         _grantService = grantService;
         _clientService = clientService;
         _tokenFactory = tokenFactory;
+        _grantAccessor = grantAccessor;
         _logger = logger;
     }
 
@@ -177,7 +180,41 @@ public class ConnectController : Controller
 
     private async Task<IActionResult> GetTokenForDeviceAuthorizationGrant(TokenModel model, Client client)
     {
-        throw new NotImplementedException();
+        var deviceGrant = await _grantAccessor.GetDeviceAuthorizationGrantAsync(model.DeviceCode);
+
+        if (client.ClientId != deviceGrant.ClientId)
+        {
+            _logger.LogError("Device authorization grant {DeviceCode} is not for client {ClientId}", model.DeviceCode, client.ClientId);
+
+            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+        }
+
+        if (deviceGrant.AccessIsRejected)
+        {
+            _logger.LogInformation("Device authorization grant {DeviceCode} is rejected", model.DeviceCode);
+
+            return BadRequest(new ErrorResponse { Error = ErrorResponses.AccessDenied });
+        }
+
+        if (DateTimeOffset.UtcNow.Subtract(deviceGrant.UserCodeExpiration).TotalMilliseconds > 0)
+        {
+            _logger.LogError("Device authorization grant {DeviceCode} have expired", model.DeviceCode);
+
+            return BadRequest(new ErrorResponse { Error = ErrorResponses.ExpiredToken });
+        }
+
+        if (string.IsNullOrEmpty(deviceGrant.SubjectId))
+        {
+            _logger.LogInformation("Device authorization grant {DeviceCode} is not accepted yet", model.DeviceCode);
+
+            return BadRequest(new ErrorResponse { Error = ErrorResponses.AuthorizationPending });
+        }
+
+        var tokenResponse = await _tokenFactory.CreateTokenResponseAsync(client, deviceGrant, GetIssuer());
+
+        AddCacheControlHeader();
+
+        return Json(tokenResponse);
     }
 
     private async Task<IActionResult> GetTokenForClientCredentialsGrantAsync(Client client)
