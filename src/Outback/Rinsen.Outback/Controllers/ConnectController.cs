@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Clients;
+using Rinsen.Outback.Configuration;
 using Rinsen.Outback.Grants;
 using Rinsen.Outback.Helpers;
 using Rinsen.Outback.JwtTokens;
 using Rinsen.Outback.Models;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -22,6 +24,7 @@ public class ConnectController : Controller
     private readonly IClientService _clientService;
     private readonly ITokenService _tokenFactory;
     private readonly IGrantAccessor _grantAccessor;
+    private readonly IOutbackConfigurationAccessor _outbackConfigurationAccessor;
     private readonly ILogger<ConnectController> _logger;
 
     public ConnectController(
@@ -29,12 +32,14 @@ public class ConnectController : Controller
         IClientService clientService,
         ITokenService tokenFactory,
         IGrantAccessor grantAccessor,
+        IOutbackConfigurationAccessor outbackConfigurationAccessor,
         ILogger<ConnectController> logger)
     {
         _grantService = grantService;
         _clientService = clientService;
         _tokenFactory = tokenFactory;
         _grantAccessor = grantAccessor;
+        _outbackConfigurationAccessor = outbackConfigurationAccessor;
         _logger = logger;
     }
 
@@ -45,6 +50,39 @@ public class ConnectController : Controller
         if (ModelState.IsValid)
         {
             var client = await _clientService.GetClient(model);
+
+            if (!await _outbackConfigurationAccessor.IsCodeGrantActiveAsync())
+            {
+                _logger.LogWarning("Response type {ResponseType} is not active for client {ClientId}", model.ResponseType, client.ClientId);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+            }
+
+            if (model.ResponseType != "code")
+            {
+                _logger.LogWarning("Response type {ResponseType} is not valid for client {ClientId}", model.ResponseType, client.ClientId);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+            }
+
+            if (string.IsNullOrEmpty(model.CodeChallengeMethod))
+            {
+                model.CodeChallengeMethod = "S256";
+            }
+
+            if (model.CodeChallengeMethod != "S256")
+            {
+                _logger.LogWarning("code_challenge_method {CodeChallengeMethod} is not supported for client {ClientId}", model.ResponseType, client.ClientId);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+            }
+
+            if (model.ResponseType != "code")
+            {
+                _logger.LogWarning("Response type {ResponseType} is not valid for client {ClientId}", model.ResponseType, client.ClientId);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+            }
 
             if (!ClientValidator.IsScopeValid(client, model.Scope))
             {
@@ -87,7 +125,7 @@ public class ConnectController : Controller
                 case "form_post":
                     // Return code in a view that is posted to the client application
                     // https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html
-                    return View(new AuthorizeResponse
+                   return View(new AuthorizeResponse
                     {
                         Code = code,
                         FormPostUri = model.RedirectUri,
@@ -180,6 +218,13 @@ public class ConnectController : Controller
 
     private async Task<IActionResult> GetTokenForDeviceAuthorizationGrant(TokenModel model, Client client)
     {
+        if (!await _outbackConfigurationAccessor.IsDeviceAuthorizationGrantActiveAsync())
+        {
+            _logger.LogError("Device authorization grant is not active for client {ClientId}", client.ClientId);
+
+            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
+        }
+
         var deviceGrant = await _grantAccessor.GetDeviceAuthorizationGrantAsync(model.DeviceCode);
 
         if (client.ClientId != deviceGrant.ClientId)
@@ -219,6 +264,13 @@ public class ConnectController : Controller
 
     private async Task<IActionResult> GetTokenForClientCredentialsGrantAsync(Client client)
     {
+        if (!await _outbackConfigurationAccessor.IsClientCredentialsGrantActiveAsync())
+        {
+            _logger.LogError("Client credential grant is not active for client {ClientId}", client.ClientId);
+
+            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
+        }
+
         var tokenResponse = await _tokenFactory.CreateTokenResponseAsync(client, GetIssuer());
 
         AddCacheControlHeader();
@@ -228,6 +280,13 @@ public class ConnectController : Controller
 
     private async Task<IActionResult> GetTokenForAuthorizationCodeGrantAsync(TokenModel model, Client client)
     {
+        if (!await _outbackConfigurationAccessor.IsCodeGrantActiveAsync())
+        {
+            _logger.LogError("Code grant is not active for client {ClientId}", client.ClientId);
+
+            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant});
+        }
+
         CodeGrant persistedGrant;
         if (string.IsNullOrEmpty(model.Code))
         {
@@ -246,7 +305,7 @@ public class ConnectController : Controller
         if (!AbnfValidationHelper.IsValid(model.CodeVerifier, 43, 128))
         {
             // Code verifier is not valid
-            _logger.LogError("Code verifier is not ABNF valid for client {ClientId} with code verifier {CodewVerifier}", client.ClientId, model.CodeVerifier);
+            _logger.LogError("Code verifier is not ABNF valid for client {ClientId} with code verifier {CodeVerifier}", client.ClientId, model.CodeVerifier);
 
             return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
         }
@@ -305,6 +364,13 @@ public class ConnectController : Controller
 
     private async Task<IActionResult> GetTokenForRefreshTokenGrantAsync(TokenModel model, Client client)
     {
+        if (!await _outbackConfigurationAccessor.IsRefreshTokenGrantActiveAsync())
+        {
+            _logger.LogError("Refresh token authorization grant is not active for client {ClientId}", client.ClientId);
+
+            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
+        }
+
         RefreshTokenGrant refreshTokenGrant;
         try
         {

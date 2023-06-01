@@ -1,10 +1,9 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Rinsen.Outback.Models;
 
-public class AuthorizeModel : IValidatableObject
+public class AuthorizeModel
 {
     [Required]
     [FromQuery(Name = "client_id")]
@@ -35,26 +34,4 @@ public class AuthorizeModel : IValidatableObject
 
     [FromQuery(Name = "state")]
     public string State { get; set; } = string.Empty;
-
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-    {
-        var validationResult = new List<ValidationResult>();
-
-        if (ResponseType != "code")
-        {
-            validationResult.Add(new ValidationResult($"response_type {ResponseType} is not supported", new[] { nameof(ResponseType) }));
-        }
-
-        if (string.IsNullOrEmpty(CodeChallengeMethod))
-        {
-            CodeChallengeMethod = "S256";
-        }
-
-        if (CodeChallengeMethod != "S256")
-        {
-            validationResult.Add(new ValidationResult($"code_challenge_method {CodeChallengeMethod} is not supported", new[] { nameof(CodeChallengeMethod) }));
-        }
-
-        return validationResult;
-    }
 }

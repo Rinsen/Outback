@@ -79,4 +79,7 @@ public class OutbackClient : ICreatedAndUpdatedTimestamp, ISoftDelete
 
     [JsonIgnore]
     public List<OutbackRefreshTokenGrant> RefreshTokenGrants { get; set; } = new List<OutbackRefreshTokenGrant>();
+
+    [JsonIgnore]
+    public List<OutbackDeviceAuthorizationGrant> DeviceAuthorizationGrants { get; set; } = new List<OutbackDeviceAuthorizationGrant>();
 }

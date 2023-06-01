@@ -160,6 +160,19 @@ public class OutbackTableInstallation : DatabaseVersion
         outbackRefreshTokenGrantsTable.AddColumn(m => m.Scope, 2000);
         outbackRefreshTokenGrantsTable.AddColumn(m => m.SubjectId).ForeignKey("Identities", "IdentityId");
 
+        var outbackDeviceAuthorizationGrantTable = dbChangeList.AddNewTable<OutbackDeviceAuthorizationGrant>();
+        outbackDeviceAuthorizationGrantTable.AddAutoIncrementColumn(m => m.Id);
+        outbackDeviceAuthorizationGrantTable.AddColumn(m => m.ClientId).ForeignKey<OutbackClient>(m => m.Id);
+        outbackDeviceAuthorizationGrantTable.AddColumn(m => m.Accepted);
+        outbackDeviceAuthorizationGrantTable.AddColumn(m => m.AccessIsRejected);
+        outbackDeviceAuthorizationGrantTable.AddColumn(m => m.Created);
+        outbackDeviceAuthorizationGrantTable.AddColumn(m => m.DeviceCode, 200);
+        outbackDeviceAuthorizationGrantTable.AddColumn(m => m.Interval);
+        outbackDeviceAuthorizationGrantTable.AddColumn(m => m.Scope, 2000);
+        outbackDeviceAuthorizationGrantTable.AddColumn(m => m.UserCode, 200);
+        outbackDeviceAuthorizationGrantTable.AddColumn(m => m.UserCodeExpiration);
+        outbackDeviceAuthorizationGrantTable.AddColumn(m => m.SubjectId).ForeignKey("Identities", "IdentityId");
+
         var outbackSecretsTable = dbChangeList.AddNewTable<OutbackSecret>();
         outbackSecretsTable.AddAutoIncrementColumn(m => m.Id);
         outbackSecretsTable.AddColumn(m => m.ActiveSigningKey);

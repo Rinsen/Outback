@@ -1,5 +1,4 @@
 ﻿using System;
-using Microsoft.AspNetCore.Identity;
 using Rinsen.Outback.Clients;
 using Rinsen.Outback.Configuration;
 using Rinsen.Outback.Grants;
@@ -10,6 +9,19 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ExtensionMethods
 {
+    public static void AddRinsenOutback(this IServiceCollection services)
+    {
+        var outbackOptions = new OutbackOptions();
+
+        services.AddSingleton(outbackOptions);
+        AddServices(services);
+
+        if (outbackOptions.UseDefaultConfigurationAccessor)
+        {
+            services.AddSingleton<IOutbackConfigurationAccessor, DefaultOutbackConfigurationAccessor>();
+        }
+    }
+
     public static void AddRinsenOutback(this IServiceCollection services, Action<OutbackOptions> outbackOptionsAction)
     {
         var outbackOptions = new OutbackOptions();
@@ -17,15 +29,20 @@ public static class ExtensionMethods
         outbackOptionsAction.Invoke(outbackOptions);
 
         services.AddSingleton(outbackOptions);
-        services.AddSingleton<RandomStringGenerator>();
-        services.AddScoped<IGrantService, GrantService>();
-        services.AddScoped<IClientService, ClientService>();
-        services.AddScoped<ITokenService, TokenService>();
+        AddServices(services);
 
         if (outbackOptions.UseDefaultConfigurationAccessor)
         {
             services.AddSingleton<IOutbackConfigurationAccessor, DefaultOutbackConfigurationAccessor>();
         }
+    }
+
+    private static void AddServices(IServiceCollection services)
+    {
+        services.AddSingleton<RandomStringGenerator>();
+        services.AddScoped<IGrantService, GrantService>();
+        services.AddScoped<IClientService, ClientService>();
+        services.AddScoped<ITokenService, TokenService>();
     }
 
     public static IMvcBuilder AddRinsenOutbackControllers(this IMvcBuilder mvcBuilder)

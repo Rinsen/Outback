@@ -1,16 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Rinsen.Outback.Configuration
+﻿namespace Rinsen.Outback.Configuration
 {
     public class OutbackOptions
     {
 
         public bool UseDefaultConfigurationAccessor { get; set; } = true;
 
-        public bool DeviceAuthorizationGrantActive { get; set; }
+        public bool ClientCredentialsGrantActive { get; set; } = true;
+
+        public bool DeviceAuthorizationGrantActive { get; set; } = true;
+
+        public bool RefreshTokenGrantActive { get; set; } = true;
+
+        public bool CodeGrantActive { get; set; } = true;
+
+        public bool ClientSecretBasicActive { get; set; } = true;
+
+        public bool ClientSecretPostActive { get; set; } = true;
     }
 }

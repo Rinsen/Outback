@@ -25,6 +25,7 @@ public class OutbackDbContext : DbContext
     public DbSet<OutbackCodeGrant> CodeGrants => Set<OutbackCodeGrant>();
     public DbSet<OutbackPersistedGrant> PersistedGrants => Set<OutbackPersistedGrant>();
     public DbSet<OutbackRefreshTokenGrant> RefreshTokenGrants => Set<OutbackRefreshTokenGrant>();
+    public DbSet<OutbackDeviceAuthorizationGrant> DeviceAuthorizationGrants => Set<OutbackDeviceAuthorizationGrant>();
     public DbSet<OutbackScope> Scopes => Set<OutbackScope>();
     public DbSet<OutbackScopeClaim> ScopeClaims => Set<OutbackScopeClaim>();
     public DbSet<OutbackSecret> Secrets => Set<OutbackSecret>();
@@ -54,7 +55,6 @@ public class OutbackDbContext : DbContext
             clientScope.HasOne(m => m.Client).WithMany(m => m.Scopes).HasForeignKey(m => m.ClientId);
             clientScope.HasOne(m => m.Scope).WithMany(m => m.ClientScopes).HasForeignKey(m => m.ScopeId);
         });
-            
 
         modelBuilder.Entity<OutbackClientSecret>()
             .ToTable("OutbackClientSecrets")
@@ -79,7 +79,10 @@ public class OutbackDbContext : DbContext
         modelBuilder.Entity<OutbackClientFamily>()
             .ToTable("OutbackClientFamilies")
             .HasKey(m => m.Id);
-            
+
+        modelBuilder.Entity<OutbackDeviceAuthorizationGrant>()
+            .ToTable("OutbackDeviceAuthorizationGrants")
+            .HasKey(m => m.Id);
 
         modelBuilder.Entity<OutbackClient>(client =>
         {
@@ -95,6 +98,7 @@ public class OutbackDbContext : DbContext
             client.HasMany(m => m.Scopes).WithOne(m => m.Client).HasForeignKey(m => m.ClientId);
             client.HasMany(m => m.Secrets).WithOne(m => m.Client).HasForeignKey(m => m.ClientId);
             client.HasMany(m => m.SupportedGrantTypes).WithOne(m => m.Client).HasForeignKey(m => m.ClientId);
+            client.HasMany(m => m.DeviceAuthorizationGrants).WithOne(m => m.Client).HasForeignKey(m => m.ClientId);
             client.HasOne(m => m.ClientFamily).WithMany(m => m.Clients).HasForeignKey(m => m.ClientFamilyId);
         });
 

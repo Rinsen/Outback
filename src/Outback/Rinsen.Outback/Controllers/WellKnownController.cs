@@ -51,21 +51,48 @@ public class WellKnownController : ControllerBase
             JwksUri = $"https://{host}/.well-known/openid-configuration/jwks",
             AuthorizationEndpoint = $"https://{host}/connect/authorize",
             TokenEndpoint = $"https://{host}/connect/token",
-            TokenEndpointAuthMethodsSupported = new List<string> { "client_secret_basic" },
-            GrantTypesSupported = new List<string> { "authorization_code", "client_credentials", "refresh_token" },
             CodeChallengeMethodsSupported = new List<string> { "S256" },
-            FrontchannelLogoutSessionSupported = false,
-            FrontchannelLogoutSupported = false,
-            BackchannelLogoutSessionSupported = false,
-            BackchannelLogoutSupported = false,
             ScopesSupported = scopes.Where(m => m.ShowInDiscoveryDocument).Select(m => m.ScopeName).ToList()
         };
+
+        if (await _outbackConfigurationAccessor.IsClientSecretBasicAuthenticationActiveAsync())
+        {
+            openIdConfiguration.TokenEndpointAuthMethodsSupported.Add("client_secret_basic");
+        }
+
+        if (await _outbackConfigurationAccessor.IsClientSecretPostAuthenticationActiveAsync())
+        {
+            openIdConfiguration.TokenEndpointAuthMethodsSupported.Add("client_secret_post");
+        }
+
+        if (await _outbackConfigurationAccessor.IsCodeGrantActiveAsync())
+        {
+            openIdConfiguration.GrantTypesSupported.Add("authorization_code");
+        }
 
         if (await _outbackConfigurationAccessor.IsDeviceAuthorizationGrantActiveAsync())
         {
             openIdConfiguration.DeviceAuthorizationEndpoint = $"https://{host}/device";
             openIdConfiguration.GrantTypesSupported.Add("urn:ietf:params:oauth:grant-type:device_code");
         }
+
+        if (await _outbackConfigurationAccessor.IsClientCredentialsGrantActiveAsync())
+        {
+            openIdConfiguration.GrantTypesSupported.Add("client_credentials");
+        }
+
+        if (await _outbackConfigurationAccessor.IsRefreshTokenGrantActiveAsync())
+        {
+            openIdConfiguration.GrantTypesSupported.Add("refresh_token");
+        }
+
+        if (await _outbackConfigurationAccessor.IsCodeGrantActiveAsync())
+        {
+            openIdConfiguration.GrantTypesSupported.Add("authorization_code");
+        }
+
+
+
 
         return openIdConfiguration;
     }
