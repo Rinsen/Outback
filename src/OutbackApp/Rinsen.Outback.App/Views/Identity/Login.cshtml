@@ -23,7 +23,7 @@
         </div>
 }
     <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-    <p><a href="/Identity/Create">Register account</a></p>
+    <p class="mt-2"><a href="/Identity/Create">Register account</a></p>
     <p class="mt-5 mb-3 text-muted">&copy; 2019-@DateTime.Now.Year</p>
     @Html.HiddenFor(m => m.ReturnUrl)
     @Html.AntiForgeryToken()

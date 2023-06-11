@@ -7,7 +7,7 @@ namespace Rinsen.Outback.App.Installation;
 public class OutbackTableInstallation : DatabaseVersion
 {
     public OutbackTableInstallation()
-        : base(2)
+        : base(3)
     {
     }
 
