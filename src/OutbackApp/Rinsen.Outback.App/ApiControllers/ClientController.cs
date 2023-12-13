@@ -31,7 +31,7 @@ public class ClientController : Controller
     [ProducesResponseType(403)]
     public async Task<ActionResult<List<OutbackClient>>> GetAll()
     {
-        var clients = await _clientService.GetAll();
+        var clients = await _clientService.GetAllAsync();
 
         clients.ForEach(c => c.Secrets.ForEach(s => s.Secret = "****"));
 
@@ -46,7 +46,7 @@ public class ClientController : Controller
     [ProducesResponseType(404)]
     public async Task<ActionResult<OutbackClient>> GetById(string id)
     {
-        var client = await _clientService.GetClient(id);
+        var client = await _clientService.GetClientAsync(id);
 
         if (client == default)
             return NotFound();
@@ -64,7 +64,7 @@ public class ClientController : Controller
     [ProducesResponseType(404)]
     public async Task<ActionResult> Delete(string id)
     {
-        await _clientService.DeleteClient(id);
+        await _clientService.DeleteClientAsync(id);
 
         return Ok();
     }
@@ -79,9 +79,9 @@ public class ClientController : Controller
     {
         var clientId = Guid.NewGuid().ToString();
 
-        await _clientService.CreateNewClient(clientId, createClient.ClientName, createClient.Description, createClient.FamilyId, createClient.ClientType);
+        await _clientService.CreateNewClientAsync(clientId, createClient.ClientName, createClient.Description, createClient.FamilyId, createClient.ClientType);
 
-        var client = await _clientService.GetClient(clientId);
+        var client = await _clientService.GetClientAsync(clientId);
 
         return CreatedAtAction(nameof(GetById),
            new { id = clientId }, client);
@@ -95,7 +95,7 @@ public class ClientController : Controller
     [ProducesResponseType(403)]
     public async Task<ActionResult> Update(string id, [FromBody][Required] OutbackClient client)
     {
-        await _clientService.UpdateClient(id, client);
+        await _clientService.UpdateClientAsync(id, client);
 
         return Ok();
     }
@@ -109,7 +109,7 @@ public class ClientController : Controller
     [Route("~/Outback/api/[controller]/Family")]
     public async Task<ActionResult<List<OutbackClientFamily>>> GetAllClientFamilies()
     {
-        var clientFamilies = await _clientService.GetAllClientFamilies();
+        var clientFamilies = await _clientService.GetAllClientFamiliesAsync();
 
         return clientFamilies;
     }
@@ -123,7 +123,7 @@ public class ClientController : Controller
     [Route("~/Outback/api/[controller]/Family")]
     public async Task<ActionResult<OutbackClientFamily>> CreateFamily([Required] CreateFamily createFamily)
     {
-        var family = await _clientService.CreateNewFamily(createFamily.Name, createFamily.Description);
+        var family = await _clientService.CreateNewFamilyAsync(createFamily.Name, createFamily.Description);
 
         return CreatedAtAction(nameof(GetById),
            new { id = family.Id }, family);

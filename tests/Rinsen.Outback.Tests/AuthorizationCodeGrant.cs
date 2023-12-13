@@ -110,6 +110,7 @@ namespace Rinsen.Outback.Tests
             var locationUri = authorizeGetResponse.Headers.Location;
             var queryParameters = QueryHelpers.ParseQuery(locationUri?.Query);
 
+            Assert.NotNull(queryParameters);
             Assert.Equal(System.Net.HttpStatusCode.Redirect, authorizeGetResponse.StatusCode);
             Assert.Equal(0, authorizeGetResponseContent.Length);
             Assert.NotNull(locationUri);
@@ -117,11 +118,11 @@ namespace Rinsen.Outback.Tests
             Assert.Equal("https", locationUri?.Scheme);
             Assert.Equal("/signin-oidc", locationUri?.AbsolutePath);
             Assert.True(queryParameters.ContainsKey("code"));
-            Assert.Equal(20, queryParameters["code"][0].Length);
+            Assert.Equal(20, queryParameters["code"][0]?.Length);
             Assert.True(queryParameters.ContainsKey("scope"));
             Assert.Equal("openid", queryParameters["scope"][0]);
 
-            return queryParameters["code"][0]; ;
+            return queryParameters["code"][0] ?? string.Empty;
         }
     }
 

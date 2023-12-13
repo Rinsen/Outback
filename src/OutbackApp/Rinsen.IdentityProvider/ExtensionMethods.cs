@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Authorization;
 using Rinsen.IdentityProvider.Settings;
 using Rinsen.Outback.Accessors;
+using Rinsen.IdentityProvider.Backup;
 
 namespace Rinsen.IdentityProvider;
 
@@ -56,6 +57,7 @@ public static class ExtensionMethods
         services.AddScoped<ClientService>();
         services.AddScoped<ScopeService>();
         services.AddScoped<DefaultInstaller>();
+        services.AddScoped<BackupGenerator>();
 
     }
 

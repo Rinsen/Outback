@@ -25,7 +25,7 @@ namespace Rinsen.Outback.Tests.Helpers
 
             IdentityModelEventSource.ShowPII = true;
             var tokenHandler = new JsonWebTokenHandler();
-            var tokenValidationResult = tokenHandler.ValidateToken(token, new TokenValidationParameters
+            var tokenValidationResult = await tokenHandler.ValidateTokenAsync(token, new TokenValidationParameters
             {
                 ValidAudiences = validAudiences,
                 ValidIssuer = validIssuer,
@@ -54,7 +54,7 @@ namespace Rinsen.Outback.Tests.Helpers
 
             IdentityModelEventSource.ShowPII = true;
             var tokenHandler = new JsonWebTokenHandler();
-            var tokenValidationResult = tokenHandler.ValidateToken(token, new TokenValidationParameters
+            var tokenValidationResult = await tokenHandler.ValidateTokenAsync(token, new TokenValidationParameters
             {
                 ValidAudience = validAudience,
                 ValidIssuer = validIssuer,

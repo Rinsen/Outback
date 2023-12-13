@@ -53,15 +53,15 @@ namespace Rinsen.Outback.App.Controllers
             return View("Consent", model);
         }
 
-        [HttpPost]
-        [Route("device")]
-        public async Task<IActionResult> IndexPost([FromForm(Name = "user_code")] string userCode)
-        {
+        //[HttpPost]
+        //[Route("device")]
+        //public IActionResult IndexPost([FromForm(Name = "user_code")] string userCode)
+        //{
 
 
 
-            return View();
-        }
+        //    return View();
+        //}
 
         //[HttpPost]
         //[Route("device")]

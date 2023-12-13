@@ -10,9 +10,7 @@ using Rinsen.Outback.Helpers;
 using Rinsen.Outback.JwtTokens;
 using Rinsen.Outback.Models;
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 
 namespace Rinsen.Outback.Controllers;
@@ -353,7 +351,7 @@ public class ConnectController : Controller
         {
             if (client.AllowedCorsOrigins.Contains(origin))
             {
-                Response.Headers.Add("Access-Control-Allow-Origin", origin);
+                Response.Headers.AccessControlAllowOrigin = origin;
             }
             else
             {
@@ -394,8 +392,8 @@ public class ConnectController : Controller
 
     private void AddCacheControlHeader()
     {
-        Response.Headers.Add("Cache-Control", "no-store");
-        Response.Headers.Add("Pragma", "no-cache");
+        Response.Headers.CacheControl = "no-store";
+        Response.Headers.Pragma = "no-cache";
     }
 
     private string GetIssuer()

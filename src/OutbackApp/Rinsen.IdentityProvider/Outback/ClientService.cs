@@ -18,7 +18,7 @@ public class ClientService
         _outbackDbContext = outbackDbContext;
     }
     
-    public Task<List<OutbackClient>> GetAll()
+    public Task<List<OutbackClient>> GetAllAsync()
     {
         return _outbackDbContext.Clients
             .Include(m => m.AllowedCorsOrigins)
@@ -29,10 +29,10 @@ public class ClientService
             .Include(m => m.Scopes).ThenInclude(m => m.Scope).ThenInclude(m => m.ScopeClaims)
             .Include(m => m.Secrets)
             .Include(m => m.SupportedGrantTypes)
-            .AsSingleQuery().ToListAsync();
+            .AsSplitQuery().ToListAsync();
     }
 
-    public Task<OutbackClient?> GetClient(string clientId)
+    public Task<OutbackClient?> GetClientAsync(string clientId)
     {
         return _outbackDbContext.Clients.Where(m => m.ClientId == clientId)
             .Include(m => m.AllowedCorsOrigins)
@@ -46,7 +46,7 @@ public class ClientService
             .AsSingleQuery().SingleOrDefaultAsync();
     }
 
-    public async Task DeleteClient(string clientId)
+    public async Task DeleteClientAsync(string clientId)
     {
         var client = await _outbackDbContext.Clients.SingleOrDefaultAsync(m => m.ClientId == clientId);
 
@@ -60,12 +60,12 @@ public class ClientService
         await _outbackDbContext.SaveChangesAsync();
     }
 
-    public Task<List<OutbackClientFamily>> GetAllClientFamilies()
+    public Task<List<OutbackClientFamily>> GetAllClientFamiliesAsync()
     {
         return _outbackDbContext.ClientFamilies.ToListAsync();
     }
 
-    public async Task CreateNewClient(string clientId, string clientName, string description, int familyId, ClientType clientType)
+    public async Task CreateNewClientAsync(string clientId, string clientName, string description, int familyId, ClientType clientType)
     {
         var outbackClient = new OutbackClient
         {
@@ -81,9 +81,9 @@ public class ClientService
         await _outbackDbContext.SaveChangesAsync();
     }
 
-    public async Task UpdateClient(string id, OutbackClient updatedClient)
+    public async Task UpdateClientAsync(string id, OutbackClient updatedClient)
     {
-        var client = await GetClient(id);
+        var client = await GetClientAsync(id);
 
         if (client == default)
         {
@@ -411,7 +411,7 @@ public class ClientService
     }
 
 
-    public async Task<OutbackClientFamily> CreateNewFamily(string name, string description)
+    public async Task<OutbackClientFamily> CreateNewFamilyAsync(string name, string description)
     {
         var outbackClientFamily = new OutbackClientFamily
         {

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Configuration;
 using Rinsen.Outback.Models;
@@ -105,7 +104,7 @@ public class WellKnownController : ControllerBase
 
             if (origins.Contains(origin))
             {
-                Response.Headers.Add("Access-Control-Allow-Origin", origin);
+                Response.Headers.AccessControlAllowOrigin = origin;
             }
             else
             {
