@@ -2,7 +2,7 @@ import { DataSource } from '@angular/cdk/collections';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { Observable, of as observableOf, merge, BehaviorSubject } from 'rxjs';
-import { ClientClient, OutbackClient } from '../modules/api/api.generated';
+import { ClientClient, OutbackClient } from '../services/generated/api.generated';
 
 /**
  * Data source for the Clients view. This class should

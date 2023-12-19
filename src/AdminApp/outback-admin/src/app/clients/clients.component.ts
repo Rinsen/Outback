@@ -4,8 +4,8 @@ import { MatSort } from '@angular/material/sort';
 import { MatTable } from '@angular/material/table';
 import { ClientsDataSource } from './clients-datasource';
 import { Router }          from '@angular/router';
-import { ClientClient, ClientType, CreateClient, OutbackClient, OutbackClientFamily } from '../modules/api/api.generated';
 import { MatSelectModule } from '@angular/material/select';
+import { ClientClient, ClientType, CreateClient, OutbackClient, OutbackClientFamily } from '../services/generated/api.generated';
 
 @Component({
   selector: 'app-clients',
@@ -61,9 +61,6 @@ export class ClientsComponent implements AfterViewInit {
       case 'credentialed':
         this.newClient.clientType = ClientType._1
         break;
-      case 'public':
-        this.newClient.clientType = ClientType._2;
-          break;
       default:
         return;
     }

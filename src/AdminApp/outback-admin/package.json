@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build --base-href /admin/",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "nswag": "nswag run /runtime:Net60"
   },
   "private": true,
   "dependencies": {
