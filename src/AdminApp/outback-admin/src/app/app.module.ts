@@ -28,7 +28,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatRadioModule } from '@angular/material/radio';
-import { ClientClient, ScopeClient } from './modules/api/api.generated';
+import { ClientClient, ScopeClient } from './services/generated/api.generated';
 import { MatSelectModule } from '@angular/material/select';
 
 @NgModule({
