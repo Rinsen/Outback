@@ -49,7 +49,7 @@
                 {
                   "type": "initial",
                   "maximumWarning": "6000kb",
-                  "maximumError": "7mb"
+                  "maximumError": "10mb"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -74,11 +74,11 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "outback-admin:build:production"
+              "buildTarget": "outback-admin:build:production"
             },
             "development": {
-              "browserTarget": "outback-admin:build:development",
-              "proxyConfig": "src/proxy.conf.json"
+              "proxyConfig": "src/proxy.conf.json",
+              "buildTarget": "outback-admin:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -86,7 +86,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "outback-admin:build"
+            "buildTarget": "outback-admin:build"
           }
         },
         "test": {

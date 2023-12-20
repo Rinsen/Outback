@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { throwToolbarMixedModesError } from '@angular/material/toolbar';
 import { ActivatedRoute } from '@angular/router';
-import {MatTableModule, MatTableDataSource} from '@angular/material/table';
-import { ClientClient, ClientType, OutbackClient, OutbackClientFamily, OutbackClientLoginRedirectUri, OutbackClientScope, OutbackScope, ScopeClient } from '../modules/api/api.generated';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { ClientClient, ClientType, OutbackClient, OutbackClientFamily, OutbackClientLoginRedirectUri, OutbackClientScope, OutbackScope, ScopeClient } from '../services/generated/api.generated';
 
 @Component({
   selector: 'app-client-detail',
@@ -24,35 +24,35 @@ export class ClientDetailComponent implements OnInit {
 
     this.id = String(this.route.snapshot.paramMap.get('id'));
     this.clientClient.get(this.id)
-    .subscribe(clientResponse => {
+      .subscribe(clientResponse => {
         this.client = clientResponse;
         this.dataSource.data = this.client.scopes as unknown[];
       });
-   }
+  }
 
-   openEditScope() {
-     this.scopeClient.getAll()
+  openEditScope() {
+    this.scopeClient.getAll()
       .subscribe(scopeResponse => {
         scopeResponse.forEach(scope => {
           this.scopes.push(scope);
         });
         this.editScopesOpen = true;
       });
-   }
+  }
 
-   closeEditScope(){
+  closeEditScope() {
     this.scopes.length = 0;
     this.editScopesOpen = false;
-   }
+  }
 
-   addScopeToClient(id: number) {
+  addScopeToClient(id: number) {
     const selectedScope = this.getScope(id);
 
-    if (selectedScope === null){
+    if (selectedScope === null) {
       return;
     }
-    
-    if (!this.client.scopes?.some(( {scope}) => scope?.id === id)) {
+
+    if (!this.client.scopes?.some(({ scope }) => scope?.id === id)) {
       this.client.scopes?.push(new OutbackClientScope({
         clientId: this.client.id,
         scope: selectedScope,
@@ -60,17 +60,17 @@ export class ClientDetailComponent implements OnInit {
       }));
       this.dataSource.data = this.client.scopes as unknown[];
     }
-   }
+  }
 
-   removeScopeToClient(id: number) {
+  removeScopeToClient(id: number) {
     const selectedScope = this.getScope(id);
 
-    if (selectedScope === null){
+    if (selectedScope === null) {
       return;
     }
-    
+
     var scopeToRemove: OutbackScope | null = null;
-    if (this.client.scopes?.some(( {scope}) => scope?.id === id)) {
+    if (this.client.scopes?.some(({ scope }) => scope?.id === id)) {
       this.client.scopes.forEach(scope => {
         if (scope.id === selectedScope.id) {
           scopeToRemove = scope;
@@ -85,30 +85,32 @@ export class ClientDetailComponent implements OnInit {
         this.client.scopes?.splice(index, 1);
       }
     }
-   }
+  }
 
-   getScope(id: number) : OutbackScope | null {
+  getScope(id: number): OutbackScope | null {
     var returnScope: OutbackScope | null = null;
 
     this.scopes.forEach(scope => {
-      if (scope.id === id){
+      if (scope.id === id) {
         returnScope = scope;
       }
     });
 
     return returnScope;
-   }
+  }
 
-   onAddLoginRedirectUri(){
-     this.client.loginRedirectUris?.push(new OutbackClientLoginRedirectUri())
-   }
+  onAddLoginRedirectUri() {
+    this.client.loginRedirectUris?.push(new OutbackClientLoginRedirectUri())
+  }
 
-   onSaveClient(){
-    this.clientClient.update(this.client.clientId, this.client)
-    .subscribe(clientResponse => {
-      
-    });
-   }
+  onSaveClient() {
+    if (this.client.clientId !== undefined) {
+      this.clientClient.update(this.client.clientId, this.client)
+        .subscribe(clientResponse => {
+
+        });
+    }
+  }
 
   ngOnInit(): void {
 

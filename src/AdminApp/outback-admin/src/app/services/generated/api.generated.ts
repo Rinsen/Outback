@@ -325,7 +325,7 @@ export class ClientClient {
     }
 
     /**
-     * Create a client
+     * Update a client
      * @return Success
      */
     update(id: string, body: OutbackClient): Observable<void> {
@@ -968,7 +968,6 @@ export class ScopeClient {
 export enum ClientType {
     _0 = 0,
     _1 = 1,
-    _2 = 2,
 }
 
 export class CreateClient implements ICreateClient {
@@ -1121,7 +1120,7 @@ export interface ICreateScope {
 
 export class OutbackClient implements IOutbackClient {
     id?: number;
-    clientId!: string;
+    clientId?: string;
     active?: boolean;
     name?: string;
     description?: string;
@@ -1130,9 +1129,9 @@ export class OutbackClient implements IOutbackClient {
     consentRequired?: boolean;
     saveConsent?: boolean;
     addUserInfoClaimsInIdentityToken?: boolean;
-    savedConsentLifetime?: number;
     issueRefreshToken?: boolean;
     issueIdentityToken?: boolean;
+    savedConsentLifetime?: number;
     refreshTokenLifetime?: number;
     accessTokenLifetime?: number;
     identityTokenLifetime?: number;
@@ -1170,9 +1169,9 @@ export class OutbackClient implements IOutbackClient {
             this.consentRequired = _data["consentRequired"];
             this.saveConsent = _data["saveConsent"];
             this.addUserInfoClaimsInIdentityToken = _data["addUserInfoClaimsInIdentityToken"];
-            this.savedConsentLifetime = _data["savedConsentLifetime"];
             this.issueRefreshToken = _data["issueRefreshToken"];
             this.issueIdentityToken = _data["issueIdentityToken"];
+            this.savedConsentLifetime = _data["savedConsentLifetime"];
             this.refreshTokenLifetime = _data["refreshTokenLifetime"];
             this.accessTokenLifetime = _data["accessTokenLifetime"];
             this.identityTokenLifetime = _data["identityTokenLifetime"];
@@ -1238,9 +1237,9 @@ export class OutbackClient implements IOutbackClient {
         data["consentRequired"] = this.consentRequired;
         data["saveConsent"] = this.saveConsent;
         data["addUserInfoClaimsInIdentityToken"] = this.addUserInfoClaimsInIdentityToken;
-        data["savedConsentLifetime"] = this.savedConsentLifetime;
         data["issueRefreshToken"] = this.issueRefreshToken;
         data["issueIdentityToken"] = this.issueIdentityToken;
+        data["savedConsentLifetime"] = this.savedConsentLifetime;
         data["refreshTokenLifetime"] = this.refreshTokenLifetime;
         data["accessTokenLifetime"] = this.accessTokenLifetime;
         data["identityTokenLifetime"] = this.identityTokenLifetime;
@@ -1290,7 +1289,7 @@ export class OutbackClient implements IOutbackClient {
 
 export interface IOutbackClient {
     id?: number;
-    clientId: string;
+    clientId?: string;
     active?: boolean;
     name?: string;
     description?: string;
@@ -1299,9 +1298,9 @@ export interface IOutbackClient {
     consentRequired?: boolean;
     saveConsent?: boolean;
     addUserInfoClaimsInIdentityToken?: boolean;
-    savedConsentLifetime?: number;
     issueRefreshToken?: boolean;
     issueIdentityToken?: boolean;
+    savedConsentLifetime?: number;
     refreshTokenLifetime?: number;
     accessTokenLifetime?: number;
     identityTokenLifetime?: number;
