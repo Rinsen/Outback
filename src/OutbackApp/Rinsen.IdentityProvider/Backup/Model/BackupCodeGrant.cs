@@ -7,6 +7,5 @@ namespace Rinsen.IdentityProvider.Backup.Model
         public string Code { get; set; } = string.Empty;
         public string RedirectUri { get; set; } = string.Empty;
         public Guid SubjectId { get; set; }
-        public object Used { get; set; }
     }
 }

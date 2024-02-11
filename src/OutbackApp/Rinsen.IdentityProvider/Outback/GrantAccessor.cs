@@ -39,8 +39,8 @@ public class GrantAccessor : IGrantAccessor
         {
             ClientId = outbackCodeGrant.Client.ClientId,
             Code = outbackCodeGrant.Code,
-            CodeChallange = outbackCodeGrant.CodeChallange,
-            CodeChallangeMethod = outbackCodeGrant.CodeChallangeMethod,
+            CodeChallenge = outbackCodeGrant.CodeChallenge,
+            CodeChallengeMethod = outbackCodeGrant.CodeChallengeMethod,
             Created = outbackCodeGrant.Created,
             Expires = outbackCodeGrant.Expires,
             Nonce = outbackCodeGrant.Nonce,
@@ -120,8 +120,8 @@ public class GrantAccessor : IGrantAccessor
         {
             ClientId = clientIntId,
             Code = codeGrant.Code,
-            CodeChallange = codeGrant.CodeChallange,
-            CodeChallangeMethod = codeGrant.CodeChallangeMethod,
+            CodeChallenge = codeGrant.CodeChallenge,
+            CodeChallengeMethod = codeGrant.CodeChallengeMethod,
             Created = codeGrant.Created,
             Expires = codeGrant.Expires,
             Nonce = codeGrant.Nonce,

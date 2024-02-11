@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Clients;
 using Rinsen.Outback.Configuration;
@@ -118,23 +119,20 @@ public class ConnectController : Controller
                 model.RedirectUri = client.LoginRedirectUris.Single();
             }
 
-            switch (model.ResponseMode)
+            return model.ResponseMode switch
             {
-                case "form_post":
-                    // Return code in a view that is posted to the client application
-                    // https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html
-                   return View(new AuthorizeResponse
-                    {
-                        Code = code,
-                        FormPostUri = model.RedirectUri,
-                        Scope = model.Scope,
-                        SessionState = null,
-                        State = model.State
-                    });
-                default:
-                    // Redirect the code response as a 302 Redirect
-                    return Redirect(BuildRedirectUri(model, code));
-            }
+                // Return code in a view that is posted to the client application
+                // https://openid.net/specs/oauth-v2-form-post-response-mode-1_0.html
+                "form_post" => View(new AuthorizeResponse
+                {
+                    Code = code,
+                    FormPostUri = model.RedirectUri,
+                    Scope = model.Scope,
+                    SessionState = null,
+                    State = model.State
+                }),
+                _ => Redirect(BuildRedirectUri(model, code)),// Redirect the code response as a 302 Redirect
+            };
         }
 
         var errorString = string.Join("; ", ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage));
@@ -349,13 +347,20 @@ public class ConnectController : Controller
     {
         if (Request.Headers.TryGetValue("Origin", out var origin))
         {
-            if (client.AllowedCorsOrigins.Contains(origin))
+            if (StringValues.IsNullOrEmpty(origin))
             {
-                Response.Headers.AccessControlAllowOrigin = origin;
+                _logger.LogInformation("No content of Origin header found");
             }
             else
             {
-                _logger.LogError("No valid origin {origin} found for client {clientId}", origin, client.ClientId);
+                if (client.AllowedCorsOrigins.Contains(origin.ToString()))
+                {
+                    Response.Headers.AccessControlAllowOrigin = origin;
+                }
+                else
+                {
+                    _logger.LogError("No valid origin {origin} found for client {clientId}", origin.ToString(), client.ClientId);
+                }
             }
         }
     }

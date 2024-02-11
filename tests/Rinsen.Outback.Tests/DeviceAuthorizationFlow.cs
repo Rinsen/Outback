@@ -61,10 +61,10 @@ namespace Rinsen.Outback.Tests
             // (A) The client requests access from the authorization server and
             // includes its client identifier in the request.
 
-            var formContent = new FormUrlEncodedContent(new[]
-            {
+            var formContent = new FormUrlEncodedContent(
+            [
                 new KeyValuePair<string, string>("client_id", "DeviceAuthorizationClientId")
-            });
+            ]);
 
             var client = application.CreateClient();
             var grantAccessor = application.Services.GetRequiredService<IGrantAccessor>();
@@ -74,7 +74,8 @@ namespace Rinsen.Outback.Tests
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             var content = await response.Content.ReadAsStringAsync();
             var device_authorization_Response = JsonConvert.DeserializeObject<device_authorization_Response>(content);
-            
+            Assert.NotNull(device_authorization_Response);
+
             // (C) The client instructs the end user to use a user agent on another
             // device and visit the provided end-user verification URI.  The
             // client provides the user with the end-user code to enter in
@@ -96,12 +97,12 @@ namespace Rinsen.Outback.Tests
             // the user completed the user authorization step.  The client
             // includes the device code and its client identifier.
 
-            var tokenRequestFormContent = new FormUrlEncodedContent(new[]
-            {
+            var tokenRequestFormContent = new FormUrlEncodedContent(
+            [
                 new KeyValuePair<string, string>("grant_type", "urn:ietf:params:oauth:grant-type:device_code"),
                 new KeyValuePair<string, string>("device_code", device_authorization_Response.device_code),
                 new KeyValuePair<string, string>("client_id", "DeviceAuthorizationClientId"),
-            });
+            ]);
 
             var notAcceptedTokenRequest = await client.PostAsync("connect/token", tokenRequestFormContent);
 
@@ -125,7 +126,7 @@ namespace Rinsen.Outback.Tests
             var accessToken = await JwtValidationHelper.ValidateToken(client, tokenResponse.access_token, "OutbackAS", "https://localhost");
 
             Assert.True(accessToken.IsValid);
-            Assert.Equal(8, accessToken.Claims.Count());
+            Assert.Equal(8, accessToken.Claims.Count);
             Assert.Equal("DeviceAuthorizationClientId", accessToken.Claims.Single(m => m.Key == "client_id").Value);
             Assert.Equal("openid profile", accessToken.Claims.Single(m => m.Key == "scope").Value);
             Assert.Equal("123456789", accessToken.Claims.Single(m => m.Key == "sub").Value);

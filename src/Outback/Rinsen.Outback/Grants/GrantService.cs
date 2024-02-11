@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -42,11 +40,10 @@ internal class GrantService : IGrantService
         }
 
         // Validate code
-        using var sha256 = SHA256.Create();
-        var challengeBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));
+        var challengeBytes = SHA256.HashData(Encoding.UTF8.GetBytes(codeVerifier));
         var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
 
-        if (codeChallenge != codeGrant.CodeChallange)
+        if (codeChallenge != codeGrant.CodeChallenge)
         {
             throw new SecurityException("Code verifier is not matching code challenge");
         }
@@ -59,15 +56,15 @@ internal class GrantService : IGrantService
         if (!AbnfValidationHelper.IsValid(model.CodeChallenge, 43, 128))
         {
             // Code verifier is not valid
-            throw new SecurityException("Code challange is not valid");
+            throw new SecurityException("Code challenge is not valid");
         }
 
         var grant = new CodeGrant
         {
             ClientId = client.ClientId,
             Code = _randomStringGenerator.GetRandomString(15),
-            CodeChallange = model.CodeChallenge,
-            CodeChallangeMethod = model.CodeChallengeMethod,
+            CodeChallenge = model.CodeChallenge,
+            CodeChallengeMethod = model.CodeChallengeMethod,
             Nonce = model.Nonce,
             RedirectUri = model.RedirectUri,
             Scope = model.Scope,
@@ -179,7 +176,7 @@ internal class GrantService : IGrantService
         return deviceAuthorizationGrant;
     }
 
-    private string GetUserCode(int length)
+    private static string GetUserCode(int length)
     {
         const string sourceString = "BCDFGHJKLMNPQRSTVWXZ";
 
@@ -189,12 +186,12 @@ internal class GrantService : IGrantService
 
         randomNumberGenerator.GetBytes(randomBytes);
 
-        var result = new StringBuilder(length + 2); // Ewwww
+        var result = new StringBuilder(length + 2);
 
         var count = 0;
         foreach (byte b in randomBytes)
         {
-            if (count == 4 || count == 9) // Ewwww
+            if (count == 4 || count == 9)
             {
                 result.Append('-');
                 count++;

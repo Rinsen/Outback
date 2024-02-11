@@ -132,8 +132,8 @@ public class OutbackTableInstallation : DatabaseVersion
         outbackCodeGrantsTable.AddColumn(m => m.ClientId).ForeignKey<OutbackClient>(m => m.Id);
         outbackCodeGrantsTable.AddColumn(m => m.Created);
         outbackCodeGrantsTable.AddColumn(m => m.Code, 200);
-        outbackCodeGrantsTable.AddColumn(m => m.CodeChallange, 1000);
-        outbackCodeGrantsTable.AddColumn(m => m.CodeChallangeMethod, 200);
+        outbackCodeGrantsTable.AddColumn(m => m.CodeChallenge, 1000);
+        outbackCodeGrantsTable.AddColumn(m => m.CodeChallengeMethod, 200);
         outbackCodeGrantsTable.AddColumn(m => m.Expires);
         outbackCodeGrantsTable.AddColumn(m => m.Nonce, 1000).Null();
         outbackCodeGrantsTable.AddColumn(m => m.RedirectUri, 1000);

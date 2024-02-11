@@ -10,9 +10,9 @@ public class CodeGrant
 
     public string Code { get; set; } = string.Empty;
 
-    public string CodeChallange { get; set; } = string.Empty;
+    public string CodeChallenge { get; set; } = string.Empty;
 
-    public string CodeChallangeMethod { get; set; } = string.Empty;
+    public string CodeChallengeMethod { get; set; } = string.Empty;
 
     public string State { get; set; } = string.Empty;
 

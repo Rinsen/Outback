@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Configuration;
 using Rinsen.Outback.Models;
 using Rinsen.Outback.WellKnown;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -50,7 +50,7 @@ public class WellKnownController : ControllerBase
             JwksUri = $"https://{host}/.well-known/openid-configuration/jwks",
             AuthorizationEndpoint = $"https://{host}/connect/authorize",
             TokenEndpoint = $"https://{host}/connect/token",
-            CodeChallengeMethodsSupported = new List<string> { "S256" },
+            CodeChallengeMethodsSupported = ["S256"],
             ScopesSupported = scopes.Where(m => m.ShowInDiscoveryDocument).Select(m => m.ScopeName).ToList()
         };
 
@@ -100,15 +100,22 @@ public class WellKnownController : ControllerBase
     {
         if (Request.Headers.TryGetValue("Origin", out var origin))
         {
-            var origins = await _allowedCorsOriginsAccessor.GetOrigins();
-
-            if (origins.Contains(origin))
+            if (StringValues.IsNullOrEmpty(origin))
             {
-                Response.Headers.AccessControlAllowOrigin = origin;
+                _logger.LogInformation("No content of Origin header found");
             }
             else
             {
-                _logger.LogInformation("No valid origin found for {origin}", origin);
+                var origins = await _allowedCorsOriginsAccessor.GetOrigins();
+
+                if (origins.Contains(origin.ToString()))
+                {
+                    Response.Headers.AccessControlAllowOrigin = origin;
+                }
+                else
+                {
+                    _logger.LogInformation("No valid origin found for {origin}", origin.ToString());
+                }
             }
         }
     }
