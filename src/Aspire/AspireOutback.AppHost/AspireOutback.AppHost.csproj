@@ -18,5 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\OutbackApp\Rinsen.Outback.App.Installation\Rinsen.Outback.App.Installation.csproj" />
+    <ProjectReference Include="..\..\OutbackApp\Rinsen.Outback.App\Rinsen.Outback.App.csproj" />
   </ItemGroup>
 </Project>
