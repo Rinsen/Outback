@@ -6,7 +6,9 @@
         "Command": "Install",
         "DatabaseName": "Outback",
         "Schema": "dbo",
-        "ConnectionStrings__Outback": "Server=;User Id=sa;Password=; TrustServerCertificate=True;"
+        "ConnectionStrings__Outback": "Server=;User Id=sa;Password=; TrustServerCertificate=True;",
+        "Login__Debug__Password": "YourStrong!Passw0rd",
+        "Login__Runtime__Password": "YourStrong!Passw0rd"
       },
       "remoteDebugEnabled": false,
       "hotReloadEnabled": true
