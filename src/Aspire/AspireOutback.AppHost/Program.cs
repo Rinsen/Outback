@@ -2,11 +2,11 @@
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var sqlServer = builder.AddSqlServer("outbackserver")
+var sqlServer = builder.AddSqlServer("outbackSqlServer")
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);
 
-var db = sqlServer.AddDatabase("Outback");
+var outbackDb = sqlServer.AddDatabase("Outback");
 
 var installation = builder.AddProject<Projects.Rinsen_Outback_App_Installation>("outbackinstallation")
     .WithReference(sqlServer)
@@ -14,13 +14,16 @@ var installation = builder.AddProject<Projects.Rinsen_Outback_App_Installation>(
     .WithEnvironment("Command", "Install")
     .WithEnvironment("DatabaseName", "Outback")
     .WithEnvironment("Schema", "dbo")
+    .WithEnvironment("ConnectionStringName", "outbackSqlServer")
     .WithEnvironment("Login__Debug__Password", "nfgsjknFSDgdf5436545fghscnhfgmDFSAFdfsj4534DFG")
     .WithEnvironment("Login__Runtime__Password", "fds4235sfdgDFGfgde4523sdfgSDdcsfsfdg32");
 
 builder.AddProject<Projects.Rinsen_Outback_App>("outbackapp")
-    .WithReference(db)
-    .WaitFor(db)
+    .WithReference(outbackDb)
+    .WaitFor(outbackDb)
     .WaitFor(installation)
-    .WithExternalHttpEndpoints();
+    .WithExternalHttpEndpoints()
+    .WithEnvironment("Rinsen__InvitationCode", "1234")
+    .WithUrl("https://localhost:5001");
 
 builder.Build().Run();

@@ -72,15 +72,15 @@ public class Startup
 
         var gelfhost = Configuration["Rinsen:GelfHost"];
 
-        if (string.IsNullOrEmpty(gelfhost))
-            throw new Exception("No gelf host");
-
-        services.AddRinsenGelf(options =>
+        if (!string.IsNullOrEmpty(gelfhost))
         {
-            options.GelfServiceHostNameOrAddress = gelfhost;
-            options.GelfServicePort = 12202;
-            options.ApplicationName = "Outback";
-        });
+            services.AddRinsenGelf(options =>
+            {
+                options.GelfServiceHostNameOrAddress = gelfhost;
+                options.GelfServicePort = 12202;
+                options.ApplicationName = "Outback";
+            });
+        }
 
         AddAuthentication(services, connectionString);
 

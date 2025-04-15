@@ -12,17 +12,17 @@
     <None Remove="wwwroot\css\css\**" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.3" />
-    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="9.0.3" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="9.0.3" Condition="'$(Configuration)' == 'Debug'" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="9.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="9.0.4" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.4" />
     <PackageReference Include="Microsoft.OpenApi" Version="1.6.24" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.2" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
     <PackageReference Include="NJsonSchema" Version="11.2.0" />
     <PackageReference Include="Rinsen.Gelf" Version="0.0.9" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="8.1.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="8.1.1" />
     <PackageReference Include="UAParser" Version="3.1.47" />
   </ItemGroup>
   <ItemGroup>
