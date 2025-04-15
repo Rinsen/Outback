@@ -23,7 +23,7 @@ public class Program
                     var env = hostingContext.HostingEnvironment;
                     if (env.IsDevelopment())
                     {
-                        logging.AddConsole().AddRinsenGelfLogger();
+                        logging.AddConsole();
                     }
                     else
                     {
