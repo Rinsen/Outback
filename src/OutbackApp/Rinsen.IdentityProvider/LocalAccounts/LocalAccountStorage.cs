@@ -192,7 +192,7 @@ public class LocalAccountStorage : ILocalAccountStorage
             return MapLocalAccountFromReader(reader);
         }
 
-        throw new Exception($"Could not find local account for {loginId}");
+        throw new AccountNotFoundException($"Could not find local account for {loginId}");
     }
 
     public async Task<LocalAccount> GetAsync(Guid identityId)

@@ -18,12 +18,18 @@ var installation = builder.AddProject<Projects.Rinsen_Outback_App_Installation>(
     .WithEnvironment("Login__Debug__Password", "nfgsjknFSDgdf5436545fghscnhfgmDFSAFdfsj4534DFG")
     .WithEnvironment("Login__Runtime__Password", "fds4235sfdgDFGfgde4523sdfgSDdcsfsfdg32");
 
-builder.AddProject<Projects.Rinsen_Outback_App>("outbackapp")
+var outbackApp = builder.AddProject<Projects.Rinsen_Outback_App>("outbackapp")
     .WithReference(outbackDb)
     .WaitFor(outbackDb)
     .WaitFor(installation)
     .WithExternalHttpEndpoints()
     .WithEnvironment("Rinsen__InvitationCode", "1234")
     .WithUrl("https://localhost:5001");
+
+builder.AddNpmApp("angular", "../../AdminApp/outback-admin")
+    .WithReference(outbackApp)
+    .WaitFor(outbackApp)
+    .WithHttpEndpoint(env: "PORT")
+    .WithExternalHttpEndpoints();
 
 builder.Build().Run();

@@ -114,13 +114,15 @@ public class IdentityController : Controller
     {
         if (ModelState.IsValid)
         {
-            var result = await _loginService.LoginAsync(model.Email, model.Password, Request.Host.Value, model.RememberMe);
+            var hostValue = Request.Host.Value ?? "no-host"; // Ensure host is not null
+
+            var result = await _loginService.LoginAsync(model.Email, model.Password, hostValue, model.RememberMe);
 
             if (result.Succeeded && result.Principal != null)
             {
                 return await LoginSuccess(result.LoginId, model.ReturnUrl, result.Principal);
             }
-            else if(result.TwoFactorRequired)
+            else if (result.TwoFactorRequired)
             {
                 var twoFactorModel = new TwoFactorModel
                 {
@@ -132,7 +134,7 @@ public class IdentityController : Controller
                     TwoFactorSmsEnabled = result.TwoFactorSmsEnabled,
                     TwoFactorTotpEnabled = result.TwoFactorTotpEnabled,
                 };
-                
+
                 Response.Cookies.Append("AuthSessionId", result.TwoFactorAuthenticationSessionId);
 
                 return View("TwoFactor", twoFactorModel);
