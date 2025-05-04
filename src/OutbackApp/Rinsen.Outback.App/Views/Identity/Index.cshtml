@@ -1,7 +1,7 @@
 @model Rinsen.Outback.App.Models.IdentityOverview
 @{
     ViewData["Title"] = "Outback identity";
-    Layout = "_LayoutIdentity";
+    Layout = "_Layout";
 }
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">Navbar</a>
@@ -38,54 +38,49 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
                         <th scope="col">Client</th>
-                        <th scope="col">Ip Address</th>
-                        <th scope="col">Expires</th>
-                        <th scope="col">Created</th>
+                        <th scope="col">Login time</th>
                         <th scope="col">Status</th>
+                        <th scope="col">End time</th>
+                        <th scope="col">Ip Address</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td scope="row">@Model.CurrentSession.Id</td>
                         <td>@Model.CurrentSession.ClientDescrition</td>
-                        <td>@Model.CurrentSession.IpAddress</td>
-                        <td>@Model.CurrentSession.Expires</td>
-                        <td>@Model.CurrentSession.Created</td>
+                        <td class="format-time" data-time="@Model.CurrentSession.Created.ToString("o")"></td>
                         <td>Current</td>
+                        <td class="format-time" data-time="@Model.CurrentSession.Expires.ToString("o")"></td>
+                        <td>@Model.CurrentSession.IpAddress</td>
                     </tr>
                     @foreach (var session in Model.Sessions.Where(m => !m.Deleted && !m.Expired).OrderByDescending(m => m.Created))
                 {
                     <tr>
-                            <td scope="row">@session.Id</td>
                             <td>@session.ClientDescrition</td>
-                            <td>@session.IpAddress</td>
-                            <td>@session.Expires</td>
-                            <td>@session.Created</td>
+                            <td class="format-time" data-time="@session.Created.ToString("o")"></td>
                             <td>Other</td>
+                            <td class="format-time" data-time="@session.Expires.ToString("o")"></td>
+                            <td>@session.IpAddress</td>
                         </tr>
                 }
                     @foreach (var session in Model.Sessions.Where(m => !m.Deleted && m.Expired).OrderByDescending(m => m.Created))
                 {
                     <tr>
-                            <td scope="row">@session.Id</td>
                             <td>@session.ClientDescrition</td>
-                            <td>@session.IpAddress</td>
-                            <td>@session.Expires</td>
-                            <td>@session.Created</td>
+                            <td class="format-time" data-time="@session.Created.ToString("o")"></td>
                             <td>Expired</td>
+                            <td class="format-time" data-time="@session.Expires.ToString("o")"></td>
+                            <td>@session.IpAddress</td>
                         </tr>
                 }
                     @foreach (var session in Model.Sessions.Where(m => m.Deleted).OrderByDescending(m => m.Created))
                 {
                     <tr>
-                            <td scope="row">@session.Id</td>
                             <td>@session.ClientDescrition</td>
-                            <td>@session.IpAddress</td>
-                            <td>@session.Expires</td>
-                            <td>@session.Created</td>
+                            <td class="format-time" data-time="@session.Created.ToString("o")"></td>
                             <td>Signed out</td>
+                            <td class="format-time" data-time="@session.Expires.ToString("o")"></td>
+                            <td>@session.IpAddress</td>
                         </tr>
                 }
                 </tbody>
@@ -93,3 +88,15 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const expiresCells = document.querySelectorAll(".format-time");
+        expiresCells.forEach(cell => {
+            const expiresIso = cell.getAttribute("data-time");
+            if (expiresIso) {
+                const localDate = new Date(expiresIso).toLocaleString();
+                cell.textContent = localDate;
+            }
+        });
+    });
+</script>
