@@ -17,15 +17,15 @@ namespace Rinsen.Outback.Controllers
     public class DeviceAuthorizationController : Controller
     {
         private readonly IClientAccessor _clientAccessor;
-        private readonly IGrantService _grantService;
+        private readonly IEnumerable<IGrantTypeHandler> _grantTypeHandlers;
         private readonly ILogger<DeviceAuthorizationController> _logger;
 
         public DeviceAuthorizationController(IClientAccessor clientAccessor,
-            IGrantService grantService,
+            IEnumerable<IGrantTypeHandler> grantTypeHandlers,
             ILogger<DeviceAuthorizationController> logger)
         {
             _clientAccessor = clientAccessor;
-            _grantService = grantService;
+            _grantTypeHandlers = grantTypeHandlers;
             _logger = logger;
         }
 
@@ -61,7 +61,16 @@ namespace Rinsen.Outback.Controllers
                     scope = deviceAuthorizationModel.Scope;
                 }
 
-                var deviceAuthorizationGrantRequest = await _grantService.GetDeviceAuthorizationGrantAsync(client, scope);
+                var grantTypeHandler = _grantTypeHandlers.SingleOrDefault(h => h.GrantType == "urn:ietf:params:oauth:grant-type:device_code");
+
+                if (grantTypeHandler is not DeviceCodeGrantTypeHandler deviceCodeGrantTypeHandler)
+                {
+                    _logger.LogWarning("Grant type device code is not active for client {ClientId}", client.ClientId);
+
+                    return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+                }
+
+                var deviceAuthorizationGrantRequest = await deviceCodeGrantTypeHandler.GetDeviceCodeGrantAsync(client, scope);
 
                 if (deviceAuthorizationGrantRequest == default)
                 {

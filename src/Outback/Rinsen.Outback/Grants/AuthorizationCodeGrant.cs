@@ -2,7 +2,7 @@
 
 namespace Rinsen.Outback.Grants;
 
-public class CodeGrant
+public class AuthorizationCodeGrant
 {
     public string ClientId { get; set; } = string.Empty;
 

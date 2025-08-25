@@ -29,12 +29,12 @@ internal class TokenService : ITokenService
         _scopeAccessor = scopeAccessor;
     }
 
-    public Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, CodeGrant persistedGrant, string issuer)
+    public Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, AuthorizationCodeGrant persistedGrant, string issuer)
     {
         return CreateTokenResponseAsync(client, persistedGrant, null, issuer);
     }
 
-    public async Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, CodeGrant persistedGrant, string? refreshToken, string issuer)
+    public async Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, AuthorizationCodeGrant persistedGrant, string? refreshToken, string issuer)
     {
         var tokenHandler = new JsonWebTokenHandler();
         var key = await _tokenSigningAccessor.GetSigningSecurityKey();
@@ -49,7 +49,7 @@ internal class TokenService : ITokenService
                 throw new Exception($"No refresh token defined for client {client.ClientId}");
             }
 
-            return new AccessTokenWithIdentityTokenAndRefreshTokenResponse
+            return new AccessTokenResponse
             {
                 AccessToken = accessTokenString,
                 ExpiresIn = client.AccessTokenLifetime,
@@ -62,7 +62,7 @@ internal class TokenService : ITokenService
         {
             var identityTokenString = await CreateIdentityToken(client, persistedGrant.SubjectId, persistedGrant.Nonce, persistedGrant.Scope, issuer, tokenHandler, key);
 
-            return new AccessTokenWithIdentityTokenResponse
+            return new AccessTokenResponse
             {
                 AccessToken = accessTokenString,
                 ExpiresIn = client.AccessTokenLifetime,
@@ -77,7 +77,7 @@ internal class TokenService : ITokenService
                 throw new Exception($"No refresh token defined for client {client.ClientId}");
             }
 
-            return new AccessTokenWithRefreshTokenResponse
+            return new AccessTokenResponse
             {
                 AccessToken = accessTokenString,
                 ExpiresIn = client.AccessTokenLifetime,
@@ -236,7 +236,7 @@ internal class TokenService : ITokenService
         };
     }
 
-    public async Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, DeviceAuthorizationGrant deviceAuthorizationGrant, string issuer)
+    public async Task<AccessTokenResponse> CreateTokenResponseAsync(Client client, DeviceCodeGrant deviceAuthorizationGrant, string issuer)
     {
         if (string.IsNullOrEmpty(deviceAuthorizationGrant.SubjectId))
         {
@@ -283,7 +283,7 @@ internal class TokenService : ITokenService
         {
             var identityTokenString = await CreateIdentityToken(client, refreshTokenGrant.SubjectId, null, refreshTokenGrant.Scope, issuer, tokenHandler, key);
 
-            return new AccessTokenWithIdentityTokenAndRefreshTokenResponse
+            return new AccessTokenResponse
             {
                 AccessToken = accessTokenString,
                 ExpiresIn = client.AccessTokenLifetime,
@@ -293,7 +293,7 @@ internal class TokenService : ITokenService
             };
         }
 
-        return new AccessTokenWithRefreshTokenResponse
+        return new AccessTokenResponse
         {
             AccessToken = accessTokenString,
             ExpiresIn = client.AccessTokenLifetime,

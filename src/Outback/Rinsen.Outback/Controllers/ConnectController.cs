@@ -5,12 +5,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Clients;
-using Rinsen.Outback.Configuration;
 using Rinsen.Outback.Grants;
-using Rinsen.Outback.Helpers;
-using Rinsen.Outback.JwtTokens;
 using Rinsen.Outback.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,27 +17,21 @@ namespace Rinsen.Outback.Controllers;
 [Route("connect")]
 public class ConnectController : Controller
 {
-    private readonly IGrantService _grantService;
     private readonly IClientService _clientService;
-    private readonly ITokenService _tokenFactory;
-    private readonly IGrantAccessor _grantAccessor;
-    private readonly IOutbackConfigurationAccessor _outbackConfigurationAccessor;
+    private readonly IEnumerable<IGrantTypeHandler> _grantTypeHandlers;
     private readonly ILogger<ConnectController> _logger;
+    private readonly IUserInfoAccessor _userInfoAccessor;
 
     public ConnectController(
-        IGrantService grantService,
         IClientService clientService,
-        ITokenService tokenFactory,
-        IGrantAccessor grantAccessor,
-        IOutbackConfigurationAccessor outbackConfigurationAccessor,
-        ILogger<ConnectController> logger)
+        IEnumerable<IGrantTypeHandler> grantTypeHandlers,
+        ILogger<ConnectController> logger,
+        IUserInfoAccessor userInfoAccessor)
     {
-        _grantService = grantService;
         _clientService = clientService;
-        _tokenFactory = tokenFactory;
-        _grantAccessor = grantAccessor;
-        _outbackConfigurationAccessor = outbackConfigurationAccessor;
+        _grantTypeHandlers = grantTypeHandlers;
         _logger = logger;
+        _userInfoAccessor = userInfoAccessor;
     }
 
     [HttpGet]
@@ -50,9 +42,11 @@ public class ConnectController : Controller
         {
             var client = await _clientService.GetClient(model);
 
-            if (!await _outbackConfigurationAccessor.IsCodeGrantActiveAsync())
+            var grantTypeHandler = _grantTypeHandlers.SingleOrDefault(h => h.GrantType == "authorization_code");
+
+            if (grantTypeHandler is not AuthorizationCodeGrantTypeHandler authorizationCodeGrantHandler)
             {
-                _logger.LogWarning("Response type {ResponseType} is not active for client {ClientId}", model.ResponseType, client.ClientId);
+                _logger.LogWarning("Grant type {ResponseType} is not active for client {ClientId}", model.ResponseType, client.ClientId);
 
                 return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
             }
@@ -76,13 +70,6 @@ public class ConnectController : Controller
                 return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
             }
 
-            if (model.ResponseType != "code")
-            {
-                _logger.LogWarning("Response type {ResponseType} is not valid for client {ClientId}", model.ResponseType, client.ClientId);
-
-                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
-            }
-
             if (!ClientValidator.IsScopeValid(client, model.Scope))
             {
                 _logger.LogWarning("Client scopes {Scope} is not valid for client {ClientId}", model.Scope, client.ClientId);
@@ -100,7 +87,7 @@ public class ConnectController : Controller
             string code;
             if (client.ConsentRequired)
             {
-                code = await _grantService.GetCodeForExistingConsentAsync(client, User, model);
+                code = await authorizationCodeGrantHandler.GetCodeForExistingConsentAsync(client, User, model);
 
                 if (string.IsNullOrEmpty(code))
                 {
@@ -110,7 +97,7 @@ public class ConnectController : Controller
             else
             {
                 // Generate and store grant
-                code = await _grantService.CreateCodeAndStoreCodeGrantAsync(client, User, model);
+                code = await authorizationCodeGrantHandler.CreateCodeAndStoreCodeGrantAsync(client, User, model);
             }
 
             // If no redirect_uri is provided but the client have only one redirect uri we use that uri (2.3.3).
@@ -199,148 +186,77 @@ public class ConnectController : Controller
                 return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
             }
 
-            return model.GrantType switch
+            var grantTypeHandler = _grantTypeHandlers.SingleOrDefault(h => h.GrantType == model.GrantType);
+
+            if (grantTypeHandler == default)
             {
-                "authorization_code" => await GetTokenForAuthorizationCodeGrantAsync(model, client),
-                "client_credentials" => await GetTokenForClientCredentialsGrantAsync(client),
-                "refresh_token" => await GetTokenForRefreshTokenGrantAsync(model, client),
-                "urn:ietf:params:oauth:grant-type:device_code" => await GetTokenForDeviceAuthorizationGrant(model, client),
-                _ => BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant })
-            };
+                _logger.LogError("No grant type handler found for grant type {grantType}", model.GrantType);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
+            }
+
+            var result = await grantTypeHandler.GetTokenAsync(model, client, GetIssuer());
+
+            if (result.IsError)
+            {
+                return BadRequest(result.ErrorResponse);
+            }
+            
+            AddCorsHeaderIfRequiredAndSupported(client);
+            AddCacheControlHeader();
+
+            return Json(result.AccessTokenResponse);
         }
 
         return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
     }
 
-    private async Task<IActionResult> GetTokenForDeviceAuthorizationGrant(TokenModel model, Client client)
+    [HttpGet]
+    [HttpPost]
+    [Authorize]
+    [Route("userinfo")]
+    public async Task<IActionResult> UserInfo()
     {
-        if (!await _outbackConfigurationAccessor.IsDeviceAuthorizationGrantActiveAsync())
+        if (!(User?.Identity?.IsAuthenticated ?? false))
         {
-            _logger.LogError("Device authorization grant is not active for client {ClientId}", client.ClientId);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
+            return Unauthorized();
         }
 
-        var deviceGrant = await _grantAccessor.GetDeviceAuthorizationGrantAsync(model.DeviceCode);
-
-        if (client.ClientId != deviceGrant.ClientId)
+        var subjectId = User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(subjectId))
         {
-            _logger.LogError("Device authorization grant {DeviceCode} is not for client {ClientId}", model.DeviceCode, client.ClientId);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+            _logger.LogWarning("No subject (sub) claim found on principal for userinfo request");
+            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest, ErrorDescription = "Missing subject" });
         }
 
-        if (deviceGrant.AccessIsRejected)
+        var scopeClaim = User.FindFirst("scope")?.Value;
+        var scopes = new List<string>();
+        if (!string.IsNullOrEmpty(scopeClaim))
         {
-            _logger.LogInformation("Device authorization grant {DeviceCode} is rejected", model.DeviceCode);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.AccessDenied });
-        }
-
-        if (DateTimeOffset.UtcNow.Subtract(deviceGrant.UserCodeExpiration).TotalMilliseconds > 0)
-        {
-            _logger.LogError("Device authorization grant {DeviceCode} have expired", model.DeviceCode);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.ExpiredToken });
-        }
-
-        if (string.IsNullOrEmpty(deviceGrant.SubjectId))
-        {
-            _logger.LogInformation("Device authorization grant {DeviceCode} is not accepted yet", model.DeviceCode);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.AuthorizationPending });
-        }
-
-        var tokenResponse = await _tokenFactory.CreateTokenResponseAsync(client, deviceGrant, GetIssuer());
-
-        AddCacheControlHeader();
-
-        return Json(tokenResponse);
-    }
-
-    private async Task<IActionResult> GetTokenForClientCredentialsGrantAsync(Client client)
-    {
-        if (!await _outbackConfigurationAccessor.IsClientCredentialsGrantActiveAsync())
-        {
-            _logger.LogError("Client credential grant is not active for client {ClientId}", client.ClientId);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
-        }
-
-        var tokenResponse = await _tokenFactory.CreateTokenResponseAsync(client, GetIssuer());
-
-        AddCacheControlHeader();
-
-        return Json(tokenResponse);
-    }
-
-    private async Task<IActionResult> GetTokenForAuthorizationCodeGrantAsync(TokenModel model, Client client)
-    {
-        if (!await _outbackConfigurationAccessor.IsCodeGrantActiveAsync())
-        {
-            _logger.LogError("Code grant is not active for client {ClientId}", client.ClientId);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant});
-        }
-
-        CodeGrant persistedGrant;
-        if (string.IsNullOrEmpty(model.Code))
-        {
-            _logger.LogError("No code for client {ClientId}", client.ClientId);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
-        }
-
-        if (string.IsNullOrEmpty(model.CodeVerifier))
-        {
-            _logger.LogError("No code verifier for client {ClientId}", client.ClientId);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
-        }
-
-        if (!AbnfValidationHelper.IsValid(model.CodeVerifier, 43, 128))
-        {
-            // Code verifier is not valid
-            _logger.LogError("Code verifier is not ABNF valid for client {ClientId} with code verifier {CodeVerifier}", client.ClientId, model.CodeVerifier);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
-        }
-
-        try
-        {
-            persistedGrant = await _grantService.GetCodeGrantAsync(model.Code, client.ClientId, model.CodeVerifier);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to resolve grant for client {ClientId}", client.ClientId);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
-        }
-
-        // Validate return url if provided
-        if (!string.Equals(persistedGrant.RedirectUri, model.RedirectUri))
-        {
-            _logger.LogError("Redirect uri '{RedirectUri}' did not match granted '{GrantedRedirectUri}' redirect uri", model.RedirectUri, persistedGrant.RedirectUri);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
-        }
-
-        AccessTokenResponse tokenResponse;
-        if (client.IssueRefreshToken)
-        {
-            var refreshToken = await _grantService.CreateRefreshTokenAsync(client, persistedGrant);
-
-            tokenResponse = await _tokenFactory.CreateTokenResponseAsync(client, persistedGrant, refreshToken, GetIssuer());
+            scopes = scopeClaim.Split(' ').ToList();
         }
         else
         {
-            tokenResponse = await _tokenFactory.CreateTokenResponseAsync(client, persistedGrant, GetIssuer());
+            _logger.LogWarning("No scope claim found on principal for userinfo request for subject {SubjectId}", subjectId);
         }
 
-        AddCorsHeaderIfRequiredAndSupported(client);
+        Dictionary<string, string> userInfoClaims;
+        try
+        {
+            userInfoClaims = await _userInfoAccessor.GetUserInfoClaims(subjectId, scopes);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get userinfo claims for subject {SubjectId}", subjectId);
+            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+        }
+
+        // Ensure 'sub' is always included per OIDC spec
+        userInfoClaims["sub"] = subjectId;
+
         AddCacheControlHeader();
 
-        return Json(tokenResponse);
+        return Json(userInfoClaims);
     }
 
     private void AddCorsHeaderIfRequiredAndSupported(Client client)
@@ -363,36 +279,6 @@ public class ConnectController : Controller
                 }
             }
         }
-    }
-
-    private async Task<IActionResult> GetTokenForRefreshTokenGrantAsync(TokenModel model, Client client)
-    {
-        if (!await _outbackConfigurationAccessor.IsRefreshTokenGrantActiveAsync())
-        {
-            _logger.LogError("Refresh token authorization grant is not active for client {ClientId}", client.ClientId);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
-        }
-
-        RefreshTokenGrant refreshTokenGrant;
-        try
-        {
-            refreshTokenGrant = await _grantService.GetRefreshTokenGrantAsync(model.RefreshToken, client.ClientId);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to resolve grant for client {ClientId} with {RefreshToken}", client.ClientId, model.RefreshToken);
-
-            return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
-        }
-
-        var refreshToken = await _grantService.CreateNewRefreshTokenAsync(client, refreshTokenGrant);
-
-        var tokenResponse = await _tokenFactory.CreateTokenResponseAsync(client, refreshTokenGrant, refreshToken, GetIssuer());
-
-        AddCacheControlHeader();
-
-        return Json(tokenResponse);
     }
 
     private void AddCacheControlHeader()

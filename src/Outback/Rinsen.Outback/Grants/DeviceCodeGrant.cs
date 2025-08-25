@@ -2,7 +2,7 @@
 
 namespace Rinsen.Outback.Grants
 {
-    public class DeviceAuthorizationGrant
+    public class DeviceCodeGrant
     {
         /// <summary>
         /// The client that is Granted access for the Subject.

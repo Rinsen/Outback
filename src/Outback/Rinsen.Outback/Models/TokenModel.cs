@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Rinsen.Outback.Models;
@@ -53,4 +55,11 @@ public class TokenModel
     /// </summary>
     [BindProperty(Name = "device_code")]
     public string DeviceCode { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Captures any additional form parameters not mapped to known properties.
+    /// Key = parameter name, Value = parameter value.
+    /// </summary>
+    [ModelBinder(BinderType = typeof(AdditionalTokenParametersBinder))]
+    public Dictionary<string, string> AdditionalParameters { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }

@@ -178,7 +178,7 @@ public class IdentityController : Controller
     {
         if (ModelState.IsValid)
         {
-            if(Request.Cookies.TryGetValue("AuthSessionId", out var authSessionId))
+            if (Request.Cookies.TryGetValue("AuthSessionId", out var authSessionId))
             {
                 if (string.IsNullOrEmpty(authSessionId))
                 {
@@ -198,7 +198,8 @@ public class IdentityController : Controller
                     LoginResult result;
                     try
                     {
-                        result = await _loginService.ConfirmTotpCode(authSessionId, model.KeyCode, Request.Host.Value, model.RememberMe);
+                        var hostValue = Request.Host.Value ?? "unknown-host"; // Ensure host is not null
+                        result = await _loginService.ConfirmTotpCode(authSessionId, model.KeyCode, hostValue, model.RememberMe);
                     }
                     catch (TotpCodeAlreadyUsedException)
                     {
@@ -259,9 +260,9 @@ public class IdentityController : Controller
                 var createLocalAccountResult = await _localAccountService.CreateAsync(createIdentityResult.Identity.IdentityId, model.Email, model.Password);
 
                 if (createLocalAccountResult.Succeeded)
-                {
-                    var loginResult = await _loginService.LoginAsync(model.Email, model.Password, Request.Host.Value, false);
-
+                {                    
+                    var hostValue = Request.Host.Value ?? "no-host"; // Ensure host is not null
+                    var loginResult = await _loginService.LoginAsync(model.Email, model.Password, hostValue, false);
                     if (loginResult.Succeeded)
                     {
                         return View("UserCreated");
