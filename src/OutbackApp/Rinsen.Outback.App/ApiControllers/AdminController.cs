@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -9,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Rinsen.IdentityProvider.Backup;
 using Rinsen.IdentityProvider.Outback;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace Rinsen.Outback.App.ApiControllers;
 
@@ -34,7 +32,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [Route("install")]
-    [SwaggerOperation(summary: "Install default clients", OperationId = "Admin_Install")]
+    //[SwaggerOperation(summary: "Install default clients", OperationId = "Admin_Install")]
     [ProducesResponseType(200)]
     public async Task<IActionResult> InstallDefault()
     {
@@ -46,7 +44,7 @@ public class AdminController : Controller
     [HttpGet]
     [Route("configuration")]
     [Authorize("AdminsOnly")]
-    [SwaggerOperation(summary: "Get IConfiguration parameters", OperationId = "Admin_Configuration")]
+    //[SwaggerOperation(summary: "Get IConfiguration parameters", OperationId = "Admin_Configuration")]
     [ProducesResponseType(200)]
     public IActionResult GetConfiguration()
     {
@@ -58,7 +56,7 @@ public class AdminController : Controller
     [HttpGet]
     [Route("backup/download")]
     [Authorize("AdminsOnly")]
-    [SwaggerOperation(summary: "Get IConfiguration parameters", OperationId = "Admin_Backup_Download")]
+    //[SwaggerOperation(summary: "Get IConfiguration parameters", OperationId = "Admin_Backup_Download")]
     [ProducesResponseType(200)]
     public async Task<IActionResult> Download()
     {
@@ -81,7 +79,7 @@ public class AdminController : Controller
 
     [HttpPost("backup/upload")]
     [Authorize("AdminsOnly")]
-    [SwaggerOperation(summary: "Get IConfiguration parameters", OperationId = "Admin_Backup_Upload")]
+    //[SwaggerOperation(summary: "Get IConfiguration parameters", OperationId = "Admin_Backup_Upload")]
     [ProducesResponseType(200)]
     public IActionResult Upload(IFormFile file)
     {

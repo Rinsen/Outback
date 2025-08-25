@@ -15,9 +15,9 @@ using Microsoft.AspNetCore.HttpOverrides;
 using System.Net;
 using Microsoft.AspNetCore.DataProtection;
 using Rinsen.IdentityProvider.Configurations;
-using Microsoft.OpenApi.Models;
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.OpenApi;
 
 namespace Rinsen.Outback.App;
 
@@ -40,32 +40,34 @@ public class Startup
         if (string.IsNullOrEmpty(connectionString))
             throw new Exception("No connection string provided");
 
-        services.AddSwaggerGen(c =>
-        {
-            c.SwaggerDoc("operation", new OpenApiInfo { Title = "Operational API", Version = "v1", Description = "APIs for running operational tasks on this Outback installation" });
-            c.SwaggerDoc("outback", new OpenApiInfo { Title = "Outback", Version = "v1", Description = "APIs for managing the outback client and scope configurations" });
-            c.SwaggerDoc("openid", new OpenApiInfo { Title = "OpenId Connect and OAuth APIs", Version = "v1", Description = "Outback OpenId Connect and OAuth APIs" });
-            c.SwaggerDoc("session", new OpenApiInfo { Title = "Session information", Version = "v1", Description = "Information about the user session" });
-            c.DocInclusionPredicate((name, desc) =>
-            {
-                switch (name)
-                {
-                    case "outback":
-                        return string.IsNullOrEmpty(desc.RelativePath) ? false : desc.RelativePath.Contains("outback", StringComparison.OrdinalIgnoreCase);
-                    case "operation":
-                        return string.IsNullOrEmpty(desc.RelativePath) ? false : desc.RelativePath.Contains("admin", StringComparison.OrdinalIgnoreCase);
-                    case "session":
-                        return string.IsNullOrEmpty(desc.RelativePath) ? false : desc.RelativePath.Contains("session", StringComparison.OrdinalIgnoreCase);
-                    case "openid":
-                        return string.IsNullOrEmpty(desc.RelativePath) ? false : (desc.RelativePath.Contains(".well-known/openid-configuration", StringComparison.OrdinalIgnoreCase) || desc.RelativePath.Contains(".well-known/openid-configuration/jwks", StringComparison.OrdinalIgnoreCase)
-                        || desc.RelativePath.Contains("connect/authorize", StringComparison.OrdinalIgnoreCase) || desc.RelativePath.Contains("connect/token", StringComparison.OrdinalIgnoreCase));
-                    default:
-                        return false;
-                }
-            });
-            c.EnableAnnotations();
-            c.SupportNonNullableReferenceTypes();
-        });
+        services.AddOpenApi();
+
+        //services.AddSwaggerGen(c =>
+        //{
+        //    c.SwaggerDoc("operation", new OpenApiInfo { Title = "Operational API", Version = "v1", Description = "APIs for running operational tasks on this Outback installation" });
+        //    c.SwaggerDoc("outback", new OpenApiInfo { Title = "Outback", Version = "v1", Description = "APIs for managing the outback client and scope configurations" });
+        //    c.SwaggerDoc("openid", new OpenApiInfo { Title = "OpenId Connect and OAuth APIs", Version = "v1", Description = "Outback OpenId Connect and OAuth APIs" });
+        //    c.SwaggerDoc("session", new OpenApiInfo { Title = "Session information", Version = "v1", Description = "Information about the user session" });
+        //    c.DocInclusionPredicate((name, desc) =>
+        //    {
+        //        switch (name)
+        //        {
+        //            case "outback":
+        //                return string.IsNullOrEmpty(desc.RelativePath) ? false : desc.RelativePath.Contains("outback", StringComparison.OrdinalIgnoreCase);
+        //            case "operation":
+        //                return string.IsNullOrEmpty(desc.RelativePath) ? false : desc.RelativePath.Contains("admin", StringComparison.OrdinalIgnoreCase);
+        //            case "session":
+        //                return string.IsNullOrEmpty(desc.RelativePath) ? false : desc.RelativePath.Contains("session", StringComparison.OrdinalIgnoreCase);
+        //            case "openid":
+        //                return string.IsNullOrEmpty(desc.RelativePath) ? false : (desc.RelativePath.Contains(".well-known/openid-configuration", StringComparison.OrdinalIgnoreCase) || desc.RelativePath.Contains(".well-known/openid-configuration/jwks", StringComparison.OrdinalIgnoreCase)
+        //                || desc.RelativePath.Contains("connect/authorize", StringComparison.OrdinalIgnoreCase) || desc.RelativePath.Contains("connect/token", StringComparison.OrdinalIgnoreCase));
+        //            default:
+        //                return false;
+        //        }
+        //    });
+        //    c.EnableAnnotations();
+        //    c.SupportNonNullableReferenceTypes();
+        //});
 
         services.AddRinsenIdentity(options => options.ConnectionString = connectionString);
         services.AddRinsenOutback();
@@ -145,16 +147,16 @@ public class Startup
         }
 
         // Enable middleware to serve generated Swagger as a JSON endpoint.
-        app.UseSwagger();
+        //app.UseSwagger();
 
         // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
         // specifying the Swagger JSON endpoint.
         app.UseSwaggerUI(c =>
         {
-            c.SwaggerEndpoint("/swagger/outback/swagger.json", "Outback");
-            c.SwaggerEndpoint("/swagger/operation/swagger.json", "Operation");
-            c.SwaggerEndpoint("/swagger/session/swagger.json", "Session");
-            c.SwaggerEndpoint("/swagger/openid/swagger.json", "OpenId Connect and OAuth");
+            c.SwaggerEndpoint("/openapi/v1.json", "Outback");
+            //    c.SwaggerEndpoint("/swagger/operation/swagger.json", "Operation");
+            //    c.SwaggerEndpoint("/swagger/session/swagger.json", "Session");
+            //    c.SwaggerEndpoint("/swagger/openid/swagger.json", "OpenId Connect and OAuth");
         });
 
         app.UseRouting();
@@ -167,6 +169,7 @@ public class Startup
         
         app.UseEndpoints(routes =>
         {
+            routes.MapOpenApi();
             routes.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Identity}/{action=Index}");
