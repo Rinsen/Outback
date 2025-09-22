@@ -49,7 +49,7 @@ namespace Rinsen.Outback.Tests
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", encodedClientIdAndSecret);
 
             // Act
-            var response = await client.PostAsync("connect/token", formContent);
+            var response = await client.PostAsync("oauth/token", formContent);
 
             // Assert
             Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);

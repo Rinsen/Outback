@@ -1,24 +1,23 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Rinsen.IdentityProvider;
-using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Http;
-using Rinsen.IdentityProvider.Outback.Entities;
-using Microsoft.AspNetCore.HttpOverrides;
-using System.Net;
-using Microsoft.AspNetCore.DataProtection;
 using Rinsen.IdentityProvider.Configurations;
-using System;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.OpenApi;
-using System.Linq;
+using Rinsen.IdentityProvider.Outback.Entities;
 
 namespace Rinsen.Outback.App;
 
@@ -40,14 +39,8 @@ public class Startup
 
         if (string.IsNullOrEmpty(connectionString))
             throw new Exception("No connection string provided");
-
-        services.AddOpenApi("outback", (options) =>
-        {
-            options.ShouldInclude = (description) =>
-            {
-                return true;
-            };
-        });
+        
+        ConfigureOpenApi(services);
 
         services.AddRinsenIdentity(options => options.ConnectionString = connectionString);
         services.AddRinsenOutback();
@@ -108,7 +101,6 @@ public class Startup
         }
 #endif
     }
-
     public void Configure(IApplicationBuilder app, ILogger<Startup> logger)
     {
         if (_env.IsDevelopment())
@@ -126,19 +118,16 @@ public class Startup
             app.UseHttpsRedirection();
         }
 
-        // Enable middleware to serve generated Swagger as a JSON endpoint.
-        //app.UseSwagger();
-
-        // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), 
-        // specifying the Swagger JSON endpoint.
-        app.UseSwaggerUI(c =>
+        if (_env.IsDevelopment())
         {
-            c.SwaggerEndpoint("/openapi/v1.json", "Outback");
-            // To expose the other docs in the UI, uncomment:
-            // c.SwaggerEndpoint("/openapi/operation.json", "Operation");
-            // c.SwaggerEndpoint("/openapi/session.json", "Session");
-            // c.SwaggerEndpoint("/openapi/openid.json", "OpenId Connect and OAuth");
-        });
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/openapi/outback.json", "Outback");
+                c.SwaggerEndpoint("/openapi/operation.json", "Operation");
+                c.SwaggerEndpoint("/openapi/session.json", "Session");
+                c.SwaggerEndpoint("/openapi/oauth.json", "OpenId Connect and OAuth");
+            });
+        }
 
         app.UseRouting();
 
@@ -180,6 +169,102 @@ public class Startup
                 options.Audience = Configuration["Rinsen:ClientId"];
             });
     }
+
+    private static void ConfigureOpenApi(IServiceCollection services)
+    {
+        services.AddOpenApi("outback", (options) =>
+        {
+            options.AddDocumentTransformer((document, context, cancellationToken)
+                             =>
+            {
+                document.Info.Title = "Outback";
+                document.Info.Version = "v1";
+                document.Info.Description = "APIs for managing the outback client and scope configurations";
+                return Task.CompletedTask;
+            });
+
+            options.ShouldInclude = (description) =>
+            {
+                var relativePath = description.RelativePath ?? string.Empty;
+                if (relativePath.Contains("outback/api", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+                return false;
+            };
+        });
+
+        services.AddOpenApi("oauth", (options) =>
+        {
+            options.AddDocumentTransformer((document, context, cancellationToken)
+                             =>
+            {
+                document.Info.Title = "OpenId Connect and OAuth APIs";
+                document.Info.Version = "v1";
+                document.Info.Description = "Outback OpenId Connect and OAuth APIs";
+                return Task.CompletedTask;
+            });
+
+            options.ShouldInclude = (description) =>
+            {
+                var relativePath = description.RelativePath ?? string.Empty;
+
+                if (relativePath.Contains(".well-known", StringComparison.OrdinalIgnoreCase)
+                    || relativePath.Contains("oauth", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+                return false;
+            };
+        });
+
+        services.AddOpenApi("session", (options) =>
+        {
+            options.AddDocumentTransformer((document, context, cancellationToken)
+                             =>
+            {
+                document.Info.Title = "Session information";
+                document.Info.Version = "v1";
+                document.Info.Description = "Information about the user session";
+                return Task.CompletedTask;
+            });
+
+            options.ShouldInclude = (description) =>
+            {
+                var relativePath = description.RelativePath ?? string.Empty;
+
+                if (relativePath.Equals("api/session", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+                return false;
+            };
+        });
+
+        services.AddOpenApi("operation", (options) =>
+        {
+            options.AddDocumentTransformer((document, context, cancellationToken)
+                             =>
+            {
+                document.Info.Title = "Operational API";
+                document.Info.Version = "v1";
+                document.Info.Description = "APIs for running operational tasks on this Outback installation";
+                return Task.CompletedTask;
+            });
+
+            options.ShouldInclude = (description) =>
+            {
+                var relativePath = description.RelativePath ?? string.Empty;
+
+                if (relativePath.Contains("api/admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+                return false;
+            };
+        });
+    }
+
 }
 
 

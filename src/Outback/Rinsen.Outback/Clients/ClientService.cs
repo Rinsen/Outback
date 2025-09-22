@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Helpers;
-using Rinsen.Outback.Models;
 
 namespace Rinsen.Outback.Clients;
 
@@ -21,9 +20,9 @@ internal class ClientService : IClientService
         _logger = logger;
     }
 
-    public async Task<Client> GetClient(AuthorizeModel model)
+    public async Task<Client> GetClient(string clientId)
     {
-        var client = await _clientAccessor.GetClient(model.ClientId);
+        var client = await _clientAccessor.GetClient(clientId);
 
         return client;
     }

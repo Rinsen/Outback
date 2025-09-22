@@ -14,18 +14,19 @@ using System.Threading.Tasks;
 
 namespace Rinsen.Outback.Controllers;
 
-[Route("connect")]
-public class ConnectController : Controller
+[ApiController]
+[Route("oauth")]
+public class OAuthController : Controller
 {
     private readonly IClientService _clientService;
     private readonly IEnumerable<IGrantTypeHandler> _grantTypeHandlers;
-    private readonly ILogger<ConnectController> _logger;
+    private readonly ILogger<OAuthController> _logger;
     private readonly IUserInfoAccessor _userInfoAccessor;
 
-    public ConnectController(
+    public OAuthController(
         IClientService clientService,
         IEnumerable<IGrantTypeHandler> grantTypeHandlers,
-        ILogger<ConnectController> logger,
+        ILogger<OAuthController> logger,
         IUserInfoAccessor userInfoAccessor)
     {
         _clientService = clientService;
@@ -40,7 +41,7 @@ public class ConnectController : Controller
     {
         if (ModelState.IsValid)
         {
-            var client = await _clientService.GetClient(model);
+            var client = await _clientService.GetClient(model.ClientId);
 
             var grantTypeHandler = _grantTypeHandlers.SingleOrDefault(h => h.GrantType == "authorization_code");
 
@@ -206,6 +207,67 @@ public class ConnectController : Controller
             AddCacheControlHeader();
 
             return Json(result.AccessTokenResponse);
+        }
+
+        return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+    }
+
+    [HttpPost]
+    [Route("device_authorization")]
+    public async Task<IActionResult> DeviceAuthorization(DeviceAuthorizationRequestModel deviceAuthorizationModel)
+    {
+        if (ModelState.IsValid)
+        {
+            var client = await _clientService.GetClient(deviceAuthorizationModel.ClientId);
+
+            if (!client.SupportedGrantTypes.Any(g => g == "urn:ietf:params:oauth:grant-type:device_code"))
+            {
+                _logger.LogWarning("Client {ClientId} does not support device authorization code grant", deviceAuthorizationModel.ClientId);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidGrant });
+            }
+
+            var scope = string.Empty;
+            if (string.IsNullOrEmpty(deviceAuthorizationModel.Scope))
+            {
+                scope = string.Join(' ', client.Scopes);
+            }
+            else if (!ClientValidator.IsScopeValid(client, deviceAuthorizationModel.Scope))
+            {
+                _logger.LogWarning("Client scopes {Scope} is not valid for client {ClientId}", deviceAuthorizationModel.Scope, client.ClientId);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidScope });
+            }
+            else
+            {
+                scope = deviceAuthorizationModel.Scope;
+            }
+
+            var grantTypeHandler = _grantTypeHandlers.SingleOrDefault(h => h.GrantType == "urn:ietf:params:oauth:grant-type:device_code");
+
+            if (grantTypeHandler is not DeviceCodeGrantTypeHandler deviceCodeGrantTypeHandler)
+            {
+                _logger.LogWarning("Grant type device code is not active for client {ClientId}", client.ClientId);
+
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+            }
+
+            var deviceAuthorizationGrantRequest = await deviceCodeGrantTypeHandler.GetDeviceCodeGrantAsync(client, scope);
+
+            if (deviceAuthorizationGrantRequest == default)
+            {
+                return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
+            }
+
+            return Json(new DeviceAuthorizationResponse
+            {
+                DeviceCode = deviceAuthorizationGrantRequest.DeviceCode,
+                UserCode = deviceAuthorizationGrantRequest.UserCode,
+                ExpiresIn = client.DeviceCodeUserCompletionLifetime,
+                Interval = deviceAuthorizationGrantRequest.Interval,
+                VerificationUri = $"https://{HttpContext.Request.Host}/device",
+                VerificationUriComplete = $"https://{HttpContext.Request.Host}/device?user_code={deviceAuthorizationGrantRequest.UserCode}"
+            });
         }
 
         return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
