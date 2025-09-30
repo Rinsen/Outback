@@ -18,7 +18,7 @@ public class GrantAccessor : IGrantAccessor
         _outbackDbContext = outbackDbContext;
     }
 
-    public async Task<CodeGrant> GetCodeGrantAsync(string code)
+    public async Task<AuthorizationCodeGrant> GetCodeGrantAsync(string code)
     {
         var outbackCodeGrant = await _outbackDbContext.CodeGrants.Include(m => m.Client).SingleOrDefaultAsync(m => m.Code == code && m.Resolved == null);
 
@@ -35,7 +35,7 @@ public class GrantAccessor : IGrantAccessor
         outbackCodeGrant.Resolved = DateTimeOffset.Now;
         await _outbackDbContext.SaveChangesAsync();
 
-        return new CodeGrant
+        return new AuthorizationCodeGrant
         {
             ClientId = outbackCodeGrant.Client.ClientId,
             Code = outbackCodeGrant.Code,
@@ -51,7 +51,7 @@ public class GrantAccessor : IGrantAccessor
         };
     }
 
-    public Task<DeviceAuthorizationGrant> GetDeviceAuthorizationGrantAsync(string deviceCode)
+    public Task<DeviceCodeGrant> GetDeviceAuthorizationGrantAsync(string deviceCode)
     {
         throw new NotImplementedException();
     }
@@ -112,7 +112,7 @@ public class GrantAccessor : IGrantAccessor
         };
     }
 
-    public async Task SaveCodeGrantAsync(CodeGrant codeGrant)
+    public async Task SaveCodeGrantAsync(AuthorizationCodeGrant codeGrant)
     {
         var clientIntId = await _outbackDbContext.Clients.Where(m => m.ClientId == codeGrant.ClientId).Select(m => m.Id).SingleAsync();
 
@@ -136,7 +136,7 @@ public class GrantAccessor : IGrantAccessor
         await _outbackDbContext.SaveChangesAsync();
     }
 
-    public Task SaveDeviceAuthorizationGrantAsync(DeviceAuthorizationGrant deviceAuthorizationGrant)
+    public Task SaveDeviceAuthorizationGrantAsync(DeviceCodeGrant deviceAuthorizationGrant)
     {
         throw new NotImplementedException();
     }

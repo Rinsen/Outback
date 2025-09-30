@@ -6,10 +6,10 @@ namespace SampleServer.InMemoryAccessors
 {
     public class GrantAccessor : IGrantAccessor
     {
-        private readonly ConcurrentDictionary<string, CodeGrant> _persistedGrants = new();
-        private readonly ConcurrentDictionary<string, DeviceAuthorizationGrant> _persistedDeviceAuthorizationGrant = new();
+        private readonly ConcurrentDictionary<string, AuthorizationCodeGrant> _persistedGrants = new();
+        private readonly ConcurrentDictionary<string, DeviceCodeGrant> _persistedDeviceAuthorizationGrant = new();
 
-        public Task<CodeGrant> GetCodeGrantAsync(string code)
+        public Task<AuthorizationCodeGrant> GetCodeGrantAsync(string code)
         {
             var codeGrant = _persistedGrants.GetValueOrDefault(code);
 
@@ -21,7 +21,7 @@ namespace SampleServer.InMemoryAccessors
             return Task.FromResult(codeGrant);
         }
 
-        public Task<DeviceAuthorizationGrant> GetDeviceAuthorizationGrantAsync(string deviceCode)
+        public Task<DeviceCodeGrant> GetDeviceAuthorizationGrantAsync(string deviceCode)
         {
             var deviceGrant = _persistedDeviceAuthorizationGrant.GetValueOrDefault(deviceCode);
 
@@ -43,14 +43,14 @@ namespace SampleServer.InMemoryAccessors
             throw new NotImplementedException();
         }
 
-        public Task SaveCodeGrantAsync(CodeGrant codeGrant)
+        public Task SaveCodeGrantAsync(AuthorizationCodeGrant codeGrant)
         {
             _persistedGrants.TryAdd(codeGrant.Code, codeGrant);
 
             return Task.CompletedTask;
         }
 
-        public Task SaveDeviceAuthorizationGrantAsync(DeviceAuthorizationGrant deviceAuthorizationGrant)
+        public Task SaveDeviceAuthorizationGrantAsync(DeviceCodeGrant deviceAuthorizationGrant)
         {
             _persistedDeviceAuthorizationGrant.TryAdd(deviceAuthorizationGrant.DeviceCode, deviceAuthorizationGrant);
 

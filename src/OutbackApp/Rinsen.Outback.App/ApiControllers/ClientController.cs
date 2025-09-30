@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using Rinsen.IdentityProvider.Outback;
 using Rinsen.IdentityProvider.Outback.Entities;
 using Rinsen.Outback.App.Models;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace Rinsen.Outback.App.ApiControllers;
 
@@ -25,7 +24,7 @@ public class ClientController : Controller
     }
 
     [HttpGet]
-    [SwaggerOperation(summary: "Get a list of all clients", OperationId = "Client_Get" )]
+    //[SwaggerOperation(summary: "Get a list of all clients", OperationId = "Client_Get" )]
     [ProducesResponseType(200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
@@ -39,7 +38,7 @@ public class ClientController : Controller
     }
 
     [HttpGet("{id}")]
-    [SwaggerOperation(summary: "Get a specific client by id", OperationId = "Client_Get")]
+    //[SwaggerOperation(summary: "Get a specific client by id", OperationId = "Client_Get")]
     [ProducesResponseType(200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
@@ -57,7 +56,7 @@ public class ClientController : Controller
     }
 
     [HttpDelete("{id}")]
-    [SwaggerOperation(summary: "Delete a client", OperationId = "Client_Delete")]
+    //[SwaggerOperation(summary: "Delete a client", OperationId = "Client_Delete")]
     [ProducesResponseType(200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
@@ -70,7 +69,7 @@ public class ClientController : Controller
     }
 
     [HttpPost]
-    [SwaggerOperation(summary: "Create a client", OperationId = "Client_Create")]
+    //[SwaggerOperation(summary: "Create a client", OperationId = "Client_Create")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -88,7 +87,7 @@ public class ClientController : Controller
     }
 
     [HttpPut("{id}")]
-    [SwaggerOperation(summary: "Update a client", OperationId = "Client_Update")]
+    //[SwaggerOperation(summary: "Update a client", OperationId = "Client_Update")]
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
@@ -101,7 +100,7 @@ public class ClientController : Controller
     }
 
     [HttpGet]
-    [SwaggerOperation(summary: "Get all client families", OperationId = "Client_GetFamily")]
+    //[SwaggerOperation(summary: "Get all client families", OperationId = "Client_GetFamily")]
     [ProducesResponseType(200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
@@ -115,7 +114,7 @@ public class ClientController : Controller
     }
 
     [HttpPost]
-    [SwaggerOperation(summary: "Create client family", OperationId = "Client_CreateFamily")]
+    //[SwaggerOperation(summary: "Create client family", OperationId = "Client_CreateFamily")]
     [ProducesResponseType(201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]

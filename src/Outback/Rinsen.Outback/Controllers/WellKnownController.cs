@@ -48,8 +48,8 @@ public class WellKnownController : ControllerBase
         {
             Issuer = $"https://{host}",
             JwksUri = $"https://{host}/.well-known/openid-configuration/jwks",
-            AuthorizationEndpoint = $"https://{host}/connect/authorize",
-            TokenEndpoint = $"https://{host}/connect/token",
+            AuthorizationEndpoint = $"https://{host}/oauth/authorize",
+            TokenEndpoint = $"https://{host}/oauth/token",
             CodeChallengeMethodsSupported = ["S256"],
             ScopesSupported = scopes.Where(m => m.ShowInDiscoveryDocument).Select(m => m.ScopeName).ToList()
         };
@@ -71,7 +71,7 @@ public class WellKnownController : ControllerBase
 
         if (await _outbackConfigurationAccessor.IsDeviceAuthorizationGrantActiveAsync())
         {
-            openIdConfiguration.DeviceAuthorizationEndpoint = $"https://{host}/device";
+            openIdConfiguration.DeviceAuthorizationEndpoint = $"https://{host}/oauth/device_authorization";
             openIdConfiguration.GrantTypesSupported.Add("urn:ietf:params:oauth:grant-type:device_code");
         }
 
@@ -89,9 +89,6 @@ public class WellKnownController : ControllerBase
         {
             openIdConfiguration.GrantTypesSupported.Add("authorization_code");
         }
-
-
-
 
         return openIdConfiguration;
     }

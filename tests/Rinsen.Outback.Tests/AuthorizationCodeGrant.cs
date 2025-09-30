@@ -87,7 +87,7 @@ namespace Rinsen.Outback.Tests
                 new KeyValuePair<string, string>("code_verifier", codeVerifier),
             });
 
-            var tokenResponse = await client.PostAsync("connect/token", formContent);
+            var tokenResponse = await client.PostAsync("oauth/token", formContent);
             tokenResponse.EnsureSuccessStatusCode();
 
             return await tokenResponse.Content.ReadFromJsonAsync<AccessTokenResponse>();
@@ -98,7 +98,7 @@ namespace Rinsen.Outback.Tests
             using var sha256 = SHA256.Create();
             var challengeBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));
             var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
-            var uri = "connect/authorize";
+            var uri = "oauth/authorize";
             uri = QueryHelpers.AddQueryString(uri, "response_type", "code");
             uri = QueryHelpers.AddQueryString(uri, "client_id", clientId);
             uri = QueryHelpers.AddQueryString(uri, "code_challenge", codeChallenge);

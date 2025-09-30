@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rinsen.IdentityProvider;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace Rinsen.Outback.App.ApiControllers;
 
@@ -18,7 +17,7 @@ public class RandomController : Controller
     }
 
     [HttpGet("{count}")]
-    [SwaggerOperation(summary: "Get a random string with provided length", OperationId = "Random_Get")]
+    //[SwaggerOperation(summary: "Get a random string with provided length", OperationId = "Random_Get")]
     [ProducesResponseType(200)]
     [ProducesResponseType(403)]
     public ActionResult<string> Get(int count)

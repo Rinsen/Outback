@@ -68,7 +68,7 @@ namespace Rinsen.Outback.Tests
 
             var client = application.CreateClient();
             var grantAccessor = application.Services.GetRequiredService<IGrantAccessor>();
-            var response = await client.PostAsync("device_authorization", formContent);
+            var response = await client.PostAsync("oauth/device_authorization", formContent);
 
             // (B) The authorization server issues a device code and an end - user code and provides the end - user verification URI.
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -104,7 +104,7 @@ namespace Rinsen.Outback.Tests
                 new KeyValuePair<string, string>("client_id", "DeviceAuthorizationClientId"),
             ]);
 
-            var notAcceptedTokenRequest = await client.PostAsync("connect/token", tokenRequestFormContent);
+            var notAcceptedTokenRequest = await client.PostAsync("oauth/token", tokenRequestFormContent);
 
             var error_Response = await notAcceptedTokenRequest.Content.ReadFromJsonAsync<error_response>();
             Assert.Equal("authorization_pending", error_Response?.error);
@@ -117,7 +117,7 @@ namespace Rinsen.Outback.Tests
             // granted access, an error if they are denied access, or an
             // indication that the client should continue to poll.
 
-            var tokenResponseAfterAccept = await client.PostAsync("connect/token", tokenRequestFormContent);
+            var tokenResponseAfterAccept = await client.PostAsync("oauth/token", tokenRequestFormContent);
 
             var tokenResponse = await tokenResponseAfterAccept.Content.ReadFromJsonAsync<token_response>();
 

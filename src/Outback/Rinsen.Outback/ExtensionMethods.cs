@@ -40,7 +40,6 @@ public static class ExtensionMethods
     private static void AddServices(IServiceCollection services)
     {
         services.AddSingleton<RandomStringGenerator>();
-        services.AddScoped<IGrantService, GrantService>();
         services.AddScoped<IClientService, ClientService>();
         services.AddScoped<ITokenService, TokenService>();
     }

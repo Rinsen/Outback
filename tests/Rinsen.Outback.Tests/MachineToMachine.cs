@@ -37,7 +37,7 @@ namespace Rinsen.Outback.Tests
             var client = application.CreateClient();
 
             // Act
-            var response = await client.PostAsync("connect/token", formContent);
+            var response = await client.PostAsync("oauth/token", formContent);
 
             // Assert
             response.EnsureSuccessStatusCode();
@@ -70,7 +70,7 @@ namespace Rinsen.Outback.Tests
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", encodedClientIdAndSecret);
 
             // Act
-            var response = await client.PostAsync("connect/token", formContent);
+            var response = await client.PostAsync("oauth/token", formContent);
 
             // Assert
             response.EnsureSuccessStatusCode();
