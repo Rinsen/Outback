@@ -23,6 +23,7 @@
     <PackageReference Include="UAParser" Version="3.1.47" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Aspire\AspireOutback.ServiceDefaults\AspireOutback.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\Outback\Rinsen.Outback\Rinsen.Outback.csproj" />
     <ProjectReference Include="..\Rinsen.IdentityProvider\Rinsen.IdentityProvider.csproj" />
   </ItemGroup>
