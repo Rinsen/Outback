@@ -36,8 +36,6 @@ public class DefaultInstaller
         await CreateSigningKey();
 
         var creadentials = await CreateInnovationBoostWebClient();
-        //creadentials.SpaApplicationClientId = await CreateInnovationBoostSpaClient();
-        //await CreateOpenIdConnectSampleClient(creadentials);
 
         return creadentials;
     }

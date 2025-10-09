@@ -16,29 +16,16 @@ namespace Rinsen.Outback.App.ApiControllers;
 [Authorize("AdminsOnly")]
 public class AdminController : Controller
 {
-    private readonly DefaultInstaller _defaultInstaller;
     private readonly IConfiguration _configuration;
     private readonly BackupGenerator _backupGenerator;
 
-    public AdminController(DefaultInstaller defaultInstaller,
+    public AdminController(
         IConfiguration configuration,
         BackupGenerator backupGenerator
         )
     {
-        _defaultInstaller = defaultInstaller;
         _configuration = configuration;
         _backupGenerator = backupGenerator;
-    }
-
-    [HttpPost]
-    [Route("install")]
-    //[SwaggerOperation(summary: "Install default clients", OperationId = "Admin_Install")]
-    [ProducesResponseType(200)]
-    public async Task<IActionResult> InstallDefault()
-    {
-        var credentials = await _defaultInstaller.Install();
-
-        return Ok(credentials);
     }
 
     [HttpGet]
