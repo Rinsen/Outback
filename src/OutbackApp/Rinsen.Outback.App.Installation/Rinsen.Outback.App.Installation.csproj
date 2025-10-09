@@ -9,7 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
-    <PackageReference Include="Rinsen.DatabaseInstaller" Version="0.7.0" />
+    <PackageReference Include="Rinsen.DatabaseInstaller" Version="0.7.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
   </ItemGroup>
 
   <ItemGroup>
