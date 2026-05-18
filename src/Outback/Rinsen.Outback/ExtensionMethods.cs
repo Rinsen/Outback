@@ -42,6 +42,12 @@ public static class ExtensionMethods
         services.AddSingleton<RandomStringGenerator>();
         services.AddScoped<IClientService, ClientService>();
         services.AddScoped<ITokenService, TokenService>();
+
+        // Register all grant type handlers
+        services.AddScoped<IGrantTypeHandler, AuthorizationCodeGrantTypeHandler>();
+        services.AddScoped<IGrantTypeHandler, ClientCredentialsGrantTypeHandler>();
+        services.AddScoped<IGrantTypeHandler, DeviceCodeGrantTypeHandler>();
+        services.AddScoped<IGrantTypeHandler, RefreshTokenGrantTypeHandler>();
     }
 
     public static IMvcBuilder AddRinsenOutbackControllers(this IMvcBuilder mvcBuilder)

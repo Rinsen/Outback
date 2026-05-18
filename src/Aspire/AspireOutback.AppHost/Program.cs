@@ -26,7 +26,7 @@ var outbackApp = builder.AddProject<Projects.Rinsen_Outback_App>("outbackapp")
     .WithEnvironment("Rinsen__InvitationCode", "1234")
     .WithUrl("https://localhost:5001");
 
-builder.AddNpmApp("angular", "../../AdminApp/outback-admin")
+builder.AddJavaScriptApp("angular", "../../AdminApp/outback-admin")
     .WithReference(outbackApp)
     .WaitFor(outbackApp)
     .WithHttpEndpoint(env: "PORT")
