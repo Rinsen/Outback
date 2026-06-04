@@ -19,7 +19,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { ClientsComponent } from './clients/clients.component';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { ClientDetailComponent } from './client-detail/client-detail.component';
@@ -30,41 +30,34 @@ import { MatRadioModule } from '@angular/material/radio';
 import { ClientClient, ScopeClient } from './services/generated/api.generated';
 import { MatSelectModule } from '@angular/material/select';
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    NavigationComponent,
-    DashboardComponent,
-    ClientsComponent,
-    ClientDetailComponent
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    BrowserAnimationsModule,
-    LayoutModule,
-    MatToolbarModule,
-    MatButtonModule,
-    MatSidenavModule,
-    MatIconModule,
-    MatListModule,
-    MatGridListModule,
-    MatCardModule,
-    MatMenuModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    HttpClientModule,
-    MatProgressSpinnerModule,
-    FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSlideToggleModule,
-    MatRadioModule,
-    MatSnackBarModule,
-    MatSelectModule
-  ],
-  providers: [ClientClient, ScopeClient],
-  bootstrap: [AppComponent]
-})
+@NgModule({ declarations: [
+        AppComponent,
+        NavigationComponent,
+        DashboardComponent,
+        ClientsComponent,
+        ClientDetailComponent
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        LayoutModule,
+        MatToolbarModule,
+        MatButtonModule,
+        MatSidenavModule,
+        MatIconModule,
+        MatListModule,
+        MatGridListModule,
+        MatCardModule,
+        MatMenuModule,
+        MatTableModule,
+        MatPaginatorModule,
+        MatSortModule,
+        MatProgressSpinnerModule,
+        FormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSlideToggleModule,
+        MatRadioModule,
+        MatSnackBarModule,
+        MatSelectModule], providers: [ClientClient, ScopeClient, provideHttpClient(withInterceptorsFromDi())] })
 export class AppModule { }
