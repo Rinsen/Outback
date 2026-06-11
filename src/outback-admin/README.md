@@ -36,6 +36,16 @@ ng build
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
+## Generate OpenAPI client
+
+To generate the Angular API client from Outback OpenAPI, run:
+
+```bash
+npm run nswag
+```
+
+The generator uses `https://localhost:56399/openapi/outback.json` and writes output to `src/app/serices/generated/outback.ts`.
+
 ## Running unit tests
 
 To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
