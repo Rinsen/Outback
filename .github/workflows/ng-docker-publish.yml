@@ -55,8 +55,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: src/AdminApp/outback-admin
-          file: src/AdminApp/outback-admin/Dockerfile
+          context: src/outback-admin
+          file: src/outback-admin/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
