@@ -1,0 +1,34 @@
+<Solution>
+  <Folder Name="/sample/">
+    <Project Path="sample/SampleServer/SampleServer.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+    <File Path="Todo.txt" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Aspire/">
+    <Project Path="src/Aspire/AspireOutback.AppHost/AspireOutback.AppHost.csproj" />
+    <Project Path="src/Aspire/AspireOutback.ServiceDefaults/AspireOutback.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/src/Outback/">
+    <Project Path="src/Outback/Rinsen.Outback/Rinsen.Outback.csproj" />
+  </Folder>
+  <Folder Name="/src/OutbackApp/">
+    <Project Path="src/OutbackApp/Rinsen.IdentityProvider/Rinsen.IdentityProvider.csproj" />
+    <Project Path="src/OutbackApp/Rinsen.Outback.App.Installation/Rinsen.Outback.App.Installation.csproj" />
+    <Project Path="src/OutbackApp/Rinsen.Outback.App/Rinsen.Outback.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Rinsen.IdentityProvider.Tests/Rinsen.IdentityProvider.Tests.csproj" />
+    <Project Path="tests/Rinsen.Outback.Tests/Rinsen.Outback.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Workflows/">
+    <File Path=".github/workflows/docker-publish-installation.yml" />
+    <File Path=".github/workflows/docker-publish.yml" />
+    <File Path=".github/workflows/ng-docker-publish.yml" />
+  </Folder>
+</Solution>

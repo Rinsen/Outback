@@ -1,0 +1,21 @@
+<div class="layout">
+	<aside class="sidebar">
+		<h1 class="sidebar-title">Outback Admin</h1>
+		<nav class="menu" aria-label="Main navigation">
+			@for (item of menuItems; track item.path) {
+				<a
+					class="menu-button"
+					[routerLink]="item.path"
+					routerLinkActive="menu-button-active"
+					[routerLinkActiveOptions]="{ exact: true }"
+				>
+					{{ item.label }}
+				</a>
+			}
+		</nav>
+	</aside>
+
+	<main class="content">
+		<router-outlet></router-outlet>
+	</main>
+</div>

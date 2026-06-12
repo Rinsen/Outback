@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "src/Aspire/AspireOutback.AppHost/AspireOutback.AppHost.csproj"
+  }
+}
