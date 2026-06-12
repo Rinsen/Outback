@@ -2,8 +2,11 @@
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+var sqlPassword = builder.AddParameter("sql-password", "ddsaFDSS54#$%&hglk");
+
+// var sqlServer = builder.AddSqlServer("outbackSqlServer", sqlPassword)
+    // .WithDataVolume()
 var sqlServer = builder.AddSqlServer("outbackSqlServer")
-    .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);
 
 var outbackDb = sqlServer.AddDatabase("Outback");
