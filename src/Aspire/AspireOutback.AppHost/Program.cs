@@ -2,10 +2,8 @@
 
 var sqlPassword = builder.AddParameter("sql-password", "ddsaFDSS54#$%&hglk");
 
-// var sqlServer = builder.AddSqlServer("outbackSqlServer", sqlPassword)
-    // .WithDataVolume()
-var sqlServer = builder.AddSqlServer("outbackSqlServer")
-    .WithLifetime(ContainerLifetime.Persistent);
+var sqlServer = builder.AddSqlServer("outbackSqlServer", sqlPassword)
+    .WithDataVolume();
 
 var outbackDb = sqlServer.AddDatabase("Outback");
 
@@ -24,13 +22,13 @@ var outbackApp = builder.AddProject<Projects.Rinsen_Outback_App>("outbackapp")
     .WaitFor(outbackDb)
     .WaitFor(installation)
     .WithExternalHttpEndpoints()
-    .WithEnvironment("Rinsen__InvitationCode", "1234")
-    .WithUrl("https://localhost:5001");
+    .WithEnvironment("Rinsen__InvitationCode", "1234");
 
-// builder.AddNpmApp("angular", "../../outback-admin")
-//     .WithReference(outbackApp)
-//     .WaitFor(outbackApp)
-//     .WithHttpEndpoint(env: "PORT")
-//     .WithExternalHttpEndpoints();
+builder.AddJavaScriptApp("angular", "../../outback-admin", runScriptName: "start")
+    .WithNpm(installCommand: "ci")
+    .WithReference(outbackApp)
+    .WaitFor(outbackApp)
+    .WithHttpEndpoint(env: "PORT")
+    .WithExternalHttpEndpoints();
 
 builder.Build().Run();
