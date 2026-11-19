@@ -7,7 +7,7 @@ var sqlServer = builder.AddSqlServer("outbackSqlServer", sqlPassword)
 
 var outbackDb = sqlServer.AddDatabase("Outback");
 
-var installation = builder.AddProject<Projects.Rinsen_Outback_App_Installation>("outbackinstallation")
+var installation = builder.AddDotnetProject("outbackinstallation", "../../OutbackApp/Rinsen.Outback.App.Installation/Rinsen.Outback.App.Installation.csproj")
     .WithReference(sqlServer)
     .WaitFor(sqlServer)
     .WithEnvironment("Command", "Install")
@@ -17,7 +17,7 @@ var installation = builder.AddProject<Projects.Rinsen_Outback_App_Installation>(
     .WithEnvironment("Login__Debug__Password", "nfgsjknFSDgdf5436545fghscnhfgmDFSAFdfsj4534DFG")
     .WithEnvironment("Login__Runtime__Password", "fds4235sfdgDFGfgde4523sdfgSDdcsfsfdg32");
 
-var outbackApp = builder.AddProject<Projects.Rinsen_Outback_App>("outbackapp")
+var outbackApp = builder.AddDotnetProject("outbackapp", "../../OutbackApp/Rinsen.Outback.App/Rinsen.Outback.App.csproj")
     .WithReference(outbackDb)
     .WaitFor(outbackDb)
     .WaitFor(installation)
