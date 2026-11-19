@@ -97,13 +97,6 @@ public class Program
         })
         .AddRinsenOutbackControllers();
 
-#if DEBUG
-        if (env.IsDevelopment())
-        {
-            mvcBuilder.AddRazorRuntimeCompilation();
-        }
-#endif
-
         // Optional - Add Aspire service defaults if you want to use it
         builder.AddServiceDefaults();
 
