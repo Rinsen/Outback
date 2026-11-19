@@ -48,7 +48,7 @@ public class SessionController : Controller
     {
         if (_env.IsDevelopment())
         {
-            return $"https://localhost:44300/Identity/Logout";
+            return $"https://localhost:56399/Identity/Logout";
         }
 
         if (Request.IsHttps)
@@ -63,7 +63,7 @@ public class SessionController : Controller
     {
         if (_env.IsDevelopment())
         {
-            return $"https://localhost:44300/Identity/Login";
+            return $"https://localhost:56399/Identity/Login";
         }
 
         if (Request.IsHttps)

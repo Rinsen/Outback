@@ -1,0 +1,14 @@
+{
+  "name": "outback-admin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Plain HTML/JS/Bootstrap admin app for Outback (PoC: session card, top nav, sidebar, generated API clients).",
+  "scripts": {
+    "start": "node tools/static-server.mjs",
+    "generate": "node tools/generate-clients.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
