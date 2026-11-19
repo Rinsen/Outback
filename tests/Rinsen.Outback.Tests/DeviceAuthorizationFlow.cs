@@ -6,7 +6,6 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Tests.Helpers;
 using SampleServer;
@@ -72,8 +71,7 @@ namespace Rinsen.Outback.Tests
 
             // (B) The authorization server issues a device code and an end - user code and provides the end - user verification URI.
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            var content = await response.Content.ReadAsStringAsync();
-            var device_authorization_Response = JsonConvert.DeserializeObject<device_authorization_Response>(content);
+            var device_authorization_Response = await response.Content.ReadFromJsonAsync<device_authorization_Response>();
             Assert.NotNull(device_authorization_Response);
 
             // (C) The client instructs the end user to use a user agent on another

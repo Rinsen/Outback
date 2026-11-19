@@ -93,13 +93,6 @@ public class Startup
 
         })
         .AddRinsenOutbackControllers();
-
-#if DEBUG
-        if (_env.IsDevelopment())
-        {
-            builder.AddRazorRuntimeCompilation();
-        }
-#endif
     }
     public void Configure(IApplicationBuilder app, ILogger<Startup> logger)
     {
