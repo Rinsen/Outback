@@ -31,4 +31,14 @@ builder.AddJavaScriptApp("angular", "../../outback-admin", runScriptName: "start
     .WithHttpEndpoint(env: "PORT")
     .WithExternalHttpEndpoints();
 
+// Plain HTML/JS/Bootstrap admin app (src/Admin). No npm dependencies, so no
+// WithNpm: Aspire just runs `npm run start`, which starts tools/static-server.mjs.
+// WithReference injects the backend URL as OUTBACKAPP; the static server's proxy
+// reads it, so the browser only ever talks to one origin (same as production).
+builder.AddJavaScriptApp("admin", "../../Admin", runScriptName: "start")
+    .WithReference(outbackApp)
+    .WaitFor(outbackApp)
+    .WithHttpEndpoint(env: "PORT")
+    .WithExternalHttpEndpoints();
+
 builder.Build().Run();
