@@ -1,8 +1,9 @@
 # Outback Admin
 
 Plain **HTML + JavaScript + Bootstrap 5** admin app for Outback. No frameworks,
-no build step, no npm dependencies — just static files, ES modules and a small
-zero-dependency Node server for local development.
+no build step — just static files, ES modules and a small zero-dependency Node
+server for local development. Bootstrap is installed via npm and synced into
+`assets/` (see [Updating Bootstrap](#updating-bootstrap)).
 
 PoC scope:
 
@@ -36,6 +37,7 @@ both apps behind one origin. No CORS configuration is needed.
 | ---------------- | ------------------------------------------------------------------------- |
 | `npm start`      | Serve the app + proxy the API (`tools/static-server.mjs`).                |
 | `npm run generate` | Regenerate `js/api/*.js` from the backend's live OpenAPI documents (`/openapi/session.json`, `/openapi/outback.json`). Requires the backend to be running. |
+| `npm run sync:bootstrap` | Copy Bootstrap from `node_modules` into `assets/` (`tools/sync-bootstrap.mjs`). Runs automatically after `npm install` (postinstall). |
 
 ## Environment variables (`npm start`)
 
@@ -75,10 +77,13 @@ Admin/
 ├── settings.html
 ├── assets/
 │   ├── css/
-│   │   ├── app.css          # App shell styling
-│   │   └── bootstrap.min.css  # Bootstrap 5.3.9 (vendored, pinned)
-│   └── js/
-│       └── bootstrap.bundle.min.js
+│   │   ├── app.css                    # App shell styling
+│   │   ├── bootstrap.min.css          # Synced from npm (sync:bootstrap)
+│   │   └── bootstrap.min.css.map
+│   ├── js/
+│   │   ├── bootstrap.bundle.min.js    # Synced from npm (sync:bootstrap)
+│   │   └── bootstrap.bundle.min.js.map
+│   └── bootstrap-LICENSE              # Bootstrap's MIT license
 ├── js/
 │   ├── core/
 │   │   ├── config.js        # API_BASE (same-origin by default)
@@ -96,12 +101,14 @@ Admin/
 │       └── settings.js
 ├── tools/
 │   ├── generate-clients.mjs # OpenAPI -> js/api/*.js generator
-│   └── static-server.mjs    # Dev server: static files + same-origin proxy
+│   ├── static-server.mjs    # Dev server: static files + same-origin proxy
+│   └── sync-bootstrap.mjs   # Copy Bootstrap from node_modules into assets/
 └── package.json
 ```
 
 Each page loads exactly two app modules: `js/layout.js` (shared chrome) and
-its own page module. Bootstrap is vendored locally — no CDN.
+its own page module. Bootstrap is installed via npm and synced into `assets/`
+— no CDN.
 
 ## Regenerating the API clients
 
@@ -121,6 +128,23 @@ Run with the backend up:
 ```powershell
 npm run generate
 ```
+
+## Updating Bootstrap
+
+Bootstrap is a regular npm dependency; `assets/` holds a synced copy of the
+published dist files so production can ship pure static files without
+`node_modules`.
+
+To update:
+
+```powershell
+npm update bootstrap      # bump to the latest 5.x
+npm run sync:bootstrap    # re-copy the dist files into assets/
+```
+
+`sync:bootstrap` also runs automatically after every `npm install`
+(postinstall), so `assets/` can never drift from the installed version.
+Review the diff in `assets/` before committing.
 
 ## Production notes
 
