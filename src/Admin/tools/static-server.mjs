@@ -167,7 +167,7 @@ function proxy(req, res) {
       method: req.method,
       headers,
       timeout: BACKEND_TIMEOUT_MS,
-      ...(target.protocol === "https:" ? { rejectUnauthorized: !REQUIRE_SECURE } : {}),
+      ...(target.protocol === "https:" ? { rejectUnauthorized: REQUIRE_SECURE } : {}),
     },
     (upstreamRes) => {
       const responseHeaders = { ...upstreamRes.headers };

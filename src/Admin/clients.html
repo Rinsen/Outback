@@ -9,16 +9,31 @@
 </head>
 <body data-page="clients">
   <main id="main" class="container-fluid">
-    <div class="row justify-content-center py-5">
-      <div class="col-12 col-md-8 col-lg-6 text-center">
-        <h1 class="h4">Clients</h1>
-        <p class="text-secondary">Outback client management will live here.</p>
-        <p class="small text-secondary mb-4">
-          The generated API client is already available:
-          <code>js/api/outback.js</code> (<code>getClient()</code>, <code>postClient()</code>, …).
+    <div class="py-3">
+      <div class="mb-3">
+        <h1 class="h4 mb-0">Clients</h1>
+        <p class="text-secondary small mb-0">
+          OAuth2 / OIDC clients known to the Outback identity provider.
         </p>
-        <a class="btn btn-outline-secondary btn-sm" href="/index.html">Back to dashboard</a>
       </div>
+
+      <div
+        id="clients-error"
+        class="alert alert-danger d-flex align-items-center gap-2 d-none"
+        role="alert"
+      >
+        <span id="clients-error-message"></span>
+        <button
+          id="clients-error-retry"
+          type="button"
+          class="btn btn-sm btn-outline-danger ms-auto"
+        >
+          Try again
+        </button>
+      </div>
+
+      <div id="clients-toolbar"></div>
+      <div id="clients-grid"></div>
     </div>
   </main>
   <script src="/assets/js/bootstrap.bundle.min.js"></script>

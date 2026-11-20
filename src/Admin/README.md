@@ -9,7 +9,9 @@ PoC scope:
 
 - a **live session card** (name, expiration, sign in / out) on the dashboard,
 - a **top navigation bar** with the session state and sign in/out,
-- a **left sidebar** with placeholders for Clients, Scopes, Sessions and Settings,
+- a **left sidebar** with links to Clients, Scopes, Sessions and Settings,
+- a **Clients page** with a sortable/paginated grid of all client fields and
+  collections, plus create / update / delete modals,
 - **API clients generated** from the backend's OpenAPI documents (committed).
 
 ## Quick start
@@ -71,8 +73,8 @@ HTTP endpoint, which would take the browser cross-origin).
 ```
 Admin/
 ├── index.html               # Dashboard (live session card)
-├── clients.html             # Placeholder pages (sidebar links)
-├── scopes.html
+├── clients.html             # Clients: grid + toolbar + create/update/delete modals
+├── scopes.html              # Placeholder pages (sidebar links)
 ├── sessions.html
 ├── settings.html
 ├── assets/
@@ -88,14 +90,18 @@ Admin/
 │   ├── core/
 │   │   ├── config.js        # API_BASE (same-origin by default)
 │   │   ├── http.js          # fetch wrapper: timeouts, HttpError, JSON
-│   │   └── ui.js            # toast, formatDateTime, setActiveNav, escapeHtml
+│   │   ├── ui.js            # toast, formatDateTime, formatDuration, boolBadge, setActiveNav, escapeHtml
+│   │   ├── grid.js          # Reusable data grid: columns, sorting, pagination, row selection
+│   │   ├── toolbar.js       # Reusable button toolbar (add/enable/disable buttons by id)
+│   │   ├── modal.js         # Thin wrapper around a Bootstrap modal (show/hide, onHidden)
+│   │   └── list-editor.js   # Reusable add/remove list editor for collection properties
 │   ├── api/
 │   │   ├── session.js       # GENERATED — DO NOT EDIT
 │   │   └── outback.js       # GENERATED — DO NOT EDIT
 │   ├── layout.js            # Top nav + sidebar + session badge + signIn/signOut
 │   └── pages/
 │       ├── index.js         # Dashboard page module (session card)
-│       ├── clients.js       # Placeholder modules
+│       ├── clients.js       # Clients page: grid, toolbar, create/update/delete modals
 │       ├── scopes.js
 │       ├── sessions.js
 │       └── settings.js

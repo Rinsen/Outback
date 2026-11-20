@@ -47,6 +47,46 @@ export function formatDateTime(unixSeconds) {
 }
 
 /**
+ * Formats a duration in seconds as a short human-readable string
+ * (at most two largest units), e.g. "30 days", "1 day 2 hours", "45 seconds".
+ * @param {number|null|undefined} seconds
+ * @returns {string}
+ */
+export function formatDuration(seconds) {
+  if (seconds == null) return "—";
+  if (seconds <= 0) return "0 seconds";
+  const units = [
+    { label: "year", size: 365 * 24 * 60 * 60 },
+    { label: "day", size: 24 * 60 * 60 },
+    { label: "hour", size: 60 * 60 },
+    { label: "minute", size: 60 },
+  ];
+  let remaining = Math.round(seconds);
+  const parts = [];
+  for (const unit of units) {
+    if (parts.length === 2) break;
+    const value = Math.floor(remaining / unit.size);
+    if (value > 0) {
+      parts.push(`${value} ${unit.label}${value === 1 ? "" : "s"}`);
+      remaining -= value * unit.size;
+    }
+  }
+  if (parts.length === 0) return `${remaining} seconds`;
+  return parts.join(" ");
+}
+
+/**
+ * Renders an Active/Inactive badge for a boolean value.
+ * @param {boolean|null|undefined} value
+ * @returns {string} HTML
+ */
+export function boolBadge(value) {
+  return value
+    ? '<span class="badge text-bg-success">Active</span>'
+    : '<span class="badge text-bg-secondary">Inactive</span>';
+}
+
+/**
  * Highlights the sidebar item for the given page.
  * @param {string} page
  */
