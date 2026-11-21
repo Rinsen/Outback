@@ -5,6 +5,32 @@ body {
   height: 100%;
 }
 
+/* --- Grid (js/core/grid.js) ---------------------------------------------- */
+
+.grid-sort-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.grid-sort-btn:hover {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+.grid-sort-arrow {
+  font-size: 0.7em;
+  margin-left: 0.25rem;
+}
+
+.grid-row-selected > td {
+  background-color: rgba(13, 110, 253, 0.07);
+}
+
 body {
   background-color: #f5f6f8;
 }
