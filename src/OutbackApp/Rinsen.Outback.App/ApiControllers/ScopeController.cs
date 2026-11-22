@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rinsen.IdentityProvider.Outback;
 using Rinsen.IdentityProvider.Outback.Entities;
@@ -22,7 +23,7 @@ public class ScopeController : ControllerBase
 
     // GET: api/<ScopeController>
     [HttpGet]
-    //[SwaggerOperation(summary: "Get all scopes", OperationId = "Scope_Get")]
+    [EndpointDescription("Get all scopes")]
     [ProducesResponseType(200)]
     [ProducesResponseType(403)]
     public async Task<IEnumerable<OutbackScope>> Get()
@@ -34,7 +35,7 @@ public class ScopeController : ControllerBase
 
     // GET api/<ScopeController>/5
     [HttpGet("{id}")]
-    //[SwaggerOperation(summary: "Get a specific scope by id", OperationId = "Scope_Get")]
+    [EndpointDescription("Get a specific scope by id")]
     [ProducesResponseType(200)]
     [ProducesResponseType(403)]
     [ProducesResponseType(404)]
@@ -52,7 +53,7 @@ public class ScopeController : ControllerBase
     [HttpPost]
     [ProducesResponseType(201)]
     [ProducesResponseType(403)]
-    //[SwaggerOperation(summary: "Create a new scope", OperationId = "Scope_Create")]
+    [EndpointDescription("Create a new scope")]
     public async Task<ActionResult<OutbackScope>> Post([FromBody]CreateScope createScope)
     {
         var scopeId = await _scopeService.CreateScopeAsync(createScope.Name, createScope.ScopeName, createScope.Audience, createScope.Description, createScope.ShowInDiscoveryDocument, createScope.ClaimsInIdToken, createScope.Enabled);
@@ -67,7 +68,7 @@ public class ScopeController : ControllerBase
     [HttpPut("{id}")]
     [ProducesResponseType(200)]
     [ProducesResponseType(403)]
-    //[SwaggerOperation(summary: "Update scope", OperationId = "Scope_Update")]
+    [EndpointDescription("Update scope")]
     public async Task<ActionResult> Put(int id, [FromBody] OutbackScope scope)
     {
         await _scopeService.UpdateScopeAsync(id, scope);
@@ -77,7 +78,7 @@ public class ScopeController : ControllerBase
 
     // DELETE api/<ScopeController>/5
     [HttpDelete("{id}")]
-    //[SwaggerOperation(summary: "Delete a scope", OperationId = "Scope_Delete")]
+    [EndpointDescription("Delete a scope")]
     [ProducesResponseType(200)]
     [ProducesResponseType(403)]
     public async Task<ActionResult> DeleteAsync(int id)

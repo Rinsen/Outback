@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rinsen.IdentityProvider;
 
@@ -17,7 +18,7 @@ public class RandomController : Controller
     }
 
     [HttpGet("{count}")]
-    //[SwaggerOperation(summary: "Get a random string with provided length", OperationId = "Random_Get")]
+    [EndpointDescription("Get a random string with provided length")]
     [ProducesResponseType(200)]
     [ProducesResponseType(403)]
     public ActionResult<string> Get(int count)

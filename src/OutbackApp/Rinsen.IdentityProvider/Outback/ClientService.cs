@@ -21,6 +21,7 @@ public class ClientService
     public Task<List<OutbackClient>> GetAllAsync()
     {
         return _outbackDbContext.Clients
+            .Where(m => m.Deleted == null)
             .Include(m => m.AllowedCorsOrigins)
             .Include(m => m.ClientClaims)
             .Include(m => m.ClientFamily)

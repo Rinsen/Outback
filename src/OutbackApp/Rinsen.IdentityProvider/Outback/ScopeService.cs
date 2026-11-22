@@ -19,6 +19,7 @@ public class ScopeService
     public Task<List<OutbackScope>> GetAllAsync()
     {
         return _outbackDbContext.Scopes
+            .Where(m => m.Deleted == null)
             .Include(m => m.ScopeClaims).ToListAsync();
     }
 
@@ -34,6 +35,7 @@ public class ScopeService
 
         if (scope != default)
         {
+            scope.Deleted = null;
             scope.DisplayName = displayName;
             scope.Audience = audience;
             scope.Description = description;
@@ -104,7 +106,8 @@ public class ScopeService
             || scope.DisplayName != updatedScope.DisplayName
             || scope.Description != updatedScope.Description
             || scope.ScopeName != updatedScope.ScopeName
-            || scope.ShowInDiscoveryDocument != updatedScope.ShowInDiscoveryDocument;
+            || scope.ShowInDiscoveryDocument != updatedScope.ShowInDiscoveryDocument
+            || scope.ClaimsInIdToken != updatedScope.ClaimsInIdToken;
     }
 
     private static void UpdateScopeParameters(OutbackScope scope, OutbackScope updatedScope)
@@ -115,6 +118,7 @@ public class ScopeService
         scope.Description = updatedScope.Description;
         scope.ScopeName = updatedScope.ScopeName;
         scope.ShowInDiscoveryDocument = updatedScope.ShowInDiscoveryDocument;
+        scope.ClaimsInIdToken = updatedScope.ClaimsInIdToken;
     }
 
     private void UpdateScopeClaims(OutbackScope scope, OutbackScope updatedScope)

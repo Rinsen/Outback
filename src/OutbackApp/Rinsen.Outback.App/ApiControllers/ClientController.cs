@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Rinsen.IdentityProvider.Outback;
 using Rinsen.IdentityProvider.Outback.Entities;
 using Rinsen.Outback.App.Models;
+using Rinsen.Outback.Configuration;
 
 namespace Rinsen.Outback.App.ApiControllers;
 
@@ -17,14 +18,16 @@ namespace Rinsen.Outback.App.ApiControllers;
 public class ClientController : Controller
 {
     private readonly ClientService _clientService;
+    private readonly IOutbackConfigurationAccessor _outbackConfigurationAccessor;
 
-    public ClientController(ClientService clientService)
+    public ClientController(ClientService clientService, IOutbackConfigurationAccessor outbackConfigurationAccessor)
     {
         _clientService = clientService;
+        _outbackConfigurationAccessor = outbackConfigurationAccessor;
     }
 
     [HttpGet]
-    //[SwaggerOperation(summary: "Get a list of all clients", OperationId = "Client_Get" )]
+    [EndpointDescription("Get a list of all clients")]
     [ProducesResponseType(200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
@@ -38,7 +41,7 @@ public class ClientController : Controller
     }
 
     [HttpGet("{id}")]
-    //[SwaggerOperation(summary: "Get a specific client by id", OperationId = "Client_Get")]
+    [EndpointDescription("Get a specific client by id")]
     [ProducesResponseType(200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
@@ -56,7 +59,7 @@ public class ClientController : Controller
     }
 
     [HttpDelete("{id}")]
-    //[SwaggerOperation(summary: "Delete a client", OperationId = "Client_Delete")]
+    [EndpointDescription("Delete a client")]
     [ProducesResponseType(200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
@@ -69,7 +72,7 @@ public class ClientController : Controller
     }
 
     [HttpPost]
-    //[SwaggerOperation(summary: "Create a client", OperationId = "Client_Create")]
+    [EndpointDescription("Create a client")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -87,7 +90,7 @@ public class ClientController : Controller
     }
 
     [HttpPut("{id}")]
-    //[SwaggerOperation(summary: "Update a client", OperationId = "Client_Update")]
+    [EndpointDescription("Update a client")]
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
@@ -100,7 +103,7 @@ public class ClientController : Controller
     }
 
     [HttpGet]
-    //[SwaggerOperation(summary: "Get all client families", OperationId = "Client_GetFamily")]
+    [EndpointDescription("Get all client families")]
     [ProducesResponseType(200)]
     [ProducesResponseType(401)]
     [ProducesResponseType(403)]
@@ -114,7 +117,7 @@ public class ClientController : Controller
     }
 
     [HttpPost]
-    //[SwaggerOperation(summary: "Create client family", OperationId = "Client_CreateFamily")]
+    [EndpointDescription("Create client family")]
     [ProducesResponseType(201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(401)]
@@ -126,5 +129,38 @@ public class ClientController : Controller
 
         return CreatedAtAction(nameof(GetById),
            new { id = family.Id }, family);
+    }
+
+    [HttpGet]
+    [Route("~/Outback/api/[controller]/GrantTypes")]
+    [EndpointDescription("Get all available grant types")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(403)]
+    public async Task<ActionResult<List<string>>> GetAvailableGrantTypes()
+    {
+        var grantTypes = new List<string>();
+
+        if (await _outbackConfigurationAccessor.IsCodeGrantActiveAsync())
+        {
+            grantTypes.Add("authorization_code");
+        }
+
+        if (await _outbackConfigurationAccessor.IsDeviceAuthorizationGrantActiveAsync())
+        {
+            grantTypes.Add("urn:ietf:params:oauth:grant-type:device_code");
+        }
+
+        if (await _outbackConfigurationAccessor.IsClientCredentialsGrantActiveAsync())
+        {
+            grantTypes.Add("client_credentials");
+        }
+
+        if (await _outbackConfigurationAccessor.IsRefreshTokenGrantActiveAsync())
+        {
+            grantTypes.Add("refresh_token");
+        }
+
+        return grantTypes;
     }
 }

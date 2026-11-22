@@ -1,28 +1,44 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Scopes · Outback Admin</title>
-  <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
-  <link rel="stylesheet" href="/assets/css/app.css">
-</head>
-<body data-page="scopes">
-  <main id="main" class="container-fluid">
-    <div class="row justify-content-center py-5">
-      <div class="col-12 col-md-8 col-lg-6 text-center">
-        <h1 class="h4">Scopes</h1>
-        <p class="text-secondary">Outback scope management will live here.</p>
-        <p class="small text-secondary mb-4">
-          The generated API client is already available:
-          <code>js/api/outback.js</code> (<code>getScope()</code>, <code>postScope()</code>, …).
-        </p>
-        <a class="btn btn-outline-secondary btn-sm" href="/index.html">Back to dashboard</a>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Scopes · Outback Admin</title>
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/css/app.css">
+  </head>
+  <body data-page="scopes">
+    <main id="main" class="container-fluid">
+      <div class="py-3">
+        <div class="mb-3">
+          <h1 class="h4 mb-0">Scopes</h1>
+          <p class="text-secondary small mb-0">
+            OAuth2 / OIDC scopes known to the Outback identity provider.
+            Double-click a row to open a scope.
+          </p>
+        </div>
+
+        <div
+          id="scopes-error"
+          class="alert alert-danger d-flex align-items-center gap-2 d-none"
+          role="alert"
+        >
+          <span id="scopes-error-message"></span>
+          <button
+            id="scopes-error-retry"
+            type="button"
+            class="btn btn-sm btn-outline-danger ms-auto"
+          >
+            Try again
+          </button>
+        </div>
+
+        <div id="scopes-toolbar"></div>
+        <div id="scopes-grid"></div>
       </div>
-    </div>
-  </main>
-  <script src="/assets/js/bootstrap.bundle.min.js"></script>
-  <script type="module" src="/js/layout.js"></script>
-  <script type="module" src="/js/pages/scopes.js"></script>
-</body>
+    </main>
+    <script src="/assets/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="/js/layout.js"></script>
+    <script type="module" src="/js/pages/scopes.js"></script>
+  </body>
 </html>

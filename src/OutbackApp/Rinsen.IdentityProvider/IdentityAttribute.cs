@@ -10,6 +10,8 @@ public class IdentityAttribute
 
     public string Attribute { get; set; } = string.Empty;
 
+    public string Value { get; set; } = string.Empty;
+
     public DateTimeOffset Created { get; set; }
 
     public DateTimeOffset Updated { get; set; }

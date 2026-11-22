@@ -31,7 +31,7 @@ public class AdminController : Controller
     [HttpGet]
     [Route("configuration")]
     [Authorize("AdminsOnly")]
-    //[SwaggerOperation(summary: "Get IConfiguration parameters", OperationId = "Admin_Configuration")]
+    [EndpointDescription("Get IConfiguration parameters")]
     [ProducesResponseType(200)]
     public IActionResult GetConfiguration()
     {
@@ -43,7 +43,7 @@ public class AdminController : Controller
     [HttpGet]
     [Route("backup/download")]
     [Authorize("AdminsOnly")]
-    //[SwaggerOperation(summary: "Get IConfiguration parameters", OperationId = "Admin_Backup_Download")]
+    [EndpointDescription("Get IConfiguration parameters")]
     [ProducesResponseType(200)]
     public async Task<IActionResult> Download()
     {
@@ -66,7 +66,7 @@ public class AdminController : Controller
 
     [HttpPost("backup/upload")]
     [Authorize("AdminsOnly")]
-    //[SwaggerOperation(summary: "Get IConfiguration parameters", OperationId = "Admin_Backup_Upload")]
+    [EndpointDescription("Get IConfiguration parameters")]
     [ProducesResponseType(200)]
     public IActionResult Upload(IFormFile file)
     {
