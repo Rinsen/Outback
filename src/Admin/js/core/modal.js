@@ -32,15 +32,16 @@ export class Modal {
    * @param {string|HTMLElement} [options.body]
    * @param {string|HTMLElement} [options.footer]
    * @param {boolean} [options.large=false] Uses modal-lg.
+   * @param {boolean} [options.wide=false] Uses modal-wide (50% wider than modal-lg).
    * @param {function(): void} [options.onHidden] Fires after the modal is fully hidden.
    */
-  constructor({ title, body, footer, large = false, onHidden } = {}) {
+  constructor({ title, body, footer, large = false, wide = false, onHidden } = {}) {
     const el = document.createElement("div");
     el.className = "modal fade";
     el.tabIndex = -1;
     el.setAttribute("aria-hidden", "true");
     el.innerHTML = `
-      <div class="modal-dialog ${large ? "modal-lg" : ""} modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-dialog ${large ? "modal-lg" : ""} ${wide ? "modal-wide" : ""} modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title"></h5>

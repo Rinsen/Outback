@@ -10,8 +10,9 @@ PoC scope:
 - a **live session card** (name, expiration, sign in / out) on the dashboard,
 - a **top navigation bar** with the session state and sign in/out,
 - a **left sidebar** with links to Clients, Scopes, Sessions and Settings,
-- a **Clients page** with a sortable/paginated grid of all client fields and
-  collections, plus create / update / delete modals,
+- a **Clients page** with a sortable/paginated grid (Client ID, Name,
+  Description, Type, Status) — double-click a row to open the full details —
+  plus create / update / delete modals,
 - **API clients generated** from the backend's OpenAPI documents (committed).
 
 ## Quick start
