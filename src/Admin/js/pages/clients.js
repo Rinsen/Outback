@@ -1,9 +1,9 @@
 // js/pages/clients.js
 //
 // Clients: a grid of all Outback clients with a toolbar above it.
-// Phase B: read-only grid (all scalar fields + the collection columns),
+// Phase B: grid (Client ID, Name, Description, Type, Status),
 // loading/error states, a Refresh button, and selection-driven
-// Update/Delete enablement.
+// Update/Delete enablement. Double-click a row to open the client.
 // Phase C: "New client" (name, description, type, family) and
 // "New client family" (name, description) create modals, and a Delete
 // confirmation modal that hard-deletes the selected clients.
@@ -25,7 +25,7 @@ import { Grid } from "../core/grid.js";
 import { ListEditor } from "../core/list-editor.js";
 import { Modal } from "../core/modal.js";
 import { Toolbar } from "../core/toolbar.js";
-import { boolBadge, formatDuration, escapeHtml, toast } from "../core/ui.js";
+import { boolBadge, escapeHtml, toast } from "../core/ui.js";
 
 /** ClientType enum values (Rinsen.Outback.Clients.ClientType). */
 const CLIENT_TYPES = { 0: "Confidential", 1: "Public" };
@@ -38,145 +38,33 @@ function typeBadge(value) {
   return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
 }
 
-/** Renders a compact yes/no indicator for a boolean flag. */
-function boolIcon(value) {
-  return value
-    ? '<span class="text-success" title="Yes">✓</span>'
-    : '<span class="text-secondary" title="No">—</span>';
+/** Max characters shown in the Description column before truncating. */
+const DESCRIPTION_LIMIT = 80;
+
+/** Renders a description truncated to DESCRIPTION_LIMIT characters,
+ *  with the full text available in a hover tooltip. */
+function truncateDescription(value) {
+  if (!value) return '<span class="text-secondary">—</span>';
+  const text = String(value);
+  const short =
+    text.length > DESCRIPTION_LIMIT ? `${text.slice(0, DESCRIPTION_LIMIT)}…` : text;
+  return `<span class="text-secondary" title="${escapeHtml(text)}">${escapeHtml(short)}</span>`;
 }
 
-/** Renders a collection as a row of badges (chips). */
-function chips(items, textOf) {
-  if (!items?.length) return '<span class="text-secondary">—</span>';
-  const rendered = items
-    .map((item) => {
-      const text = textOf(item);
-      if (text == null || text === "") return "";
-      return `<span class="badge text-bg-light border me-1 mb-1">${escapeHtml(text)}</span>`;
-    })
-    .filter(Boolean)
-    .join("");
-  return rendered || '<span class="text-secondary">—</span>';
-}
-
-/** Formats an ISO 8601 date-time string (the API's created/updated values). */
-function isoDateTime(value) {
-  if (!value) return "—";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? escapeHtml(value) : date.toLocaleString();
-}
-
-/** Grid columns: every scalar field, then the seven collections as chips. */
+/** Grid columns: the client's identity at a glance — everything else
+ *  (status flags, lifetimes, scopes, secrets, claims, URIs, CORS) is
+ *  shown and edited in the Update modal. */
 const COLUMNS = [
-  { key: "name", label: "Name", width: "150px" },
-  { key: "active", label: "Status", render: (v) => boolBadge(v), width: "95px" },
-  { key: "clientType", label: "Type", render: (v) => typeBadge(v), width: "115px" },
-  {
-    key: "clientFamily",
-    label: "Family",
-    sortValue: (row) => row.clientFamily?.name ?? "",
-    render: (v) =>
-      v?.name ? escapeHtml(v.name) : '<span class="text-secondary">—</span>',
-    width: "120px",
-  },
-  {
-    key: "description",
-    label: "Description",
-    render: (v) =>
-      v
-        ? `<span class="text-secondary" title="${escapeHtml(v)}">${escapeHtml(v)}</span>`
-        : '<span class="text-secondary">—</span>',
-  },
   {
     key: "clientId",
     label: "Client ID",
     render: (v) => (v ? `<code>${escapeHtml(v)}</code>` : "—"),
+    width: "320px",
   },
-  { key: "consentRequired", label: "Consent required", render: (v) => boolIcon(v), width: "115px" },
-  { key: "saveConsent", label: "Save consent", render: (v) => boolIcon(v), width: "100px" },
-  {
-    key: "addUserInfoClaimsInIdentityToken",
-    label: "User info claims",
-    render: (v) => boolIcon(v),
-    width: "115px",
-  },
-  { key: "issueRefreshToken", label: "Refresh tokens", render: (v) => boolIcon(v), width: "105px" },
-  { key: "issueIdentityToken", label: "ID tokens", render: (v) => boolIcon(v), width: "90px" },
-  {
-    key: "savedConsentLifetime",
-    label: "Consent lifetime",
-    render: (v) => formatDuration(v),
-    width: "115px",
-  },
-  {
-    key: "refreshTokenLifetime",
-    label: "Refresh lifetime",
-    render: (v) => formatDuration(v),
-    width: "115px",
-  },
-  {
-    key: "accessTokenLifetime",
-    label: "Access lifetime",
-    render: (v) => formatDuration(v),
-    width: "110px",
-  },
-  {
-    key: "identityTokenLifetime",
-    label: "ID token lifetime",
-    render: (v) => formatDuration(v),
-    width: "120px",
-  },
-  {
-    key: "authorityCodeLifetime",
-    label: "Code lifetime",
-    render: (v) => formatDuration(v),
-    width: "105px",
-  },
-  {
-    key: "scopes",
-    label: "Scopes",
-    sortValue: (row) => row.scopes?.length ?? 0,
-    render: (v) => chips(v, (s) => s.scope?.scopeName ?? s.scopeId),
-  },
-  {
-    key: "secrets",
-    label: "Secrets",
-    sortValue: (row) => row.secrets?.length ?? 0,
-    render: (v) => chips(v, (s) => s.secret),
-  },
-  {
-    key: "clientClaims",
-    label: "Claims",
-    sortValue: (row) => row.clientClaims?.length ?? 0,
-    render: (v) => chips(v, (c) => (c.type ? (c.value ? `${c.type}=${c.value}` : c.type) : "")),
-  },
-  {
-    key: "supportedGrantTypes",
-    label: "Grant types",
-    sortValue: (row) => row.supportedGrantTypes?.length ?? 0,
-    render: (v) => chips(v, (g) => g.grantType),
-  },
-  {
-    key: "loginRedirectUris",
-    label: "Login redirect URIs",
-    sortValue: (row) => row.loginRedirectUris?.length ?? 0,
-    render: (v) => chips(v, (u) => u.loginRedirectUri),
-  },
-  {
-    key: "postLogoutRedirectUris",
-    label: "Post-logout URIs",
-    sortValue: (row) => row.postLogoutRedirectUris?.length ?? 0,
-    render: (v) => chips(v, (u) => u.postLogoutRedirectUri),
-  },
-  {
-    key: "allowedCorsOrigins",
-    label: "CORS origins",
-    sortValue: (row) => row.allowedCorsOrigins?.length ?? 0,
-    render: (v) => chips(v, (o) => o.origin),
-  },
-  { key: "created", label: "Created", render: (v) => isoDateTime(v), width: "165px" },
-  { key: "updated", label: "Updated", render: (v) => isoDateTime(v), width: "165px" },
-  { key: "id", label: "ID", width: "55px" },
+  { key: "name", label: "Name" },
+  { key: "description", label: "Description", render: (v) => truncateDescription(v) },
+  { key: "clientType", label: "Type", render: (v) => typeBadge(v), width: "120px" },
+  { key: "active", label: "Status", render: (v) => boolBadge(v), width: "100px" },
 ];
 
 const EMPTY_MESSAGE = "No clients yet.";
@@ -208,6 +96,20 @@ const grid = new Grid(gridEl, {
       selected.length ? `Delete (${selected.length})` : "Delete",
     );
   },
+});
+
+// Double-click a row to open the client (the Update modal shows every
+// field and collection). The checkbox cell is excluded so selection
+// clicks never open a modal.
+grid.tbodyEl.addEventListener("dblclick", (event) => {
+  const tr = event.target.closest("tr");
+  if (!tr || event.target.closest(".grid-check-cell")) return;
+  for (const [row, rowEl] of grid.rowEls) {
+    if (rowEl === tr) {
+      openUpdateModal(row);
+      return;
+    }
+  }
 });
 
 // Toolbar. Create buttons first, then the selection-driven actions
@@ -710,7 +612,7 @@ const updateModal = new Modal({
   footer: `
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
     <button type="submit" form="update-client-form" class="btn btn-primary">Save</button>`,
-  large: true,
+  wide: true,
   onHidden: () => {
     updateForm.reset();
     updateForm.classList.remove("was-validated");

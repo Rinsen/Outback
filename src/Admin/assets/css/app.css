@@ -7,6 +7,11 @@ body {
 
 /* --- Grid (js/core/grid.js) ---------------------------------------------- */
 
+/* Rows are double-clicked to open a client; don't let that select text. */
+.grid table {
+  user-select: none;
+}
+
 .grid-sort-btn {
   background: none;
   border: 0;
@@ -29,6 +34,23 @@ body {
 
 .grid-row-selected > td {
   background-color: rgba(13, 110, 253, 0.07);
+}
+
+/* Client IDs are long GUIDs — keep them on one line. */
+.grid code {
+  white-space: nowrap;
+}
+
+/* --- Modals (js/core/modal.js) ------------------------------------------- */
+
+/* 50% wider than modal-lg (800px -> 1200px). */
+.modal-wide {
+  --bs-modal-width: 1200px;
+}
+
+/* 50% taller than the default content height (~466px -> ~699px). */
+.modal-wide .modal-content {
+  min-height: 699px;
 }
 
 body {
