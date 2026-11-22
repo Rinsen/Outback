@@ -48,9 +48,9 @@ body {
   --bs-modal-width: 1200px;
 }
 
-/* 50% taller than the default content height (~466px -> ~699px). */
+/* Fixed minimum height so the client popup doesn't change size when switching tabs. */
 .modal-wide .modal-content {
-  min-height: 699px;
+  min-height: 1000px;
 }
 
 body {
