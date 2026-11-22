@@ -33,6 +33,7 @@ public class CreateTables : DatabaseVersion
         identityAttributesTable.AddAutoIncrementColumn(m => m.Id, primaryKey: false).Unique("UQ_IdentityAttributes_Id").Clustered();
         identityAttributesTable.AddColumn(m => m.IdentityId).ForeignKey("Identities", "IdentityId").Unique("UQ_IdentityAttributes_Attribute");
         identityAttributesTable.AddColumn(m => m.Attribute, 256).Unique("UQ_IdentityAttributes_Attribute");
+        identityAttributesTable.AddColumn(m => m.Value, 4000);
         identityAttributesTable.AddColumn(m => m.Created);
         identityAttributesTable.AddColumn(m => m.Updated);
         identityAttributesTable.AddColumn(m => m.Deleted);

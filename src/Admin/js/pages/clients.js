@@ -20,6 +20,7 @@ import {
   putClientId,
   getRandomCount,
   getScope,
+  getClientGrantTypes,
 } from "../api/outback.js";
 import { Grid } from "../core/grid.js";
 import { ListEditor } from "../core/list-editor.js";
@@ -652,15 +653,16 @@ const claimsEditor = new ListEditor(updateForm.querySelector("#update-claims-edi
   emptyMessage: "No claims.",
 });
 
+const grantField = {
+  key: "grantType",
+  label: "Grant type",
+  type: "select",
+  placeholder: "Choose a grant type…",
+  className: "col-md-8",
+};
+
 const grantTypesEditor = new ListEditor(updateForm.querySelector("#update-grant-types-editor"), {
-  fields: [
-    {
-      key: "grantType",
-      label: "Grant type",
-      placeholder: "authorization_code, client_credentials, refresh_token, …",
-      className: "col-md-8",
-    },
-  ],
+  fields: [grantField],
   addLabel: "Add grant type",
   emptyMessage: "No grant types.",
 });
@@ -866,16 +868,24 @@ async function openUpdateModal(row) {
     '<option value="" selected disabled>Loading families…</option>';
   updateModal.show();
   try {
-    const [families, scopes] = await Promise.all([getClientFamily(), getScope()]);
+    const [families, scopes, grantTypes] = await Promise.all([
+      getClientFamily(),
+      getScope(),
+      getClientGrantTypes(),
+    ]);
     fillFamilySelect(families, row.clientFamilyId, row.clientFamily?.name);
     scopeField.options = (Array.isArray(scopes) ? scopes : []).map((scope) => ({
       value: scope.id,
       label: scope.scopeName || String(scope.id),
     }));
+    grantField.options = (Array.isArray(grantTypes) ? grantTypes : []).map((type) => ({
+      value: type,
+      label: type,
+    }));
   } catch (error) {
     // Keep the current family so the client can still be saved.
     fillFamilySelect([], row.clientFamilyId, row.clientFamily?.name);
-    setFormError(updateErrorEl, error?.message || "Could not load families or scopes.");
+    setFormError(updateErrorEl, error?.message || "Could not load families, scopes, or grant types.");
   }
   fillUpdateForm(row);
 }

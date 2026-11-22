@@ -293,3 +293,4 @@ tempkey.rsa
 /src/Rinsen.InnovationBoost/package-lock.json
 *.development.json
 .angular/
+.playwright-cli/
