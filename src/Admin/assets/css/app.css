@@ -43,14 +43,17 @@ body {
 
 /* --- Modals (js/core/modal.js) ------------------------------------------- */
 
-/* 50% wider than modal-lg (800px -> 1200px). */
+/* 50% wider than modal-lg (800px -> 1200px), but never wider than the
+   viewport — leaves 1rem of breathing room on each side. */
 .modal-wide {
-  --bs-modal-width: 1200px;
+  --bs-modal-width: min(1200px, calc(100vw - 2rem));
 }
 
-/* Fixed minimum height so the client popup doesn't change size when switching tabs. */
+/* Stable height (so the popup doesn't resize when switching tabs) that is
+   capped to the viewport, so the header/close button and footer always stay
+   on screen and the body scrolls instead of overflowing. */
 .modal-wide .modal-content {
-  min-height: 1000px;
+  height: min(1000px, calc(100vh - 4rem));
 }
 
 body {
