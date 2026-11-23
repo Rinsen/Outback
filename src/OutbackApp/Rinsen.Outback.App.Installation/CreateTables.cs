@@ -23,7 +23,7 @@ public class CreateTables : DatabaseVersion
         identitiesTable.AddColumn(m => m.EmailConfirmed);
         identitiesTable.AddColumn(m => m.GivenName, 128);
         identitiesTable.AddColumn(m => m.Surname, 128);
-        identitiesTable.AddColumn(m => m.PhoneNumber, 128).Unique("UQ_Identities_PhoneNumber");
+        identitiesTable.AddColumn(m => m.PhoneNumber, 128).Null().Unique("UQ_Identities_PhoneNumber");
         identitiesTable.AddColumn(m => m.PhoneNumberConfirmed);
         identitiesTable.AddColumn(m => m.Created);
         identitiesTable.AddColumn(m => m.Updated);

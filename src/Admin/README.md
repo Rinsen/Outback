@@ -3,16 +3,22 @@
 Plain **HTML + JavaScript + Bootstrap 5** admin app for Outback. No frameworks,
 no build step — just static files, ES modules and a small zero-dependency Node
 server for local development. Bootstrap is installed via npm and synced into
-`assets/` (see [Updating Bootstrap](#updating-bootstrap)).
+`assets/` (see [Updating Bootstrap](#updating-bootstrap)); a small QR-code
+generator is vendored directly into `assets/` (see
+[QR code library](#qr-code-library)).
 
 PoC scope:
 
 - a **live session card** (name, expiration, sign in / out) on the dashboard,
 - a **top navigation bar** with the session state and sign in/out,
-- a **left sidebar** with links to Clients, Scopes, Sessions and Settings,
+- a **left sidebar** with links to Clients, Scopes, Users, Sessions and Settings,
 - a **Clients page** with a sortable/paginated grid (Client ID, Name,
   Description, Type, Status) — double-click a row to open the full details —
   plus create / update / delete modals,
+- a **Users page** with a sortable/paginated grid (Name, Email, Phone, Login ID,
+  Admin, 2FA, Status) — double-click a row to open the user — plus create,
+  update, reset password, enable / disable 2FA and delete modals. The Enable 2FA
+  modal renders a scannable `otpauth://` **QR code** next to the one-time secret,
 - **API clients generated** from the backend's OpenAPI documents (committed).
 
 ## Quick start
@@ -75,6 +81,7 @@ HTTP endpoint, which would take the browser cross-origin).
 Admin/
 ├── index.html               # Dashboard (live session card)
 ├── clients.html             # Clients: grid + toolbar + create/update/delete modals
+├── users.html               # Users: grid + toolbar + create/update/password/2FA/delete modals
 ├── scopes.html              # Placeholder pages (sidebar links)
 ├── sessions.html
 ├── settings.html
@@ -85,8 +92,11 @@ Admin/
 │   │   └── bootstrap.min.css.map
 │   ├── js/
 │   │   ├── bootstrap.bundle.min.js    # Synced from npm (sync:bootstrap)
-│   │   └── bootstrap.bundle.min.js.map
-│   └── bootstrap-LICENSE              # Bootstrap's MIT license
+│   │   ├── bootstrap.bundle.min.js.map
+│   │   ├── qr.js                      # Vendored QR generator (MIT) — classic script
+│   │   └── qr.mjs                     # Vendored QR generator — ES module wrapper
+│   ├── bootstrap-LICENSE              # Bootstrap's MIT license
+│   └── qr-LICENSE                     # QR generator's MIT license
 ├── js/
 │   ├── core/
 │   │   ├── config.js        # API_BASE (same-origin by default)
@@ -103,6 +113,7 @@ Admin/
 │   └── pages/
 │       ├── index.js         # Dashboard page module (session card)
 │       ├── clients.js       # Clients page: grid, toolbar, create/update/delete modals
+│       ├── users.js         # Users page: grid, toolbar, create/update/password/2FA/delete modals
 │       ├── scopes.js
 │       ├── sessions.js
 │       └── settings.js
@@ -152,6 +163,24 @@ npm run sync:bootstrap    # re-copy the dist files into assets/
 `sync:bootstrap` also runs automatically after every `npm install`
 (postinstall), so `assets/` can never drift from the installed version.
 Review the diff in `assets/` before committing.
+
+## QR code library
+
+The Enable 2FA modal renders a scannable `otpauth://` QR code so the secret can
+be added to an authenticator app by scanning. The generator is a small,
+dependency-free, single-file MIT library vendored directly into
+`assets/js/` (`qr.js` + its `qr.mjs` ES-module wrapper) — it is **not** an npm
+dependency, so there is nothing to install or sync. `users.js` imports it as an
+ES module:
+
+```js
+import { QRCode } from "../../assets/js/qr.mjs";
+QRCode.toSVG(otpauthUri, { scale: 5, margin: 4 }); // -> an <svg> element
+```
+
+The secret never leaves the browser; the QR is generated entirely client-side.
+To update the library, replace `assets/js/qr.js` and `assets/js/qr.mjs` with a
+newer copy and review the diff before committing.
 
 ## Production notes
 

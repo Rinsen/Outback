@@ -15,5 +15,6 @@ public class IdentityOptions
     public int NumberOfBytesInPasswordSalt { get; set; }
     public int NumberOfBytesInPasswordHash { get; set; }
     public int MaxFailedLoginSleepCount { get; set; }
+    public string TotpIssuer { get; set; } = "Outback";
 
 }

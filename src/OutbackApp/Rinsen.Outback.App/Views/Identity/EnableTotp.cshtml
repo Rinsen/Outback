@@ -1,0 +1,51 @@
+@using Rinsen.Outback.App.Models
+@model EnableTotpViewModel
+@{
+    ViewData["Title"] = "Two-factor authentication";
+    Layout = "_LayoutIdentity";
+}
+
+<div class="form-signin">
+    <h1 class="h3 mb-3 font-weight-normal">Two-factor authentication is now enabled</h1>
+    <p class="text-secondary small mb-3">
+        Scan the QR code with your authenticator app, or enter the secret
+        manually — it will not be shown again.
+    </p>
+    <div class="d-flex align-items-start justify-content-center gap-3">
+        <div class="totp-qr bg-white p-2 rounded border flex-shrink-0" role="img" aria-label="TOTP QR code"></div>
+        <div class="input-group" style="max-width: 320px;">
+            <code class="form-control font-monospace text-break">@Model.Secret</code>
+            <button type="button" class="btn btn-outline-secondary totp-copy" title="Copy to clipboard">Copy</button>
+        </div>
+    </div>
+    <p class="mt-4"><a href="/Identity">Back to profile</a></p>
+    <p class="mt-5 mb-3 text-muted">&copy; 2019-@DateTime.Now.Year</p>
+</div>
+
+@section Scripts {
+    <script id="totp-options" type="application/json">
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new { uri = Model.OtpauthUri, secret = Model.Secret }))
+    </script>
+    <script src="~/js/qr.js"></script>
+    <script>
+        (function () {
+            var options = JSON.parse(document.getElementById('totp-options').textContent);
+
+            var qrEl = document.querySelector('.totp-qr');
+            try {
+                qrEl.appendChild(QRCode.toSVG(options.uri, { scale: 5, margin: 4 }));
+            } catch (error) {
+                console.warn('Could not render the TOTP QR code.', error);
+                qrEl.innerHTML = '<span class="text-secondary small">QR unavailable — enter the secret manually.</span>';
+            }
+
+            var copyBtn = document.querySelector('.totp-copy');
+            copyBtn.addEventListener('click', function () {
+                navigator.clipboard.writeText(options.secret).then(function () {
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(function () { copyBtn.textContent = 'Copy'; }, 2000);
+                });
+            });
+        })();
+    </script>
+}

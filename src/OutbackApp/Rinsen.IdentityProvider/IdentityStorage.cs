@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Data.SqlClient;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Rinsen.IdentityProvider;
@@ -46,6 +47,37 @@ public class IdentityStorage : IIdentityStorage
                                             Deleted
                                         FROM 
                                             Identities 
+                                        WHERE 
+                                            IdentityId=@IdentityId";
+
+    private const string SelectAllSql = @"SELECT 
+                                                Created,
+                                                Email,
+                                                EmailConfirmed,
+                                                GivenName, 
+                                                Id, 
+                                                IdentityId, 
+                                                Surname,
+                                                PhoneNumber, 
+                                                PhoneNumberConfirmed, 
+                                                Updated,
+                                                Deleted
+                                            FROM 
+                                                Identities 
+                                            WHERE 
+                                                Deleted IS NULL";
+
+    private const string UpdateSql = @"UPDATE 
+                                            Identities 
+                                        SET 
+                                            Email = @Email,
+                                            EmailConfirmed = @EmailConfirmed,
+                                            GivenName = @GivenName,
+                                            Surname = @Surname,
+                                            PhoneNumber = @PhoneNumber,
+                                            PhoneNumberConfirmed = @PhoneNumberConfirmed,
+                                            Updated = @Updated,
+                                            Deleted = @Deleted
                                         WHERE 
                                             IdentityId=@IdentityId";
 
@@ -96,31 +128,95 @@ public class IdentityStorage : IIdentityStorage
     
     public async Task<Identity> GetAsync(Guid identityId)
     {
+        var identity = await TryGetAsync(identityId);
+
+        if (identity is null)
+        {
+            throw new Exception($"Failed to get identity {identityId}");
+        }
+
+        return identity;
+    }
+
+    public async Task<Identity?> TryGetAsync(Guid identityId)
+    {
         using var connection = new SqlConnection(_identityOptions.ConnectionString);
         using var command = new SqlCommand(_getSql, connection);
 
         command.Parameters.AddWithValue("@IdentityId", identityId);
 
         await connection.OpenAsync();
-        var reader = await command.ExecuteReaderAsync();
+        using var reader = await command.ExecuteReaderAsync();
 
         if (reader.HasRows && await reader.ReadAsync())
         {
-            return new Identity
-            {
-                Created = (DateTimeOffset)reader["Created"],
-                Email = (string)reader["Email"],
-                EmailConfirmed = (bool)reader["EmailConfirmed"],
-                GivenName = (string)reader["GivenName"],
-                Surname = (string)reader["Surname"],
-                Id = (int)reader["Id"],
-                IdentityId = (Guid)reader["IdentityId"],
-                PhoneNumber = (string)reader["PhoneNumber"],
-                PhoneNumberConfirmed = (bool)reader["PhoneNumberConfirmed"],
-                Updated = (DateTimeOffset)reader["Updated"]
-            };
+            return MapIdentityFromReader(reader);
         }
 
-        throw new Exception($"Failed to get identity {identityId}");
+        return null;
+    }
+
+    public async Task<List<Identity>> GetAllAsync()
+    {
+        var result = new List<Identity>();
+
+        using var connection = new SqlConnection(_identityOptions.ConnectionString);
+        using var command = new SqlCommand(SelectAllSql, connection);
+
+        await connection.OpenAsync();
+        using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            result.Add(MapIdentityFromReader(reader));
+        }
+
+        return result;
+    }
+
+    private static Identity MapIdentityFromReader(SqlDataReader reader)
+    {
+        return new Identity
+        {
+            Created = (DateTimeOffset)reader["Created"],
+            Email = (string)reader["Email"],
+            EmailConfirmed = (bool)reader["EmailConfirmed"],
+            GivenName = (string)reader["GivenName"],
+            Surname = (string)reader["Surname"],
+            Id = (int)reader["Id"],
+            IdentityId = (Guid)reader["IdentityId"],
+            PhoneNumber = reader.GetValueOrDefault<string?>("PhoneNumber"),
+            PhoneNumberConfirmed = (bool)reader["PhoneNumberConfirmed"],
+            Updated = (DateTimeOffset)reader["Updated"],
+            Deleted = reader.GetValueOrDefault<DateTimeOffset?>("Deleted")
+        };
+    }
+
+    public async Task UpdateAsync(Identity identity)
+    {
+        identity.Updated = DateTimeOffset.Now;
+
+        using var connection = new SqlConnection(_identityOptions.ConnectionString);
+        using var command = new SqlCommand(UpdateSql, connection);
+
+        command.Parameters.AddWithValue("@Email", identity.Email);
+        command.Parameters.AddWithValue("@EmailConfirmed", identity.EmailConfirmed);
+        command.Parameters.AddWithValue("@GivenName", identity.GivenName);
+        command.Parameters.AddWithValue("@Surname", identity.Surname);
+        command.Parameters.AddWithNullableValue("@PhoneNumber", identity.PhoneNumber);
+        command.Parameters.AddWithValue("@PhoneNumberConfirmed", identity.PhoneNumberConfirmed);
+        command.Parameters.AddWithValue("@Updated", identity.Updated);
+        command.Parameters.AddWithNullableValue("@Deleted", identity.Deleted);
+        command.Parameters.AddWithValue("@IdentityId", identity.IdentityId);
+
+        await connection.OpenAsync();
+        await command.ExecuteNonQueryAsync();
+    }
+
+    public Task DeleteAsync(Identity identity)
+    {
+        identity.Deleted = DateTimeOffset.Now;
+
+        return UpdateAsync(identity);
     }
 }

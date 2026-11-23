@@ -17,6 +17,7 @@ export const PAGES = [
   { page: "dashboard", label: "Dashboard", href: "/index.html" },
   { page: "clients", label: "Clients", href: "/clients.html" },
   { page: "scopes", label: "Scopes", href: "/scopes.html" },
+  { page: "users", label: "Users", href: "/users.html" },
   { page: "sessions", label: "Sessions", href: "/sessions.html" },
   { page: "settings", label: "Settings", href: "/settings.html" },
 ];

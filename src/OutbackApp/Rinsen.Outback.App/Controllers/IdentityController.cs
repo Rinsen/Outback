@@ -29,6 +29,7 @@ public class IdentityController : Controller
     private readonly IIdentityAccessor _identityAccessor;
     private readonly ISessionStorage _sessionStorage;
     private readonly IWebHostEnvironment _env;
+    private readonly IdentityOptions _identityOptions;
 
     public IdentityController(ILoginService loginService,
         IIdentityService identityService,
@@ -37,7 +38,8 @@ public class IdentityController : Controller
         IConfiguration configuration,
         IIdentityAccessor identityAccessor,
         ISessionStorage sessionStorage,
-        IWebHostEnvironment env)
+        IWebHostEnvironment env,
+        IdentityOptions identityOptions)
     {
         _loginService = loginService;
         _identityService = identityService;
@@ -47,6 +49,7 @@ public class IdentityController : Controller
         _identityAccessor = identityAccessor;
         _sessionStorage = sessionStorage;
         _env = env;
+        _identityOptions = identityOptions;
     }
 
     [HttpGet]
@@ -285,7 +288,14 @@ public class IdentityController : Controller
     {
         var totpSecret = await _localAccountService.EnableTotp();
 
-        return Ok(totpSecret);
+        await CreateAuditLogEvent("TotpEnabled", $"User '{User.Identity?.Name}'");
+
+        return View(new EnableTotpViewModel
+        {
+            Secret = totpSecret,
+            Issuer = _identityOptions.TotpIssuer,
+            Label = User.Identity?.Name ?? string.Empty
+        });
     }
 
     [HttpGet]
