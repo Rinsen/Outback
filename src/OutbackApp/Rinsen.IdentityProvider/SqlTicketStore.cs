@@ -63,38 +63,11 @@ public class SqlTicketStore : ITicketStore
 
         if (session == default)
         {
-            throw new Exception($"No session found for key {key}");
+            return null;
         }
 
         var ticket = _ticketSerializer.Deserialize(session.SerializedTicket);
-
-        //if (ticket.Principal.HasClaim(m => m.Type == StandardClaims.Expiration))
-        //{
-        //    var expiration = ticket.Principal.GetClaimIntValue(StandardClaims.Expiration);
-
-        //    if (ticket.Properties.ExpiresUtc == default)
-        //    {
-        //        ticket.Properties.ExpiresUtc = DateTimeOffset.FromUnixTimeSeconds(expiration);
-        //    }
-        //    else
-        //    {
-        //        var expiresUtcTicket = DateTimeOffset.FromUnixTimeSeconds(expiration);
-
-        //        if (expiresUtcTicket.UtcTicks != ticket.Properties.ExpiresUtc.Value.UtcTicks)
-        //        {
-        //            ticket.Principal.Claims.First(m => m.Type == StandardClaims.Expiration).Value == ticket.Properties.ExpiresUtc.Value.ToUnixTimeSeconds().ToString();
-        //        }
-        //    }
-
-        //}
-        //else
-        //{
-
-        //}
-
-
-        //DateTimeOffset.UtcNow.AddSeconds(timeToExpiration.TotalSeconds).ToUnixTimeSeconds().ToString()
-
+        
         return ticket;
     }
 
@@ -123,19 +96,10 @@ public class SqlTicketStore : ITicketStore
                 session.IpAddress = remoteIpAddress.ToString();
             }
 
-            var userAgent = httpContext.Request.Headers["User-Agent"];
+            var userAgent = httpContext.Request.Headers.UserAgent.ToString();
             if (!string.IsNullOrEmpty(userAgent))
             {
-                if (userAgent.Count > 200)
-                {
-                    session.UserAgent = userAgent.ToString()[..200];
-                }
-                else
-                {
-#pragma warning disable CS8601 // Possible null reference assignment. Nooo, I check a few lines before?
-                    session.UserAgent = userAgent;
-#pragma warning restore CS8601 // Possible null reference assignment.
-                }
+                session.UserAgent = userAgent.Length > 200 ? userAgent[..200] : userAgent;
             }
         }
 
