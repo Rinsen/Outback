@@ -28,6 +28,7 @@ public static class ExtensionMethods
         services.AddSingleton(identityOptions);
 
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IUserService, UserService>();
         services.AddScoped<PasswordHashGenerator>();
         services.AddScoped<ILocalAccountService, LocalAccountService>();
         services.AddScoped<ILoginService, LoginService>();
@@ -176,7 +177,7 @@ public static class ExtensionMethods
         return parameter;
     }
 
-    public static SqlParameter AddWithNullableValue(this SqlParameterCollection collection, string parameterName, string value)
+    public static SqlParameter AddWithNullableValue(this SqlParameterCollection collection, string parameterName, string? value)
     {
         if (string.IsNullOrEmpty(value))
             return collection.AddWithValue(parameterName, DBNull.Value);

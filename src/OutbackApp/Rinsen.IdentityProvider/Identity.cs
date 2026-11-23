@@ -16,7 +16,7 @@ public class Identity
 
     public bool EmailConfirmed { get; set; }
 
-    public string PhoneNumber { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; } = null;
 
     public bool PhoneNumberConfirmed { get; set; }
 

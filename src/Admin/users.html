@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Users · Outback Admin</title>
+  <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/assets/css/app.css">
+</head>
+<body data-page="users">
+  <main id="main" class="container-fluid">
+    <div class="py-3">
+      <div class="mb-3">
+        <h1 class="h4 mb-0">Users</h1>
+        <p class="text-secondary small mb-0">
+          Local accounts and their identities. Double-click a row to open a user.
+        </p>
+      </div>
+
+      <div
+        id="users-error"
+        class="alert alert-danger d-flex align-items-center gap-2 d-none"
+        role="alert"
+      >
+        <span id="users-error-message"></span>
+        <button
+          id="users-error-retry"
+          type="button"
+          class="btn btn-sm btn-outline-danger ms-auto"
+        >
+          Try again
+        </button>
+      </div>
+
+      <div id="users-toolbar"></div>
+      <div id="users-grid"></div>
+    </div>
+  </main>
+  <script src="/assets/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="/js/layout.js"></script>
+  <script type="module" src="/js/pages/users.js"></script>
+</body>
+</html>

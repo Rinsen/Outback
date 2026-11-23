@@ -105,13 +105,28 @@ public class TwoFactorAuthenticationSessionStorage : ITwoFactorAuthenticationSes
                 Id = (int)reader["Id"],
                 Updated = (DateTimeOffset)reader["Updated"],
                 Deleted = reader.GetValueOrDefault<DateTimeOffset?>("Deleted"),
-                KeyCode = (string)reader["KeyCode"],
-                SessionId = (string)reader["SessionId"],
-                Type = (TwoFactorType)Enum.Parse(typeof(TwoFactorType), Convert.ToString((string)reader["Type"]))
+                KeyCode = Convert.ToString(reader["KeyCode"]) ?? string.Empty,
+                SessionId = Convert.ToString(reader["SessionId"]) ?? string.Empty,
+                Type = ParseTwoFactorType(reader["Type"])
             };
         }
 
         throw new Exception($"Failed to get session {sessionId}");
+    }
+
+    private static TwoFactorType ParseTwoFactorType(object value)
+    {
+        if (value == null || value == DBNull.Value)
+        {
+            return TwoFactorType.NotSelected;
+        }
+
+        if (value is string text)
+        {
+            return Enum.Parse<TwoFactorType>(text, ignoreCase: true);
+        }
+
+        return (TwoFactorType)Convert.ToInt32(value);
     }
 
     public async Task Update(TwoFactorAuthenticationSession twoFactorAuthenticationSession)

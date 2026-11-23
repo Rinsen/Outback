@@ -64,6 +64,13 @@ public class LoginService : ILoginService
             return LoginResult.Failure();
         }
 
+        if (localAccount is not null && localAccount.Deleted is not null)
+        {
+            _log.LogWarning("Login blocked for deleted local account of email {email}", email);
+
+            return LoginResult.Failure();
+        }
+
         if (localAccount is not null && (localAccount.TwoFactorAppNotificationEnabled is not null || localAccount.TwoFactorEmailEnabled is not null
             || localAccount.TwoFactorSmsEnabled is not null || localAccount.TwoFactorTotpEnabled is not null))
         {
@@ -138,6 +145,13 @@ public class LoginService : ILoginService
     private async Task<LoginResult> PrivateLogin(string host, bool rememberMe, LocalAccount localAccount)
     {
         var identity = await _identityService.GetIdentityAsync(localAccount.IdentityId);
+
+        if (identity.Deleted is not null)
+        {
+            _log.LogWarning("Login blocked for deleted identity {IdentityId}", identity.IdentityId);
+
+            return LoginResult.Failure();
+        }
 
         var expiration = DateTimeOffset.UtcNow.AddHours(1);
 

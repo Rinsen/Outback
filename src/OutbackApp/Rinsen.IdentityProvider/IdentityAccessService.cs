@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using System;
+using Rinsen.Outback.Claims;
 
 namespace Rinsen.IdentityProvider;
 
@@ -32,7 +33,7 @@ public class IdentityAccessService : IIdentityAccessor
     {
         get
         {
-            return ClaimsPrincipal.GetClaimGuidValue(ClaimTypes.NameIdentifier);
+            return ClaimsPrincipal.GetClaimGuidValue(StandardClaims.Subject);
         }
     }
 }

@@ -36,7 +36,11 @@ public class Program
             
         ConfigureOpenApi(builder.Services);
 
-        builder.Services.AddRinsenIdentity(options => options.ConnectionString = connectionString);
+        builder.Services.AddRinsenIdentity(options =>
+        {
+            options.ConnectionString = connectionString;
+            options.TotpIssuer = configuration["Rinsen:TotpIssuer"] ?? "Outback";
+        });
         builder.Services.AddRinsenOutback();
 
         var gelfhost = configuration["Rinsen:GelfHost"];

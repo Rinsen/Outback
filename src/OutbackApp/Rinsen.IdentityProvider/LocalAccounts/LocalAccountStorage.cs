@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Data.SqlClient;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rinsen.IdentityProvider.Exceptions;
 
@@ -84,6 +85,27 @@ public class LocalAccountStorage : ILocalAccountStorage
                                         LocalAccounts 
                                     WHERE 
                                         LoginId=@LoginId";
+
+    private const string SelectAll = @"SELECT Id,
+                                        IdentityId,
+                                        Created,
+                                        FailedLoginCount,
+                                        IsDisabled,
+                                        IterationCount,
+                                        LoginId,
+                                        PasswordHash,
+                                        PasswordSalt,
+                                        Updated,
+                                        SharedTotpSecret,
+                                        TwoFactorTotpEnabled,
+                                        TwoFactorSmsEnabled,
+                                        TwoFactorEmailEnabled,
+                                        TwoFactorAppNotificationEnabled,
+                                        Deleted 
+                                    FROM 
+                                        LocalAccounts 
+                                    WHERE 
+                                        Deleted IS NULL";
 
     private const string UpdateFailedLoginCount = @"UPDATE 
                                                     LocalAccounts 
@@ -212,6 +234,24 @@ public class LocalAccountStorage : ILocalAccountStorage
         }
 
         throw new AccountNotFoundException($"Identity {identityId} not found");
+    }
+
+    public async Task<List<LocalAccount>> GetAllAsync()
+    {
+        var result = new List<LocalAccount>();
+
+        using var connection = new SqlConnection(_identityOptions.ConnectionString);
+        using var command = new SqlCommand(SelectAll, connection);
+
+        await connection.OpenAsync();
+        using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            result.Add(MapLocalAccountFromReader(reader));
+        }
+
+        return result;
     }
 
     private static LocalAccount MapLocalAccountFromReader(SqlDataReader reader)
