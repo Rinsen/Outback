@@ -259,14 +259,16 @@ public class OAuthController : Controller
                 return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
             }
 
+            var verificationUri = $"{GetIssuer()}/device";
+
             return Json(new DeviceAuthorizationResponse
             {
                 DeviceCode = deviceAuthorizationGrantRequest.DeviceCode,
                 UserCode = deviceAuthorizationGrantRequest.UserCode,
                 ExpiresIn = client.DeviceCodeUserCompletionLifetime,
                 Interval = deviceAuthorizationGrantRequest.Interval,
-                VerificationUri = $"https://{HttpContext.Request.Host}/device",
-                VerificationUriComplete = $"https://{HttpContext.Request.Host}/device?user_code={deviceAuthorizationGrantRequest.UserCode}"
+                VerificationUri = verificationUri,
+                VerificationUriComplete = $"{verificationUri}?user_code={deviceAuthorizationGrantRequest.UserCode}"
             });
         }
 
@@ -351,7 +353,7 @@ public class OAuthController : Controller
 
     private string GetIssuer()
     {
-        return "https://" + HttpContext.Request.Host.ToString();
+        return HttpContext.Request.Scheme + "://" + HttpContext.Request.Host.ToString();
     }
 
 

@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Rinsen.IdentityProvider;
 using Rinsen.IdentityProvider.Configurations;
 using Rinsen.IdentityProvider.Outback.Entities;
+using Rinsen.Outback.JwtTokens;
 
 namespace Rinsen.Outback.App;
 
@@ -171,6 +172,7 @@ public class Program
             {
                 options.Authority = configuration["Rinsen:Outback"];
                 options.Audience = configuration["Rinsen:ClientId"];
+                options.TokenValidationParameters = InboundTokenValidation.CreateTokenValidationParameters();
             });
     }
 

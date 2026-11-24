@@ -30,6 +30,8 @@ namespace Rinsen.IdentityProvider.Outback.Entities
 
         public DateTimeOffset? Accepted { get; set; }
 
+        public DateTimeOffset? Resolved { get; set; }
+
         public virtual OutbackClient? Client { get; set; }
     }
 }

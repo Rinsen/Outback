@@ -156,6 +156,7 @@ public class OutbackTableInstallation : DatabaseVersion
         outbackRefreshTokenGrantsTable.AddColumn(m => m.Created);
         outbackRefreshTokenGrantsTable.AddColumn(m => m.Expires);
         outbackRefreshTokenGrantsTable.AddColumn(m => m.RefreshToken, 200);
+        outbackRefreshTokenGrantsTable.AddColumn(m => m.FamilyId);
         outbackRefreshTokenGrantsTable.AddColumn(m => m.Resolved);
         outbackRefreshTokenGrantsTable.AddColumn(m => m.Scope, 2000);
         outbackRefreshTokenGrantsTable.AddColumn(m => m.SubjectId).ForeignKey("Identities", "IdentityId");
@@ -171,6 +172,7 @@ public class OutbackTableInstallation : DatabaseVersion
         outbackDeviceAuthorizationGrantTable.AddColumn(m => m.Scope, 2000);
         outbackDeviceAuthorizationGrantTable.AddColumn(m => m.UserCode, 200);
         outbackDeviceAuthorizationGrantTable.AddColumn(m => m.UserCodeExpiration);
+        outbackDeviceAuthorizationGrantTable.AddColumn(m => m.Resolved);
         outbackDeviceAuthorizationGrantTable.AddColumn(m => m.SubjectId).ForeignKey("Identities", "IdentityId");
 
         var outbackSecretsTable = dbChangeList.AddNewTable<OutbackSecret>();

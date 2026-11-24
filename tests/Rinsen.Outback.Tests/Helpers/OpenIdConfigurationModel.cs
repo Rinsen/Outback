@@ -21,6 +21,12 @@ namespace Rinsen.Outback.Tests.Helpers
         [JsonPropertyName("token_endpoint")]
         public string TokenEndpoint { get; set; } = string.Empty;
 
+        [JsonPropertyName("userinfo_endpoint")]
+        public string UserInfoEndpoint { get; set; } = string.Empty;
+
+        [JsonPropertyName("device_authorization_endpoint")]
+        public string DeviceAuthorizationEndpoint { get; set; } = string.Empty;
+
         [JsonPropertyName("frontchannel_logout_supported")]
         public bool FrontchannelLogoutSupported { get; set; }
 
@@ -44,6 +50,9 @@ namespace Rinsen.Outback.Tests.Helpers
 
         [JsonPropertyName("response_types_supported")]
         public List<string> ResponseTypesSupported { get; set; } = new List<string>();
+
+        [JsonPropertyName("id_token_signing_alg_values_supported")]
+        public List<string> IdTokenSigningAlgValuesSupported { get; set; } = new List<string>();
 
         [JsonPropertyName("token_endpoint_auth_methods_supported")]
         public List<string> TokenEndpointAuthMethodsSupported { get; set; } = new List<string>();

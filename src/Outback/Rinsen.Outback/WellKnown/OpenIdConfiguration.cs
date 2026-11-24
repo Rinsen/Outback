@@ -21,6 +21,9 @@ public class OpenIdConfiguration
     [JsonPropertyName("token_endpoint")]
     public string TokenEndpoint { get; set; } = string.Empty;
 
+    [JsonPropertyName("userinfo_endpoint")]
+    public string UserInfoEndpoint { get; set; } = string.Empty;
+
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     [JsonPropertyName("end_session_endpoint")]
     public string EndSessionEndpoint { get; set; } = string.Empty;
@@ -48,6 +51,9 @@ public class OpenIdConfiguration
 
     [JsonPropertyName("response_types_supported")]
     public List<string> ResponseTypesSupported { get; set; } = new List<string>();
+
+    [JsonPropertyName("id_token_signing_alg_values_supported")]
+    public List<string> IdTokenSigningAlgValuesSupported { get; set; } = new List<string>();
 
     [JsonPropertyName("token_endpoint_auth_methods_supported")]
     public List<string> TokenEndpointAuthMethodsSupported { get; set; } = new List<string>();

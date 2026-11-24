@@ -16,6 +16,8 @@ namespace Rinsen.IdentityProvider;
 
 public class LoginService : ILoginService
 {
+    private static readonly TimeSpan UsedTotpLogMaxAge = TimeSpan.FromMinutes(10);
+
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly RandomStringGenerator _randomStringGenerator;
     private readonly IIdentityService _identityService;
@@ -127,6 +129,15 @@ public class LoginService : ILoginService
         if (localAccount.TwoFactorTotpEnabled is null || localAccount.SharedTotpSecret is null)
         {
             throw new TotpIsNotEnabledForThisAccountException("Totp is not enabled for this local account");
+        }
+
+        await _usedTotpLogStorage.PruneStaleAsync(UsedTotpLogMaxAge);
+
+        if (await _usedTotpLogStorage.HasBeenUsedAsync(localAccount.IdentityId, keyCode))
+        {
+            _log.LogWarning("Rejected replay of an already used totp code for identity {IdentityId}", localAccount.IdentityId);
+
+            throw new TotpCodeAlreadyUsedException($"Totp code already used for identity '{localAccount.IdentityId}'");
         }
 
         var totp = new Totp(localAccount.SharedTotpSecret);

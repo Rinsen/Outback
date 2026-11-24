@@ -104,7 +104,7 @@ internal class TokenService : ITokenService
         {
             Subject = null,
             TokenType = "at+jwt",
-            Expires = DateTime.UtcNow.AddSeconds(client.IdentityTokenLifetime),
+            Expires = DateTime.UtcNow.AddSeconds(client.AccessTokenLifetime),
             Issuer = issuer,
             IssuedAt = DateTime.UtcNow,
             SigningCredentials = new SigningCredentials(key.SecurityKey, key.Algorithm),
@@ -139,7 +139,7 @@ internal class TokenService : ITokenService
         {
             Subject = null,
             TokenType = null,
-            Expires = DateTime.UtcNow.AddSeconds(client.AccessTokenLifetime),
+            Expires = DateTime.UtcNow.AddSeconds(client.IdentityTokenLifetime),
             Issuer = issuer,
             IssuedAt = DateTime.UtcNow,
             Audience = client.ClientId,
@@ -200,7 +200,7 @@ internal class TokenService : ITokenService
                             new Claim(StandardClaims.Subject, client.ClientId)
             }),
             TokenType = "at+jwt",
-            Expires = DateTime.UtcNow.AddSeconds(client.IdentityTokenLifetime),
+            Expires = DateTime.UtcNow.AddSeconds(client.AccessTokenLifetime),
             Issuer = issuer,
             IssuedAt = DateTime.UtcNow,
             Audience = audiences[0],

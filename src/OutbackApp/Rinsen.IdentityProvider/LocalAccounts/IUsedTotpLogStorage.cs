@@ -9,4 +9,8 @@ public interface IUsedTotpLogStorage
 {
     Task CreateLog(UsedTotpLog usedTotp);
 
+    Task<bool> HasBeenUsedAsync(Guid identityId, string code);
+
+    Task PruneStaleAsync(TimeSpan maxAge);
+
 }

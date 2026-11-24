@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Rinsen.IdentityProvider.Exceptions
 {
-    internal class TotpKeyNotValidException : Exception
+    public class TotpKeyNotValidException : Exception
     {
         public TotpKeyNotValidException(string? message) : base(message)
         {

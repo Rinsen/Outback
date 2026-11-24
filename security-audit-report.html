@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outback Security Audit Report</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --panel:#ffffff; --ink:#1c2330; --muted:#5b6472;
+    --line:#e3e6ea; --code-bg:#1e2330; --code-ink:#e6e9ef;
+    --high:#c0392b; --high-bg:#fdecea;
+    --med:#d35400; --med-bg:#fdf0e3;
+    --low:#b7950b; --low-bg:#fbf6dd;
+    --ok:#1e8449; --ok-bg:#e8f6ee;
+    --accent:#2c5fd8;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  header{background:linear-gradient(135deg,#1b2440 0%,#2c3e6b 100%);color:#fff;padding:40px 24px 32px;}
+  header .wrap{max-width:1000px;margin:0 auto}
+  header h1{margin:0 0 6px;font-size:30px;letter-spacing:.2px}
+  header .sub{color:#c7d0e8;font-size:15px;margin:0 0 18px}
+  .meta{display:flex;flex-wrap:wrap;gap:10px 22px;font-size:13.5px;color:#dbe1f2}
+  .meta b{color:#fff;font-weight:600}
+
+  .wrap{max-width:1000px;margin:0 auto;padding:0 24px}
+  main{padding:28px 0 60px}
+
+  .toc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:26px}
+  .toc h2{margin:0 0 12px;font-size:15px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+  .toc ol{margin:0;padding-left:20px}
+  .toc li{margin:6px 0}
+
+  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:30px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;text-align:center}
+  .stat .num{font-size:34px;font-weight:700;line-height:1.1}
+  .stat .lbl{font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:4px}
+  .stat.high .num{color:var(--high)} .stat.med .num{color:var(--med)}
+  .stat.low .num{color:var(--low)} .stat.total .num{color:var(--accent)}
+
+  section.area{margin-bottom:40px}
+  .area-head{display:flex;align-items:center;gap:12px;margin:0 0 16px;padding-bottom:12px;border-bottom:2px solid var(--line)}
+  .area-head .no{background:var(--accent);color:#fff;font-weight:700;border-radius:8px;padding:4px 12px;font-size:14px}
+  .area-head h2{margin:0;font-size:21px}
+  .area-head .count{margin-left:auto;font-size:13px;color:var(--muted)}
+
+  .finding{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--muted);
+    border-radius:10px;padding:18px 20px;margin:0 0 16px;box-shadow:0 1px 2px rgba(20,25,40,.04)}
+  .finding.high{border-left-color:var(--high)}
+  .finding.med{border-left-color:var(--med)}
+  .finding.low{border-left-color:var(--low)}
+  .f-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+  .badge{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+    padding:3px 10px;border-radius:20px;white-space:nowrap;margin-top:2px}
+  .badge.high{background:var(--high-bg);color:var(--high)}
+  .badge.med{background:var(--med-bg);color:var(--med)}
+  .badge.low{background:var(--low-bg);color:var(--low)}
+  .f-title{margin:0;font-size:16.5px;font-weight:650}
+  .loc{font-family:var(--mono);font-size:12.5px;color:var(--muted);background:#f2f4f7;
+    border:1px solid var(--line);border-radius:6px;padding:6px 10px;margin:0 0 12px;word-break:break-word}
+  .f-body p{margin:0 0 10px}
+  .why b,.rem b{color:var(--ink)}
+  .rem{margin-top:12px}
+  .rem .lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ok);margin-bottom:6px}
+
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:8px;padding:14px 16px;overflow-x:auto;
+    font-family:var(--mono);font-size:12.8px;line-height:1.55;margin:0}
+  code.inline{font-family:var(--mono);font-size:.92em;background:#eef1f5;border:1px solid var(--line);
+    border-radius:4px;padding:1px 5px;color:#243049}
+
+  .clean{background:var(--ok-bg);border:1px solid #bfe6cf;border-radius:10px;padding:16px 18px;margin-top:6px}
+  .clean h3{margin:0 0 10px;font-size:14px;text-transform:uppercase;letter-spacing:.6px;color:var(--ok)}
+  .clean ul{margin:0;padding-left:20px}
+  .clean li{margin:7px 0;font-size:14.5px}
+  .clean code{font-family:var(--mono);font-size:.9em;background:rgba(255,255,255,.7);border-radius:4px;padding:1px 5px}
+
+  .context{background:#fff8e6;border:1px solid #f0dca0;border-radius:10px;padding:16px 18px}
+  .context h3{margin:0 0 10px;font-size:14px;text-transform:uppercase;letter-spacing:.6px;color:#9a7b0a}
+  .context ul{margin:0;padding-left:20px}
+  .context li{margin:7px 0;font-size:14.5px}
+  .context code{font-family:var(--mono);font-size:.9em;background:#fff;border:1px solid #e8d79a;border-radius:4px;padding:1px 5px}
+
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);font-size:14.5px}
+  th{background:#f2f4f7;font-size:12.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  tr:last-child td{border-bottom:none}
+  td .badge{margin:0}
+
+  footer{border-top:1px solid var(--line);padding:22px 24px;text-align:center;color:var(--muted);font-size:13px}
+  @media(max-width:640px){.summary{grid-template-columns:repeat(2,1fr)}header h1{font-size:24px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>Outback — Security Audit Report</h1>
+    <p class="sub">OAuth 2.1 / OIDC Identity Provider · Strict line-by-line review</p>
+    <div class="meta">
+      <span><b>Scope:</b> E:\repos\Rinsen\Outback (src/Outback, src/OutbackApp, src/Aspire, sample, src/Admin)</span>
+      <span><b>Date:</b> 2026-11-24</span>
+      <span><b>Method:</b> Read-only source review, every finding verified to exact line</span>
+    </div>
+  </div>
+</header>
+
+<main>
+<div class="wrap">
+
+  <div class="toc">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#summary">Summary</a></li>
+      <li><a href="#area1">Area 1 — OAuth 2.1 / OIDC Protocol Compliance</a></li>
+      <li><a href="#area2">Area 2 — Token Handling &amp; Validation (.NET)</a></li>
+      <li><a href="#area3">Area 3 — Authentication &amp; Login Flow Security</a></li>
+      <li><a href="#context">Context — Functional defects (not scored)</a></li>
+    </ol>
+  </div>
+
+  <!-- ============ SUMMARY ============ -->
+  <section id="summary">
+    <div class="summary">
+      <div class="stat total"><div class="num">23</div><div class="lbl">Total findings</div></div>
+      <div class="stat high"><div class="num">7</div><div class="lbl">High</div></div>
+      <div class="stat med"><div class="num">10</div><div class="lbl">Medium</div></div>
+      <div class="stat low"><div class="num">6</div><div class="lbl">Low</div></div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Area</th><th>High</th><th>Medium</th><th>Low</th><th>Theme</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="#area1">1 · OAuth 2.1 / OIDC</a></td>
+          <td>3</td><td>4</td><td>2</td>
+          <td>Credential leakage in logs, unvalidated token lifetimes, replay gaps</td>
+        </tr>
+        <tr>
+          <td><a href="#area2">2 · Token handling (.NET)</a></td>
+          <td>0</td><td>5</td><td>1</td>
+          <td>Weak validation params, non-constant-time compares, weak KDFs</td>
+        </tr>
+        <tr>
+          <td><a href="#area3">3 · Auth / login flow</a></td>
+          <td>4</td><td>1</td><td>3</td>
+          <td>No brute-force protection, disabled-account bypass, hardcoded secrets</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:16px;color:var(--muted);font-size:14.5px">
+      The protocol core (PKCE S256 enforcement, no Implicit/ROPC, exact redirect-URI matching, state/nonce,
+      authorization-code single-use, ES256-only signing, server-side session storage) is sound. The dominant
+      risks are <b>credential leakage into logs</b>, <b>unbounded credential guessing</b>, and
+      <b>weak secret-at-rest handling</b>.
+    </p>
+  </section>
+
+  <!-- ============ AREA 1 ============ -->
+  <section class="area" id="area1">
+    <div class="area-head"><span class="no">1</span><h2>OAuth 2.1 / OIDC Protocol Compliance</h2><span class="count">9 findings</span></div>
+
+    <div class="finding high">
+      <div class="f-head"><span class="badge high">High</span><p class="f-title">Refresh token expiration is never validated</p></div>
+      <div class="loc">src/Outback/Rinsen.Outback/Grants/RefreshTokenGrantTypeHandler.cs · GetRefreshTokenGrantAsync (61–76) &nbsp;·&nbsp; src/OutbackApp/Rinsen.IdentityProvider/Outback/GrantAccessor.cs · GetRefreshTokenGrantAsync (87–113)</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> Refresh token grants are created with an <code class="inline">Expires</code> value (<code class="inline">RefreshTokenGrantTypeHandler.cs:85</code>), but neither the grant handler nor the storage layer ever checks it against the current time. An expired refresh token remains a valid bearer credential indefinitely. Violates RFC 6749 §6 and RFC 9700 §4.12 (the token endpoint MUST validate token lifetimes).</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>private async Task&lt;RefreshTokenGrant&gt; GetRefreshTokenGrantAsync(string refreshToken, string clientId)
+{
+    var refreshTokenGrant = await _grantAccessor.GetRefreshTokenGrantAsync(refreshToken);
+
+    if (refreshTokenGrant == default)
+    {
+        throw new SecurityException("No RefreshToken found");
+    }
+
+    if (refreshTokenGrant.Expires &lt; DateTimeOffset.UtcNow)
+    {
+        throw new SecurityException("Refresh token has expired");
+    }
+
+    if (!string.Equals(refreshTokenGrant.ClientId, clientId, StringComparison.Ordinal))
+    {
+        throw new SecurityException("RefreshToken is not valid for client");
+    }
+
+    return refreshTokenGrant;
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="finding high">
+      <div class="f-head"><span class="badge high">High</span><p class="f-title">Refresh token written to logs in plaintext</p></div>
+      <div class="loc">src/Outback/Rinsen.Outback/Grants/RefreshTokenGrantTypeHandler.cs:49 &nbsp;·&nbsp; aggravated by GrantAccessor.cs:93, :98 (token embedded in exception messages logged by the catch block)</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> <code class="inline">_logger.LogError(e, "...with {RefreshToken}", client.ClientId, tokenModel.RefreshToken)</code> writes the raw refresh token to the log. The path is attacker-triggerable (any failed refresh attempt), so an adversary can cause their own token guesses to land in logs. RFC 9700 §10.5: refresh tokens are bearer credentials and MUST NOT be logged.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>catch (Exception e)
+{
+    _logger.LogError(e, "Failed to resolve grant for client {ClientId}", client.ClientId);
+
+    return new TokenResponse { ErrorResponse = new ErrorResponse { Error = ErrorResponses.InvalidGrant } };
+}</pre>
+<p style="margin:10px 0 6px;font-size:14px;color:var(--muted)">and in <code class="inline">GrantAccessor.cs</code>:</p>
+<pre>if (outbackPersistedGrant == default)
+{
+    throw new Exception("Refresh token not found");
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="finding high">
+      <div class="f-head"><span class="badge high">High</span><p class="f-title">PKCE code verifier written to logs</p></div>
+      <div class="loc">src/Outback/Rinsen.Outback/Grants/AuthorizationCodeGrantTypeHandler.cs:66</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> <code class="inline">_logger.LogError("...with code verifier {CodeVerifier}", client.ClientId, tokenModel.CodeVerifier)</code> — the code verifier is the PKCE secret. It is logged whenever a malformed verifier is submitted (attacker-controlled input). A leaked verifier allows the attacker to redeem the authorization code.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>_logger.LogError("Code verifier is not ABNF valid for client {ClientId}", client.ClientId);</pre></div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-head"><span class="badge med">Medium</span><p class="f-title">No refresh-token reuse detection / token-family revocation</p></div>
+      <div class="loc">src/Outback/Rinsen.Outback/Grants/RefreshTokenGrantTypeHandler.cs · GetTokenAsync (40–59) &nbsp;·&nbsp; src/OutbackApp/Rinsen.IdentityProvider/Outback/GrantAccessor.cs:87–113</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> Rotation exists (a new token is issued per refresh, old token marked <code class="inline">Resolved</code> at <code class="inline">GrantAccessor.cs:101</code>), but replay of a consumed token merely fails with <code class="inline">invalid_grant</code> while the current family token stays valid. RFC 9700 §10.5 requires that reuse of a rotated refresh token triggers revocation of the entire token family (theft detection).</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>var existing = await _outbackDbContext.RefreshTokenGrants
+    .Include(m =&gt; m.Client)
+    .SingleOrDefaultAsync(m =&gt; m.RefreshToken == refreshToken);
+
+if (existing == null)
+{
+    throw new Exception("Refresh token not found");
+}
+
+if (existing.Resolved is not null)
+{
+    // Reuse detected: revoke the entire token family
+    var family = await _outbackDbContext.RefreshTokenGrants
+        .Where(m =&gt; m.FamilyId == existing.FamilyId).ToListAsync();
+    _outbackDbContext.RefreshTokenGrants.RemoveRange(family);
+    await _outbackDbContext.SaveChangesAsync();
+    throw new SecurityException("Refresh token reuse detected; family revoked");
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-head"><span class="badge med">Medium</span><p class="f-title">Device code grant is not single-use (replayable until expiry)</p></div>
+      <div class="loc">src/Outback/Rinsen.Outback/Grants/DeviceCodeGrantTypeHandler.cs · GetTokenAsync (34–69)</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> After a successful token issuance the device grant is neither marked resolved nor deleted; the same <code class="inline">device_code</code> can be polled again and mint additional tokens until <code class="inline">UserCodeExpiration</code>. RFC 8628 §3.2 requires device codes to be one-time use. (The app's <code class="inline">GrantAccessor.GetDeviceAuthorizationGrantAsync</code> currently throws <code class="inline">NotImplementedException</code>, so this is latent, but the handler contract is unsafe.)</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>var tokenResponse = await _tokenService.CreateTokenResponseAsync(client, deviceGrant, issuer);
+
+await _grantAccessor.MarkDeviceAuthorizationGrantResolvedAsync(tokenModel.DeviceCode);
+
+return new TokenResponse { AccessTokenResponse = tokenResponse };</pre></div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-head"><span class="badge med">Medium</span><p class="f-title">Access-token and ID-token lifetimes are swapped</p></div>
+      <div class="loc">src/Outback/Rinsen.Outback/JwtTokens/TokenService.cs:107 (access token exp from IdentityTokenLifetime), :142 (ID token exp from AccessTokenLifetime), :203 (client-credentials access token) &nbsp;·&nbsp; expires_in reported at :93</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> The <code class="inline">exp</code> claim disagrees with the advertised <code class="inline">expires_in</code>, so clients either stop using valid tokens early or keep presenting tokens the server believes are expired — and the ID token (which carries user claims and is expected to be short-lived) inherits the access-token lifetime.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>// CreateAccessToken (line 107) and client-credentials variant (line 203)
+Expires = DateTime.UtcNow.AddSeconds(client.AccessTokenLifetime),
+
+// CreateIdentityToken (line 142)
+Expires = DateTime.UtcNow.AddSeconds(client.IdentityTokenLifetime),</pre></div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-head"><span class="badge med">Medium</span><p class="f-title">TOTP codes can be replayed; used-code log is never checked</p></div>
+      <div class="loc">src/OutbackApp/Rinsen.IdentityProvider/LoginService.cs · ConfirmTotpCode (132–140) &nbsp;·&nbsp; IUsedTotpLogStorage exposes only CreateLog</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> Verification uses <code class="inline">VerificationWindow.RfcSpecifiedNetworkDelay</code> (±1 step ≈ 90 s of validity). <code class="inline">UsedTotpLog</code> is inserted on success but never read, so the same code can be replayed within the window (e.g., a code observed on a shared device).</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>if (await _usedTotpLogStorage.HasBeenUsedAsync(localAccount.IdentityId, keyCode))
+{
+    throw new TotpCodeAlreadyUsedException("Totp key code already used");
+}
+
+var totp = new Totp(localAccount.SharedTotpSecret);
+if (totp.VerifyTotp(keyCode, out _, VerificationWindow.RfcSpecifiedNetworkDelay))
+{
+    await _usedTotpLogStorage.CreateLog(new UsedTotpLog
+    {
+        IdentityId = localAccount.IdentityId,
+        Code = keyCode,
+        UsedTime = DateTimeOffset.Now
+    });
+    ...
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="finding low">
+      <div class="f-head"><span class="badge low">Low</span><p class="f-title">OIDC discovery document is missing required fields</p></div>
+      <div class="loc">src/Outback/Rinsen.Outback/Controllers/WellKnownController.cs:47–93 &nbsp;·&nbsp; src/Outback/Rinsen.Outback/WellKnown/OpenIdConfiguration.cs</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> <code class="inline">response_types_supported</code> and <code class="inline">id_token_signing_alg_values_supported</code> are REQUIRED in OIDC Core §15, and <code class="inline">userinfo_endpoint</code> is omitted even though the endpoint exists (<code class="inline">OAuthController.cs:276–322</code>). Relying-party libraries that validate discovery metadata will fail or silently weaken validation.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>var openIdConfiguration = new OpenIdConfiguration
+{
+    Issuer = $"{HttpContext.Request.Scheme}://{host}",
+    JwksUri = $"{HttpContext.Request.Scheme}://{host}/.well-known/openid-configuration/jwks",
+    AuthorizationEndpoint = $"{HttpContext.Request.Scheme}://{host}/oauth/authorize",
+    TokenEndpoint = $"{HttpContext.Request.Scheme}://{host}/oauth/token",
+    UserInfoEndpoint = $"{HttpContext.Request.Scheme}://{host}/oauth/userinfo",
+    CodeChallengeMethodsSupported = ["S256"],
+    ResponseTypesSupported = new List&lt;string&gt; { "code" },
+    IdTokenSigningAlgValuesSupported = new List&lt;string&gt; { "ES256" },
+    ScopesSupported = scopes.Where(m =&gt; m.ShowInDiscoveryDocument).Select(m =&gt; m.ScopeName).ToList()
+};</pre></div>
+      </div>
+    </div>
+
+    <div class="finding low">
+      <div class="f-head"><span class="badge low">Low</span><p class="f-title">Issuer and device verification URI hard-coded to https://</p></div>
+      <div class="loc">src/Outback/Rinsen.Outback/Controllers/OAuthController.cs:268–269 (VerificationUri), :352–355 (GetIssuer) &nbsp;·&nbsp; WellKnownController.cs:49–52</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> The scheme is forced to <code class="inline">https</code> regardless of the actual request scheme. In any non-TLS deployment (dev, internal HTTP) the advertised issuer no longer matches the actual origin, breaking issuer validation on the RP side and producing an unreachable <code class="inline">verification_uri</code>.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>private string GetIssuer()
+{
+    return $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}";
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="clean">
+      <h3>Clean sections — Area 1</h3>
+      <ul>
+        <li><b>PKCE S256-only, enforced fail-closed:</b> <code>code_challenge</code> is <code>[Required]</code> (<code>AuthorizeModel.cs:22</code>); <code>code_challenge_method</code> defaults to <code>S256</code> and any other value is rejected (<code>OAuthController.cs:62–72</code>); verifier must be 43–128 ABNF unreserved chars (<code>AuthorizationCodeGrantTypeHandler.cs:58–68</code>); verification is SHA-256 + Base64Url (<code>:135–141</code>). No <code>plain</code> support.</li>
+        <li><b>No Implicit flow:</b> only <code>response_type=code</code> is accepted (<code>OAuthController.cs:55–60</code>).</li>
+        <li><b>No Resource Owner Password Credentials:</b> no password-grant handler exists anywhere in the repo.</li>
+        <li><b>Redirect URI validation:</b> exact ordinal string match against the registered list, no wildcards (<code>ClientValidator.cs:28–41</code>), re-validated at the token endpoint (<code>AuthorizationCodeGrantTypeHandler.cs:82–86</code>).</li>
+        <li><b>state / nonce:</b> <code>state</code> echoed back verbatim (<code>OAuthController.cs:139–142</code>); <code>nonce</code> persisted in the grant and emitted in the ID token (<code>TokenService.cs:154–157</code>).</li>
+        <li><b>Authorization code single-use + expiry:</b> code marked <code>Resolved</code> on redemption (<code>GrantAccessor.cs:35</code>) and expiry checked (<code>AuthorizationCodeGrantTypeHandler.cs:124–127</code>).</li>
+        <li><b>CSPRNG for all secrets/tokens:</b> <code>RandomNumberGenerator</code> in both <code>RandomStringGenerator</code> implementations.</li>
+        <li><b>Client authentication exclusivity:</b> Basic auth and body credentials may not be combined (<code>ClientIdentityHelper.cs:15–19</code>).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ AREA 2 ============ -->
+  <section class="area" id="area2">
+    <div class="area-head"><span class="no">2</span><h2>Token Handling &amp; Validation (.NET)</h2><span class="count">6 findings</span></div>
+
+    <div class="finding med">
+      <div class="f-head"><span class="badge med">Medium</span><p class="f-title">JwtBearer configured without explicit TokenValidationParameters / algorithm whitelist</p></div>
+      <div class="loc">src/OutbackApp/Rinsen.Outback.App/Startup.cs:163–167 (mirrored in Program.cs)</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> Only <code class="inline">Authority</code> and <code class="inline">Audience</code> are set. There is no <code class="inline">TokenValidationParameters</code> with an explicit <code class="inline">ValidAlgorithms</code> whitelist, and the individual <code class="inline">Validate*</code> flags are left to defaults rather than being set explicitly. If the JWKS ever exposed a key of a different type, the handler would accept it without an explicit algorithm allow-list.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>.AddJwtBearer(options =&gt;
+{
+    options.Authority = Configuration["Rinsen:Outback"];
+    options.Audience = Configuration["Rinsen:ClientId"];
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ClockSkew = TimeSpan.FromMinutes(5),
+        ValidAlgorithms = new[] { SecurityAlgorithms.EcdsaSha256 }
+    };
+});</pre></div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-head"><span class="badge med">Medium</span><p class="f-title">Sample server accepts JWTs with empty Authority and Audience</p></div>
+      <div class="loc">sample/SampleServer/Startup.cs:29–34</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> <code class="inline">options.Audience = ""; options.Authority = "";</code> disables issuer and audience validation entirely — any token from any issuer that passes signature checks is accepted. If this sample is ever run against real tokens, it is a token-validation bypass.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>services.AddAuthentication()
+    .AddJwtBearer(options =&gt;
+    {
+        options.Authority = _configuration["Rinsen:Outback"];   // real issuer
+        options.Audience = _configuration["Rinsen:ClientId"];    // real audience
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidAlgorithms = new[] { SecurityAlgorithms.EcdsaSha256 }
+        };
+    });</pre></div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-head"><span class="badge med">Medium</span><p class="f-title">Non-constant-time comparisons of secrets (4 sites)</p></div>
+      <div class="loc">ClientService.cs:47 (client secret) &nbsp;·&nbsp; AuthorizationCodeGrantTypeHandler.cs:138 (PKCE challenge) &nbsp;·&nbsp; LocalAccountService.cs:131 (password hash) &nbsp;·&nbsp; IdentityController.cs:248 (invite code)</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> Ordinal <code class="inline">==</code> / <code class="inline">!=</code> / <code class="inline">SequenceEqual</code> short-circuit on the first differing byte, leaking a timing side-channel that can be exploited over the network to recover secrets byte-by-byte. .NET provides <code class="inline">CryptographicOperations.FixedTimeEquals</code> exactly for this.</p>
+        <div class="rem"><div class="lbl">Remediation (representative — apply the same pattern to all four sites)</div>
+<pre>using System.Security.Cryptography;
+
+var secretHashBytes = Convert.FromBase64String(WebEncoders.Base64UrlDecode(secretHash));
+var match = client.Secrets.Any(s =&gt;
+{
+    var stored = Convert.FromBase64String(WebEncoders.Base64UrlDecode(s));
+    return stored.Length == secretHashBytes.Length
+        &amp;&amp; CryptographicOperations.FixedTimeEquals(stored, secretHashBytes);
+});</pre>
+<pre>if (!CryptographicOperations.FixedTimeEquals(
+    Encoding.UTF8.GetBytes(codeChallenge),
+    Encoding.UTF8.GetBytes(codeGrant.CodeChallenge)))
+{
+    throw new SecurityException("Code verifier is not matching code challenge");
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-head"><span class="badge med">Medium</span><p class="f-title">Client secrets stored as unsalted SHA-256</p></div>
+      <div class="loc">src/Outback/Rinsen.Outback/Helpers/HashHelper.cs:9–14 &nbsp;·&nbsp; used by DefaultInstaller.cs:107 and sample/SampleServer/InMemoryAccessors/ClientAccessor.cs:25,49</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> Unsalted single-round SHA-256 offers no per-secret salt and is GPU/rainbow-table precomputable. A leaked <code class="inline">Secrets</code> table yields all client secrets. Client secrets should be stored with a KDF (PBKDF2/Argon2id) with a per-client salt, or as full-length random values compared at runtime.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>public static (string Hash, string Salt) GetClientSecretHash(string secret)
+{
+    var salt = RandomNumberGenerator.GetBytes(16);
+    var hash = Rfc2898DeriveBytes.Pbkdf2(
+        Encoding.UTF8.GetBytes(secret), salt, 600_000, HashAlgorithmName.SHA256, 32);
+    return (WebEncoders.Base64UrlEncode(hash), WebEncoders.Base64UrlEncode(salt));
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-head"><span class="badge med">Medium</span><p class="f-title">PBKDF2 iteration count (100,000) below OWASP minimum</p></div>
+      <div class="loc">src/OutbackApp/Rinsen.IdentityProvider/IdentityOptions.cs:7</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> OWASP Password Storage Cheat Sheet recommends ≥ 600,000 iterations for PBKDF2-HMAC-SHA256. 100,000 is ~6× weaker against offline brute force once the database is compromised.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>public IdentityOptions()
+{
+    IterationCount = 600_000;
+    NumberOfBytesInPasswordHash = 128 / 8;
+    NumberOfBytesInPasswordSalt = 128 / 8;
+}</pre>
+<p style="margin:10px 0 0;font-size:14px;color:var(--muted)">Per-account <code class="inline">IterationCount</code> is persisted, so existing users keep working; new accounts get the stronger default.</p></div>
+      </div>
+    </div>
+
+    <div class="finding low">
+      <div class="f-head"><span class="badge low">Low</span><p class="f-title">User enumeration via response timing</p></div>
+      <div class="loc">src/OutbackApp/Rinsen.IdentityProvider/LoginService.cs:60–64 (AccountNotFoundException caught and returned before any KDF work)</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> For a nonexistent account the handler returns immediately, while an existing account incurs a PBKDF2 computation — an attacker can distinguish the two by timing, enabling username enumeration despite the identical error message.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>catch (AccountNotFoundException)
+{
+    // Equalize timing: run a dummy KDF with the same cost as a real account
+    _ = Rfc2898DeriveBytes.Pbkdf2(
+        Encoding.UTF8.GetBytes(password),
+        _dummySalt,
+        _options.IterationCount,
+        HashAlgorithmName.SHA256,
+        _options.NumberOfBytesInPasswordHash);
+
+    _log.LogWarning("Login failed for email {email}", email);
+    return LoginResult.Failure();
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="clean">
+      <h3>Clean sections — Area 2</h3>
+      <ul>
+        <li><b>Signing key / algorithm confusion:</b> signing is EC P-256 / ES256 only (<code>DefaultInstaller.cs:50–73</code>, <code>TokenSigningAccessor</code>); no <code>none</code> algorithm, no symmetric-key path.</li>
+        <li><b>Token storage:</b> server-side ticket store behind Data Protection (<code>SqlTicketStore.cs</code>); no client-side token storage exists in the provided context (no frontend code in the repo).</li>
+        <li><b>Refresh token rotation:</b> a new token is issued on every refresh and the previous one is consumed (<code>RefreshTokenGrantTypeHandler.cs:78–94</code>; <code>GrantAccessor.cs:101</code>) — rotation and single-use are present (reuse-detection and expiry are the gaps above).</li>
+        <li><b>Clock skew:</b> no explicit <code>ClockSkew</code> override anywhere; the .NET default is 5 minutes, which is compliant.</li>
+        <li><b>No hardcoded secrets in appsettings.json:</b> all four files contain only logging/host settings.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ AREA 3 ============ -->
+  <section class="area" id="area3">
+    <div class="area-head"><span class="no">3</span><h2>Authentication &amp; Login Flow Security</h2><span class="count">8 findings</span></div>
+
+    <div class="finding high">
+      <div class="f-head"><span class="badge high">High</span><p class="f-title">No brute-force protection: lockout counter never enforced, zero rate limiting</p></div>
+      <div class="loc">LocalAccountService.cs:137–147 (FailedLoginCount incremented, never read back) &nbsp;·&nbsp; IdentityOptions.cs:10 (MaxFailedLoginSleepCount defined, never used) &nbsp;·&nbsp; repo-wide: no AddRateLimiter / EnableIpRateLimiting</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> <code class="inline">/Identity/Login</code>, <code class="inline">/Identity/TwoFactor</code>, <code class="inline">/Identity/Create</code> and <code class="inline">/oauth/token</code> accept unlimited online guesses. The lockout infrastructure exists (counter column, option) but is dead code.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>// LocalAccountService.ValidatePassword / GetLocalAccountAsync
+if (localAccount.FailedLoginCount &gt;= _options.MaxFailedLoginSleepCount)
+{
+    _log.LogWarning("Account {LoginId} is locked due to repeated failures", localAccount.LoginId);
+    throw new InvalidPasswordException("Invalid password"); // same generic error
+}</pre>
+<pre>// Startup.ConfigureServices
+services.AddRateLimiter(options =&gt;
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("login", httpContext =&gt;
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ =&gt; new FixedWindowRateLimiterOptions
+            {
+                Window = TimeSpan.FromMinutes(1),
+                PermitLimit = 5,
+                QueueLimit = 0
+            }));
+});
+
+// Startup.Configure
+app.UseRateLimiter();
+
+// IdentityController
+[HttpPost]
+[ValidateAntiForgeryToken]
+[AllowAnonymous]
+[EnableRateLimiting("login")]
+public async Task&lt;IActionResult&gt; Login(LoginModel model) { ... }</pre></div>
+      </div>
+    </div>
+
+    <div class="finding high">
+      <div class="f-head"><span class="badge high">High</span><p class="f-title">IsDisabled flag is never enforced in the login path</p></div>
+      <div class="loc">LoginService.cs:67 (only Deleted checked) and :149–154 (PrivateLogin only checks identity.Deleted) &nbsp;·&nbsp; flag set by UserService.UpdateAsync (UserService.cs:155–159)</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> An administrator can disable a user (<code class="inline">UserController</code> → <code class="inline">UpdateAsync</code>), yet the account still authenticates successfully — a broken access-control invariant.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>if (localAccount is not null &amp;&amp; localAccount.IsDisabled)
+{
+    _log.LogWarning("Login blocked for disabled local account of email {email}", email);
+    return LoginResult.Failure();
+}</pre>
+<p style="margin:10px 0 0;font-size:14px;color:var(--muted)">Placed in <code class="inline">LoginAsync</code> after the <code class="inline">Deleted</code> check, so it also covers the TOTP branch.</p></div>
+      </div>
+    </div>
+
+    <div class="finding high">
+      <div class="f-head"><span class="badge high">High</span><p class="f-title">Hardcoded secrets committed in the Aspire host project</p></div>
+      <div class="loc">src/Aspire/AspireOutback.AppHost/Program.cs:3 (SQL password), :17 (Login__Debug__Password), :18 (Login__Runtime__Password), :25 (Rinsen__InvitationCode = "1234")</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> Real passwords and the invitation code that gates anonymous account creation are committed to source control. Anyone with repo access (or the built artifact) obtains the database credential and can register arbitrary accounts.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>// No default value — Aspire prompts for it, or read from user-secrets/environment
+var sqlPassword = builder.AddParameter("sql-password");
+...
+.WithEnvironment("Login__Debug__Password", builder.Configuration["Login:Debug:Password"]!)
+.WithEnvironment("Login__Runtime__Password", builder.Configuration["Login:Runtime:Password"]!)
+...
+.WithEnvironment("Rinsen__InvitationCode", builder.Configuration["Rinsen:InvitationCode"]!);</pre>
+<p style="margin:10px 0 0;font-size:14px;color:var(--muted)">Rotate all four values immediately, since they must be considered compromised.</p></div>
+      </div>
+    </div>
+
+    <div class="finding high">
+      <div class="f-head"><span class="badge high">High</span><p class="f-title">Plaintext client secret logged at Information level during installation</p></div>
+      <div class="loc">src/OutbackApp/Rinsen.Outback.App.Installation/Program.cs:71</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> <code class="inline">_logger.LogInformation("Default clients installed. ClientId: {ClientId}, ClientSecret: {ClientSecret}", ...)</code> writes the freshly generated client secret to the log at a level that is always enabled (<code class="inline">appsettings.json</code> sets <code class="inline">Default: Information</code>).</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>_logger.LogInformation("Default clients installed. ClientId: {ClientId}. " +
+    "The client secret was generated; retrieve it from the secure channel and store it in a secret manager.",
+    credentials.ClientId);</pre></div>
+      </div>
+    </div>
+
+    <div class="finding med">
+      <div class="f-head"><span class="badge med">Medium</span><p class="f-title">Anonymous account creation gated only by a short, non-constant-time invite code</p></div>
+      <div class="loc">IdentityController.cs:241–263 (Create) &nbsp;·&nbsp; code value "1234" in AspireOutback.AppHost/Program.cs:25</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> An unauthenticated endpoint creates a full identity + local account and signs the user in, protected only by a 4-character code compared with <code class="inline">!=</code>, with no rate limiting. Combined with the findings above, this is a trivial account-creation vector.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>var configuredCode = _configuration["Rinsen:InvitationCode"] ?? string.Empty;
+if (string.IsNullOrEmpty(configuredCode)
+    || !CryptographicOperations.FixedTimeEquals(
+        Encoding.UTF8.GetBytes(model.InviteCode),
+        Encoding.UTF8.GetBytes(configuredCode)))
+{
+    ModelState.AddModelError("InviteCode", "Invalid invite code.");
+    ...
+}</pre>
+<p style="margin:10px 0 0;font-size:14px;color:var(--muted)">Plus a strong random code (≥ 128 bits) and a rate-limit policy on the endpoint.</p></div>
+      </div>
+    </div>
+
+    <div class="finding low">
+      <div class="f-head"><span class="badge low">Low</span><p class="f-title">Open redirect in Development environment</p></div>
+      <div class="loc">IdentityController.cs:164–167</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> In Development, <code class="inline">Redirect(returnUrl)</code> is issued without the <code class="inline">Url.IsLocalUrl(returnUrl)</code> check that the production branch applies (lines 169–174). Any attacker who can get a developer to click a crafted <code class="inline">returnUrl</code> can redirect them to an external phishing site.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>private async Task&lt;IActionResult&gt; LoginSuccess(string loginId, string returnUrl, ClaimsPrincipal principal)
+{
+    await CreateAuditLogEvent("LoginSuccess", $"LoginId '{loginId}'");
+    HttpContext.User = principal;
+
+    if (!string.IsNullOrEmpty(returnUrl) &amp;&amp; Url.IsLocalUrl(returnUrl))
+    {
+        return Redirect(returnUrl);
+    }
+
+    return Redirect("~/");
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="finding low">
+      <div class="f-head"><span class="badge low">Low</span><p class="f-title">Two-factor session lookup ignores Deleted and expiry</p></div>
+      <div class="loc">TwoFactorAuthenticationSessionStorage.cs:29–40 (SELECT has no Deleted IS NULL predicate) and :89–115 (Get) &nbsp;·&nbsp; LoginService.ConfirmTotpCode (122–143) never checks Deleted/Created age</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> A two-factor session that has been logically deleted (or is arbitrarily old) can still be completed, because the lookup returns it regardless of <code class="inline">Deleted</code>.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>private const string SelectWithSessionId = @"SELECT Id, Created, Deleted, IdentityId, KeyCode, SessionId, Type, Updated
+                                        FROM TwoFactorAuthenticationSessions
+                                        WHERE SessionId = @SessionId AND Deleted IS NULL";</pre></div>
+      </div>
+    </div>
+
+    <div class="finding low">
+      <div class="f-head"><span class="badge low">Low</span><p class="f-title">Admin endpoint dumps the full application configuration</p></div>
+      <div class="loc">AdminController.cs:31–41 (GetConfiguration → ((IConfigurationRoot)_configuration).GetDebugView())</div>
+      <div class="f-body">
+        <p class="why"><b>Why:</b> Exposes every configuration value — including the SQL connection string with its embedded password and any secret supplied via environment variables — to every admin principal, in a form trivially scrapeable from the admin UI.</p>
+        <div class="rem"><div class="lbl">Remediation</div>
+<pre>public IActionResult GetConfiguration()
+{
+    var sensitive = new[] { "connectionstring", "password", "secret", "invitationcode" };
+    var result = ((IConfigurationRoot)_configuration).AsEnumerable()
+        .Where(kvp =&gt; sensitive.All(s =&gt; !kvp.Key.Contains(s, StringComparison.OrdinalIgnoreCase)))
+        .ToDictionary(kvp =&gt; kvp.Key, kvp =&gt; kvp.Value);
+
+    return Ok(result);
+}</pre></div>
+      </div>
+    </div>
+
+    <div class="clean">
+      <h3>Clean sections — Area 3</h3>
+      <ul>
+        <li><b>Session fixation:</b> a fresh CSPRNG session ID is generated on every login (<code>LoginService.cs:187</code>) and tickets are stored server-side with a new key per login (<code>SqlTicketStore.cs</code>); no session ID is carried across the login boundary.</li>
+        <li><b>Password hashing algorithm:</b> PBKDF2-HMAC-SHA256 with a 16-byte CSPRNG salt per account (<code>PasswordHashGenerator.cs</code>, <code>LocalAccountService.cs</code>) — an approved algorithm (iteration count is the gap above).</li>
+        <li><b>Error-message enumeration:</b> identical generic "Invalid login attempt." for unknown account and wrong password (<code>IdentityController.cs:147–150</code>; <code>LoginService.cs:54–64</code>).</li>
+        <li><b>Anti-forgery:</b> <code>[ValidateAntiForgeryToken]</code> on all login/2FA/registration POSTs.</li>
+        <li><b>Self-protection:</b> an admin cannot remove their own admin role, disable or delete their own account, and the last admin is protected (<code>UserService.cs:118–137, 219–232</code>).</li>
+        <li><b>No hardcoded secrets in appsettings.json</b> (all four files verified).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ CONTEXT ============ -->
+  <section id="context">
+    <div class="area-head"><span class="no" style="background:#7a5c00">i</span><h2>Context — Functional defects (not scored as security)</h2></div>
+    <div class="context">
+      <ul>
+        <li>No <code>IGrantTypeHandler</code> registration exists anywhere (grep-verified), so <code>OAuthController</code>'s <code>IEnumerable&lt;IGrantTypeHandler&gt;</code> resolves to an empty collection and every grant path returns <code>invalid_request</code> at runtime.</li>
+        <li><code>ClientCredentialsGrantTypeHandler.GrantType</code> getter throws <code>NotImplementedException</code> (<code>ClientCredentialsGrantTypeHandler.cs:18</code>), which would throw inside <code>OAuthController</code>'s handler enumeration.</li>
+        <li>IdentityProvider <code>GrantAccessor</code> device-flow methods throw <code>NotImplementedException</code> (<code>GrantAccessor.cs:54–57, 139–142</code>); the device consent POST in <code>DeviceController.cs</code> is commented out.</li>
+        <li><code>LoginService.LogoutAsync</code> throws <code>NotImplementedException</code> (<code>LoginService.cs:212–215</code>).</li>
+        <li><code>AbnfValidationHelper.IsValid(value, min, max)</code> throws <code>NullReferenceException</code> on a null input; currently guarded by upstream null/<code>[Required]</code> checks, but it is a latent 500.</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+</main>
+
+<footer>
+  Outback Security Audit · Generated 2026-11-24 · Read-only review, no source modifications made
+</footer>
+
+</body>
+</html>
