@@ -142,14 +142,18 @@
 - **References:** Microsoft identity guidance, .NET `TokenValidationParameters`
 
 ### SEC-011 · [P2] Fix SampleServer empty Authority/Audience
-- **Status:** Open
-- **Location:** `sample/SampleServer/Startup.cs:29–34`
+- **Status:** Done (2026-11-24)
+- **Location:** `sample/SampleServer/Startup.cs:31–53` · `sample/SampleServer/appsettings.json`
 - **Problem:** `Authority = ""` / `Audience = ""` disables issuer + audience validation.
 - **Acceptance criteria:**
-  - [ ] Set real `Authority` and `Audience` from configuration
-  - [ ] Add `ValidAlgorithms` whitelist
-  - [ ] Or clearly mark the sample as validation-disabled and gate it behind a flag
-  - [ ] Test: token from a foreign issuer is rejected
+  - [x] Set real `Authority` and `Audience` from configuration
+  - [x] Add `ValidAlgorithms` whitelist
+  - [ ] Or clearly mark the sample as validation-disabled and gate it behind a flag (not taken — validation is enabled, see Resolution)
+  - [x] Test: token from a foreign issuer is rejected
+- **Resolution:** Enabled real issuer + audience + signature validation in the SampleServer's `AddJwtBearer` (previously `Authority = ""` / `Audience = ""`, which disabled issuer + audience validation). Added a `Jwt` section to `sample/SampleServer/appsettings.json` (`Authority: "http://localhost"`, `Audience: "OutbackAS"`). The `TokenValidationParameters` now set `ValidateIssuer`/`ValidateAudience`/`ValidateLifetime`/`ValidateIssuerSigningKey = true`, `ValidIssuer` from `Jwt:Authority`, `ValidAudience` from `Jwt:Audience`, `ValidAlgorithms = [SecurityAlgorithms.EcdsaSha256]` (matching the P-256 key the sample signs with), and `ClockSkew = 5 min`. The `IssuerSigningKey` is supplied directly from the SampleServer's `ITokenSigningAccessor` singleton so validation does not depend on a metadata fetch.
+  - **Mechanism note:** we set `ValidIssuer`/`ValidAudience` (driven by the same `Jwt:Authority`/`Jwt:Audience` config values) rather than `options.Authority`/`options.Audience`. Setting `options.Authority` makes `JwtBearerPostConfigureOptions` create a `ConfigurationManager` (a `BaseConfigurationManager`) that lazily fetches signing keys from a metadata endpoint, which overrides the directly-supplied per-instance key (`JwtBearerHandler.SetupTokenValidationParametersAsync` assigns the manager to the parameters). The sample generates a fresh P-256 key per instance and does not serve it via a reachable metadata endpoint in all environments (including the in-process test host), so the metadata path fails with "no keys found" (IDX10500) → 401 even for a correctly-signed token. Supplying the key directly and validating `ValidIssuer`/`ValidAudience` achieves the same security outcome (real issuer + audience + signature validation from configuration) without the fragile metadata fetch.
+  - **Tests:** `tests/Rinsen.Outback.Tests/SampleServerTokenValidation.cs` (new, 3 tests, all passing): `TokenSignedByForeignIssuer_IsRejected` (a token signed with a foreign P-256 key → 401), `TokenWithWrongAudience_IsRejected` (correct key but a different audience → 401), and `TokenSignedBySampleServer_IsAccepted` (a token signed with the SampleServer's own DI-resolved key, `iss=http://localhost`, `aud=OutbackAS` → not 401; the sample's `UserInfoAccessor` is a stub, so a non-401 status proves the token passed authentication). Verified the tests are not vacuous: temporarily setting `ValidAudience` to a wrong value made the positive test fail (401), confirming it genuinely depends on real audience validation; and with `ValidateIssuerSigningKey = false` the foreign-key token was still rejected because the handler validates the signature against the supplied key. Full regression: `Rinsen.Outback.Tests` 32 total with only the 4 known pre-existing FUNC-001/002/003 failures; `Rinsen.IdentityProvider.Tests` 15/15; `dotnet build Outback.slnx` 0 errors.
+- **References:** ASP.NET Core `JwtBearerHandler`/`JwtBearerPostConfigureOptions` source; Microsoft identity guidance on explicit JWT validation
 
 ### SEC-012 · [P2] Use constant-time comparison for all secrets (4 sites)
 - **Status:** Open

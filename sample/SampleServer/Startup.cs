@@ -1,4 +1,6 @@
-﻿using Rinsen.Outback;
+﻿using System;
+using Microsoft.IdentityModel.Tokens;
+using Rinsen.Outback;
 using Rinsen.Outback.Accessors;
 using SampleServer.InMemoryAccessors;
 
@@ -29,8 +31,27 @@ namespace SampleServer
             services.AddAuthentication()
                 .AddJwtBearer(options =>
                 {
-                    options.Audience = "";
-                    options.Authority = "";
+                    // Real issuer + audience validation driven by configuration. We set
+                    // ValidIssuer/ValidAudience directly (rather than options.Authority)
+                    // because setting options.Authority makes JwtBearer fetch signing keys
+                    // from a metadata endpoint, which overrides the per-instance signing key
+                    // supplied below. The sample generates a fresh key per instance and does
+                    // not serve it via a reachable metadata endpoint in all environments
+                    // (including tests), so we validate against the key we hold directly.
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = _configuration["Jwt:Authority"],
+                        ValidAudience = _configuration["Jwt:Audience"],
+                        ValidAlgorithms = new[] { SecurityAlgorithms.EcdsaSha256 },
+                        ClockSkew = TimeSpan.FromMinutes(5),
+                        // Provide the signing key directly so validation does not depend on a
+                        // metadata fetch; a token signed by any other issuer's key is rejected.
+                        IssuerSigningKey = signingAccessor.GetSigningSecurityKey().GetAwaiter().GetResult().SecurityKey
+                    };
                 });
 
             services.AddRinsenOutback();
