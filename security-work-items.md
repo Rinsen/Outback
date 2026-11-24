@@ -284,20 +284,22 @@
 > security items, but are not vulnerabilities in themselves.
 
 ### FUNC-001 · [P3] Register `IGrantTypeHandler` implementations in DI
-- **Status:** Open
-- **Location:** DI composition root (no registration found repo-wide)
+- **Status:** Done (2026-11-24)
+- **Location:** `src/Outback/Rinsen.Outback/ExtensionMethods.cs` (`AddServices`)
 - **Problem:** `OAuthController`'s `IEnumerable<IGrantTypeHandler>` resolves empty; every grant path returns `invalid_request`.
 - **Acceptance criteria:**
-  - [ ] Register `AuthorizationCodeGrantTypeHandler`, `RefreshTokenGrantTypeHandler`, `ClientCredentialsGrantTypeHandler`, `DeviceCodeGrantTypeHandler`
-  - [ ] Each grant type resolves to its handler at runtime
+  - [x] Register `AuthorizationCodeGrantTypeHandler`, `RefreshTokenGrantTypeHandler`, `ClientCredentialsGrantTypeHandler`, `DeviceCodeGrantTypeHandler`
+  - [x] Each grant type resolves to its handler at runtime
+- **Resolution:** Registered all four handlers as `AddScoped<IGrantTypeHandler, …>` in `ExtensionMethods.AddServices` (the `Rinsen.Outback` library composition root, called by both `AddRinsenOutback` overloads). Both consuming apps pick them up without any local registration: `Rinsen.Outback.App` (`Program.cs` → `AddRinsenOutback()`) and `SampleServer` (`Startup.cs` → `AddRinsenOutback()`); grep confirms SampleServer performs no `IGrantTypeHandler` registration of its own, so there is no double-registration. `OAuthController`'s `IEnumerable<IGrantTypeHandler>` now resolves all four, and each grant type maps to its handler via `SingleOrDefault(h => h.GrantType == …)`. Verified at runtime: the previously failing `MachineToMachine` tests (client-credentials, BasicAuth + PostForm) and the `AuthorizationCodeGrant`/`DeviceAuthorizationFlow`/refresh-token tests all pass.
 
 ### FUNC-002 · [P3] Implement `ClientCredentialsGrantTypeHandler.GrantType`
-- **Status:** Open
+- **Status:** Done (2026-11-24)
 - **Location:** `src/Outback/Rinsen.Outback/Grants/ClientCredentialsGrantTypeHandler.cs:18`
 - **Problem:** Getter throws `NotImplementedException`, breaking handler enumeration.
 - **Acceptance criteria:**
-  - [ ] Return `"client_credentials"`
-  - [ ] Client-credentials token request succeeds end-to-end
+  - [x] Return `"client_credentials"`
+  - [x] Client-credentials token request succeeds end-to-end
+- **Resolution:** `GrantType` now returns `"client_credentials"` (was `throw new NotImplementedException()`), so `OAuthController`'s handler enumeration no longer throws and the grant type matches the standard OAuth 2.0 client-credentials identifier. End-to-end verified by the `MachineToMachine` tests: `WhenUsingClientCredentialsInBasicAuthHeaderGetAccessToken` and `WhenUsingClientCredentialsInPostFormGetAccessToken` both succeed (200 + access token) against the SampleServer in `Rinsen.Outback.Tests`.
 
 ### FUNC-003 · [P3] Implement device-flow storage + consent
 - **Status:** Open
