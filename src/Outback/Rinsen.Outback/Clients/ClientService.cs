@@ -42,13 +42,27 @@ internal class ClientService : IClientService
                     throw new SecurityException($"Secret is required for client {clientIdentity.ClientId}");
                 }
 
-                var secretHash = HashHelper.GetSha256Hash(clientIdentity.Secret);
+                var matchedSecret = client.Secrets.FirstOrDefault(s => HashHelper.VerifyClientSecret(clientIdentity.Secret, s));
 
-                if (!client.Secrets.Any(s => SecretComparer.FixedTimeEquals(s, secretHash)))
+                if (matchedSecret == null)
                 {
                     _logger.LogWarning("No valid secret provided for client {ClientId}", clientIdentity.ClientId);
 
                     throw new SecurityException($"No valid secret provided for client {clientIdentity.ClientId}");
+                }
+
+                // SEC-013: re-hash legacy (unsalted) stored secrets with the salted
+                // KDF on successful verification — the plaintext is only available here.
+                if (HashHelper.IsLegacyClientSecret(matchedSecret) && _clientAccessor is IClientSecretRehasher rehasher)
+                {
+                    try
+                    {
+                        await rehasher.RehashClientSecretAsync(client.ClientId, matchedSecret, HashHelper.HashClientSecret(clientIdentity.Secret));
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to re-hash legacy client secret for client {ClientId}", client.ClientId);
+                    }
                 }
 
                 return client;

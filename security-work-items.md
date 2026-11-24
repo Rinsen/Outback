@@ -169,14 +169,16 @@
   - **Tests:** `tests/Rinsen.Outback.Tests/SecretComparerTests.cs` (new, 13 tests: equal/not-equal/different-length/null for both overloads, single-bit-flip case) and `tests/Rinsen.Outback.Tests/ClientServiceSecretValidationTests.cs` (new, 2 tests with a `FakeClientAccessor`: correct secret accepted, wrong secret → `SecurityException`). All 15 pass. Full regression: `Rinsen.Outback.Tests` 47 total with only the 4 known pre-existing FUNC-001/002/003 failures; `Rinsen.IdentityProvider.Tests` 15/15; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-013 · [P2] Store client secrets with a salted KDF
-- **Status:** Open
-- **Location:** `src/Outback/Rinsen.Outback/Helpers/HashHelper.cs:9–14` · `DefaultInstaller.cs:107` · `sample/.../ClientAccessor.cs:25,49`
+- **Status:** Done (2026-11-24)
+- **Location:** `src/Outback/Rinsen.Outback/Helpers/HashHelper.cs` · `DefaultInstaller.cs:107,236` · `sample/.../ClientAccessor.cs:25,49`
 - **Problem:** Unsalted SHA-256 is precomputable; a leaked `Secrets` table yields all secrets.
 - **Acceptance criteria:**
-  - [ ] Replace with salted PBKDF2-HMAC-SHA256 (≥ 600k) or Argon2id; store per-client salt
-  - [ ] Provide a migration/rehash path for existing stored secrets
-  - [ ] Update `HashHelper`, `DefaultInstaller`, and the sample accessor
-  - [ ] Test: stored value is salted; verification still succeeds
+  - [x] Replace with salted PBKDF2-HMAC-SHA256 (≥ 600k) or Argon2id; store per-client salt
+  - [x] Provide a migration/rehash path for existing stored secrets
+  - [x] Update `HashHelper`, `DefaultInstaller`, and the sample accessor
+  - [x] Test: stored value is salted; verification still succeeds
+- **Resolution:** `HashHelper` (in `Rinsen.Outback`, so all consumers share it) gained `HashClientSecret(string)` — PBKDF2-HMAC-SHA256 via `Rfc2898DeriveBytes.Pbkdf2` with a fresh 16-byte `RandomNumberGenerator` salt, `ClientSecretIterationCount = 600_000` (OWASP minimum), 32-byte output — returning a self-describing stored value `PBKDF2-SHA256$<iterations>$<base64url salt>$<base64url hash>` (the salt is stored per client, embedded in the value; the `OutbackClientSecrets.Secret` column is `nvarchar(max)`, no schema change needed). `VerifyClientSecret(secret, stored)` verifies both the new format (PBKDF2 with the stored salt, constant-time compare via `SecretComparer.FixedTimeEquals`) and the legacy unsalted SHA-256 format (kept as `GetSha256Hash`, now verification-only); malformed salted values fail closed (wrong part count, non-numeric/zero iterations, bad base64, empty salt/hash all → `false`), and null inputs fail closed. **Migration/rehash path:** new optional capability interface `IClientSecretRehasher` (`Rinsen.Outback/Accessors/`) with `RehashClientSecretAsync(clientId, oldStored, newStored)`; `ClientService.GetClient(ClientIdentity)` re-hashes a legacy stored secret with the salted KDF immediately after a successful verification (the only moment the plaintext is available) when the backing accessor implements the interface — failures are logged, never fail the token request. `Rinsen.IdentityProvider/Outback/ClientAccessor.cs` implements it against `OutbackDbContext.ClientSecrets` (matches on client + old stored value, excludes soft-deleted rows; the DbContext's `SaveChanges` override stamps `Updated`). All creation paths now store the salted format: `DefaultInstaller.cs:107,236` (both seeded clients), `Rinsen.IdentityProvider/Outback/ClientService.cs:347` (secret rotation), and the sample `ClientAccessor.cs:25,49` (so the SampleServer's `MachineToMachine`/`AuthorizationCodeGrant` flows exercise the new format end-to-end).
+  - **Tests:** `tests/Rinsen.Outback.Tests/HashHelperClientSecretTests.cs` (new, 15 tests: salted format shape, two hashes of the same secret differ, correct/wrong secret against both formats, `IsLegacyClientSecret` both ways, 6 malformed-value fail-closed cases, null inputs) and `tests/Rinsen.Outback.Tests/ClientServiceSecretValidationTests.cs` (extended to 5 tests: salted stored secret accepted, wrong secret → `SecurityException`, legacy stored secret still accepted, legacy match triggers exactly one rehash call whose new value is salted and verifies, salted match triggers no rehash). Full regression: `Rinsen.Outback.Tests` 65/65; `Rinsen.IdentityProvider.Tests` 15/15; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-014 · [P2] Raise PBKDF2 iteration count to ≥ 600,000
 - **Status:** Open

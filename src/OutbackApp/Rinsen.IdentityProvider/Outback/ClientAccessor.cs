@@ -8,13 +8,27 @@ using Rinsen.Outback.Clients;
 
 namespace Rinsen.IdentityProvider.Outback;
 
-public class ClientAccessor : IClientAccessor
+public class ClientAccessor : IClientAccessor, IClientSecretRehasher
 {
     private readonly OutbackDbContext _outbackDbContext;
 
     public ClientAccessor(OutbackDbContext outbackDbContext)
     {
         _outbackDbContext = outbackDbContext;
+    }
+
+    public async Task RehashClientSecretAsync(string clientId, string oldStored, string newStored)
+    {
+        var secret = await _outbackDbContext.ClientSecrets
+            .FirstOrDefaultAsync(m => m.Client.ClientId == clientId && m.Secret == oldStored && m.Deleted == null);
+
+        if (secret == default)
+        {
+            return;
+        }
+
+        secret.Secret = newStored;
+        await _outbackDbContext.SaveChangesAsync();
     }
 
     public async Task<Client> GetClient(string clientId)

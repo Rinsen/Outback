@@ -104,7 +104,7 @@ public class DefaultInstaller
                 new OutbackClientSecret
                 {
                     Description = "Initial secret created by installer",
-                    Secret = HashHelper.GetSha256Hash(secret),
+                    Secret = HashHelper.HashClientSecret(secret),
                 }
             },
             Scopes = new List<OutbackClientScope>()
@@ -233,7 +233,7 @@ public class DefaultInstaller
                 new OutbackClientSecret
                 {
                     Description = "Initial secret created by installer",
-                    Secret = HashHelper.GetSha256Hash(secret),
+                    Secret = HashHelper.HashClientSecret(secret),
                 }
             },
             Scopes = new List<OutbackClientScope>

@@ -22,7 +22,7 @@ namespace SampleServer.InMemoryAccessors
                         IssueRefreshToken = false,
                         Secrets = new List<string>
                         {
-                            HashHelper.GetSha256Hash("pwd")
+                            HashHelper.HashClientSecret("pwd")
                         },
                         Scopes = new List<string>
                         {
@@ -46,7 +46,7 @@ namespace SampleServer.InMemoryAccessors
                         LoginRedirectUris = new List<string> { "https://my.domain/signin-oidc" },
                         Secrets = new List<string>
                         {
-                            HashHelper.GetSha256Hash("pwd")
+                            HashHelper.HashClientSecret("pwd")
                         },
                         Scopes = new List<string>
                         {
