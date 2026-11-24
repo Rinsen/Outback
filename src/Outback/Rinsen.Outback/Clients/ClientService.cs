@@ -44,7 +44,7 @@ internal class ClientService : IClientService
 
                 var secretHash = HashHelper.GetSha256Hash(clientIdentity.Secret);
 
-                if (!client.Secrets.Any(s => s == secretHash))
+                if (!client.Secrets.Any(s => SecretComparer.FixedTimeEquals(s, secretHash)))
                 {
                     _logger.LogWarning("No valid secret provided for client {ClientId}", clientIdentity.ClientId);
 

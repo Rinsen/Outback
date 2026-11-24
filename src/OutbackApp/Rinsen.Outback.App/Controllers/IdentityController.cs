@@ -10,6 +10,7 @@ using Rinsen.IdentityProvider.AuditLogging;
 using Rinsen.IdentityProvider.LocalAccounts;
 using Rinsen.Outback.App.Models;
 using Rinsen.Outback.Claims;
+using Rinsen.Outback.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -245,7 +246,7 @@ public class IdentityController : Controller
     {
         if (ModelState.IsValid)
         {
-            if (model.InviteCode != _configuration["Rinsen:InvitationCode"])
+            if (!SecretComparer.FixedTimeEquals(model.InviteCode, _configuration["Rinsen:InvitationCode"]))
             {
                 ModelState.AddModelError("InviteCode", "Invalid invite code.");
 

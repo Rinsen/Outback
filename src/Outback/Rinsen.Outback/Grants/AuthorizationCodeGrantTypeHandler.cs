@@ -136,7 +136,7 @@ namespace Rinsen.Outback.Grants
             var challengeBytes = SHA256.HashData(Encoding.UTF8.GetBytes(codeVerifier));
             var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
 
-            if (codeChallenge != codeGrant.CodeChallenge)
+            if (!SecretComparer.FixedTimeEquals(codeChallenge, codeGrant.CodeChallenge))
             {
                 throw new SecurityException("Code verifier is not matching code challenge");
             }

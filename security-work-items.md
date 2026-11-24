@@ -156,13 +156,17 @@
 - **References:** ASP.NET Core `JwtBearerHandler`/`JwtBearerPostConfigureOptions` source; Microsoft identity guidance on explicit JWT validation
 
 ### SEC-012 · [P2] Use constant-time comparison for all secrets (4 sites)
-- **Status:** Open
-- **Location:** `ClientService.cs:47` · `AuthorizationCodeGrantTypeHandler.cs:138` · `LocalAccountService.cs:131` · `IdentityController.cs:248`
+- **Status:** Done (2026-11-24)
+- **Location:** `ClientService.cs:47` · `AuthorizationCodeGrantTypeHandler.cs:139` · `LocalAccountService.cs:131` · `IdentityController.cs:249`
 - **Problem:** `==` / `!=` / `SequenceEqual` short-circuit, leaking a timing side-channel.
 - **Acceptance criteria:**
-  - [ ] All four sites use `CryptographicOperations.FixedTimeEquals` (length-checked)
-  - [ ] No remaining ordinal secret comparison in auth paths (grep)
-  - [ ] Tests: correct and incorrect secrets both produce the same comparison path
+  - [x] All four sites use `CryptographicOperations.FixedTimeEquals` (length-checked)
+  - [x] No remaining ordinal secret comparison in auth paths (grep)
+  - [x] Tests: correct and incorrect secrets both produce the same comparison path
+- **Resolution:** Added a shared `public static class SecretComparer` in `Rinsen.Outback` (`src/Outback/Rinsen.Outback/Helpers/SecretComparer.cs`, namespace `Rinsen.Outback.Helpers`) with two `FixedTimeEquals` overloads — `string` and `byte[]` — both delegating to `CryptographicOperations.FixedTimeEquals` (length-checked, no short-circuit) and failing closed on `null` inputs. It lives in `Rinsen.Outback` because all three consumer projects reference it (same public-static pattern as `InboundTokenValidation`/`HashHelper`). All four sites now call it: `ClientService.cs:47` (client secret vs stored hash), `AuthorizationCodeGrantTypeHandler.cs:139` (PKCE code challenge), `LocalAccountService.cs:131` (password hash, `byte[]` overload), `IdentityController.cs:249` (invite code vs config value).
+  - **Grep verification:** no remaining `SequenceEqual` in `src/`; the only `==`/`!=` matches on secret-like names are benign (`existingSecret == default` is a null check on an entity; URL paths, public config values, booleans, DB lookups, and non-secret settings).
+  - **Behavior note:** the `(null, null)` invite-code case now fails closed (rejected) where `null != null` previously was not — safer, edge case.
+  - **Tests:** `tests/Rinsen.Outback.Tests/SecretComparerTests.cs` (new, 13 tests: equal/not-equal/different-length/null for both overloads, single-bit-flip case) and `tests/Rinsen.Outback.Tests/ClientServiceSecretValidationTests.cs` (new, 2 tests with a `FakeClientAccessor`: correct secret accepted, wrong secret → `SecurityException`). All 15 pass. Full regression: `Rinsen.Outback.Tests` 47 total with only the 4 known pre-existing FUNC-001/002/003 failures; `Rinsen.IdentityProvider.Tests` 15/15; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-013 · [P2] Store client secrets with a salted KDF
 - **Status:** Open

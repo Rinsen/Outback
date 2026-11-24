@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using OtpNet;
 using Rinsen.IdentityProvider.Exceptions;
+using Rinsen.Outback.Helpers;
 using System;
 using System.Linq;
 using System.Security.Cryptography;
@@ -128,7 +129,7 @@ public class LocalAccountService : ILocalAccountService
 
     private async Task ValidatePassword(LocalAccount localAccount, string password)
     {
-        if (!localAccount.PasswordHash.SequenceEqual(GetPasswordHash(password, localAccount)))
+        if (!SecretComparer.FixedTimeEquals(localAccount.PasswordHash, GetPasswordHash(password, localAccount)))
         {
             await InvalidPassword(localAccount);
         }
