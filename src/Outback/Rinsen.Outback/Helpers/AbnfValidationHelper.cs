@@ -24,6 +24,11 @@ public class AbnfValidationHelper
     /// <returns></returns>
     public static bool IsValid(string value)
     {
+        if (string.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+
         foreach (var character in value)
         {
             if (!_validCaracters.Contains(character))
@@ -47,7 +52,7 @@ public class AbnfValidationHelper
     /// <returns></returns>
     public static bool IsValid(string value, int minLength, int maxLength)
     {
-        if (value.Length > maxLength || value.Length < minLength)
+        if (value is null || value.Length > maxLength || value.Length < minLength)
         {
             return false;
         }

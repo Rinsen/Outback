@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Rinsen.Outback.Clients;
 using Rinsen.Outback.JwtTokens;
 using Rinsen.Outback.Models;
@@ -15,7 +14,7 @@ namespace Rinsen.Outback.Grants
             _tokenService = tokenService;
         }
 
-        public string GrantType => throw new NotImplementedException();
+        public string GrantType => "client_credentials";
 
         public async Task<TokenResponse> GetTokenAsync(TokenModel tokenModel, Client client, string issuer)
         {

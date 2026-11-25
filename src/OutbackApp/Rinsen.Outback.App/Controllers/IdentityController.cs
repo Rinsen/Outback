@@ -1,8 +1,14 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Rinsen.IdentityProvider;
@@ -10,11 +16,7 @@ using Rinsen.IdentityProvider.AuditLogging;
 using Rinsen.IdentityProvider.LocalAccounts;
 using Rinsen.Outback.App.Models;
 using Rinsen.Outback.Claims;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
+using Rinsen.Outback.Helpers;
 using UAParser;
 
 namespace Rinsen.Outback.App.Controllers;
@@ -113,6 +115,7 @@ public class IdentityController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingPolicies.Credentials)]
     public async Task<IActionResult> Login(LoginModel model)
     {
         if (ModelState.IsValid)
@@ -161,11 +164,10 @@ public class IdentityController : Controller
         // Set logged in user to the one just created as this only will be provided at next request by the framework
         HttpContext.User = principal;
 
-        if (_env.IsDevelopment())
-        {
-            return Redirect(returnUrl);
-        }
-
+        // SEC-021: validate returnUrl in every environment. An external returnUrl
+        // is an open redirect (the previous Development-only branch followed it
+        // unvalidated), so anything that is not a local URL falls back to the
+        // site root.
         if (Url.IsLocalUrl(returnUrl))
         {
             return Redirect(returnUrl);
@@ -177,6 +179,7 @@ public class IdentityController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingPolicies.Credentials)]
     public async Task<IActionResult> TwoFactor(TwoFactorModel model)
     {
         if (ModelState.IsValid)
@@ -241,11 +244,24 @@ public class IdentityController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingPolicies.Credentials)]
     public async Task<IActionResult> Create(CreateIdentityModel model)
     {
         if (ModelState.IsValid)
         {
-            if (model.InviteCode != _configuration["Rinsen:InvitationCode"])
+            var configuredInviteCode = _configuration["Rinsen:InvitationCode"];
+
+            // SEC-020: self-registration is opt-in. Outside Development it is
+            // only enabled when the operator configured a strong invite code
+            // (>= 128 bits, at least 32 characters, e.g. `openssl rand -hex
+            // 16`). A missing or weak code fails closed with the exact same
+            // signature as a wrong code, so the endpoint state is not
+            // distinguishable to an attacker. In Development the invite-code
+            // check is bypassed entirely so local registration works without a
+            // configured code.
+            if (!_env.IsDevelopment() &&
+                (!InviteCodePolicy.IsStrong(configuredInviteCode) ||
+                 !SecretComparer.FixedTimeEquals(model.InviteCode, configuredInviteCode)))
             {
                 ModelState.AddModelError("InviteCode", "Invalid invite code.");
 

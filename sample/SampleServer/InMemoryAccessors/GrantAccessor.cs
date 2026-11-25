@@ -66,5 +66,20 @@ namespace SampleServer.InMemoryAccessors
         {
             throw new NotImplementedException();
         }
+
+        public Task RevokeRefreshTokenFamilyAsync(Guid familyId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task ResolveDeviceAuthorizationGrantAsync(string deviceCode)
+        {
+            if (_persistedDeviceAuthorizationGrant.TryGetValue(deviceCode, out var deviceGrant))
+            {
+                deviceGrant.Resolved = DateTimeOffset.UtcNow;
+            }
+
+            return Task.CompletedTask;
+        }
     }
 }

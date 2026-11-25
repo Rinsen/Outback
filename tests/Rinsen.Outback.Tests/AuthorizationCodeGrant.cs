@@ -40,7 +40,9 @@ namespace Rinsen.Outback.Tests
                     });
                 });
 
-            var client = application.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false }); ;
+            // Speak https so the scheme-aware issuer (SEC-009) is https://localhost,
+            // which is what this test validates the tokens against.
+            var client = application.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
 
             var clientId = "PKCEWebClientId";
             var codeVerifier = "abcdefghijklmnopqrstuvqyzABCDEFGHIJKLMNOPQRSTUVWXYZ-._~0123456789";

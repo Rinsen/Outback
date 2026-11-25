@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Data.SqlClient;
+using Rinsen.IdentityProvider.Exceptions;
 using System.Threading.Tasks;
 
 namespace Rinsen.IdentityProvider.LocalAccounts;
@@ -37,7 +38,11 @@ public class TwoFactorAuthenticationSessionStorage : ITwoFactorAuthenticationSes
                                     FROM 
                                         TwoFactorAuthenticationSessions 
                                     WHERE 
-                                        SessionId = @SessionId";
+                                        SessionId = @SessionId
+                                        -- SEC-022: a logically deleted session must not be
+                                        -- retrievable (it is a bearer token for the login in
+                                        -- progress), so deleted rows are filtered out here.
+                                        AND Deleted IS NULL";
 
     private const string UpdateSql = @"UPDATE 
                                     TwoFactorAuthenticationSessions 
@@ -111,7 +116,10 @@ public class TwoFactorAuthenticationSessionStorage : ITwoFactorAuthenticationSes
             };
         }
 
-        throw new Exception($"Failed to get session {sessionId}");
+        // SEC-022: no (non-deleted) session with this id — report the same domain
+        // exception StartTotpFlow uses for a missing session instead of a bare
+        // Exception.
+        throw new TwoFactorAuthSessionNotFoundException($"Failed to get session {sessionId}");
     }
 
     private static TwoFactorType ParseTwoFactorType(object value)

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -65,7 +66,9 @@ namespace Rinsen.Outback.Tests
                 new KeyValuePair<string, string>("client_id", "DeviceAuthorizationClientId")
             ]);
 
-            var client = application.CreateClient();
+            // Speak https so the scheme-aware issuer (SEC-009) is https://localhost,
+            // which is what this test validates the token against.
+            var client = application.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
             var grantAccessor = application.Services.GetRequiredService<IGrantAccessor>();
             var response = await client.PostAsync("oauth/device_authorization", formContent);
 

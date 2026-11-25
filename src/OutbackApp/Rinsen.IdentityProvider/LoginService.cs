@@ -10,12 +10,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace Rinsen.IdentityProvider;
 
 public class LoginService : ILoginService
 {
+    private static readonly TimeSpan UsedTotpLogMaxAge = TimeSpan.FromMinutes(10);
+
+    // SEC-022: a 2FA session is a bearer token for the login in progress, so it
+    // must expire. Ten minutes is plenty for the flow (start + code entry) and
+    // matches the UsedTotpLog retention window.
+    private static readonly TimeSpan TwoFactorSessionMaxAge = TimeSpan.FromMinutes(10);
+
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly RandomStringGenerator _randomStringGenerator;
     private readonly IIdentityService _identityService;
@@ -24,6 +32,8 @@ public class LoginService : ILoginService
     private readonly IIdentityAttributeStorage _identityAttributeStorage;
     private readonly IUsedTotpLogStorage _usedTotpLogStorage;
     private readonly ITwoFactorAuthenticationSessionStorage _twoFactorAuthenticationSessionStorage;
+    private readonly IdentityOptions _options;
+    private readonly PasswordHashGenerator _passwordHashGenerator;
 
     public LoginService(ILocalAccountService localAccountService,
         IIdentityService identityService,
@@ -32,7 +42,9 @@ public class LoginService : ILoginService
         ITwoFactorAuthenticationSessionStorage twoFactorAuthenticationSessionStorage,
         IHttpContextAccessor httpContextAccessor,
         RandomStringGenerator randomStringGenerator,
-        ILogger<LoginService> log)
+        ILogger<LoginService> log,
+        IdentityOptions options,
+        PasswordHashGenerator passwordHashGenerator)
     {
         _localAccountService = localAccountService;
         _identityService = identityService;
@@ -42,6 +54,8 @@ public class LoginService : ILoginService
         _httpContextAccessor = httpContextAccessor;
         _randomStringGenerator = randomStringGenerator;
         _log = log;
+        _options = options;
+        _passwordHashGenerator = passwordHashGenerator;
     }
 
     public async Task<LoginResult> LoginAsync(string email, string password, string host, bool rememberMe)
@@ -57,9 +71,22 @@ public class LoginService : ILoginService
 
             return LoginResult.Failure();
         }
+        catch (AccountLockedOutException e)
+        {
+            // SEC-016: locked-out account. Return the same generic failure as an
+            // invalid password so the lockout is not distinguishable.
+            _log.LogWarning(e, "Login blocked: account {email} is locked out", email);
+
+            return LoginResult.Failure();
+        }
         catch (AccountNotFoundException e)
         {
             _log.LogWarning(e, "Login failed for email {email}", email);
+
+            // SEC-015: no account exists, so the real KDF never ran. Perform a dummy
+            // PBKDF2 with the same cost as a real verification so that unknown and
+            // known accounts are not distinguishable by response time.
+            RunDummyPasswordHash(password);
 
             return LoginResult.Failure();
         }
@@ -67,6 +94,17 @@ public class LoginService : ILoginService
         if (localAccount is not null && localAccount.Deleted is not null)
         {
             _log.LogWarning("Login blocked for deleted local account of email {email}", email);
+
+            return LoginResult.Failure();
+        }
+
+        if (localAccount is not null && localAccount.IsDisabled)
+        {
+            // SEC-017: a disabled account must not authenticate. This check runs
+            // before the 2FA branch so a disabled account with TOTP enabled is
+            // rejected here, and it returns the same generic failure as a wrong
+            // password so the state is not distinguishable.
+            _log.LogWarning("Login blocked for disabled local account of email {email}", email);
 
             return LoginResult.Failure();
         }
@@ -121,12 +159,38 @@ public class LoginService : ILoginService
 
     public async Task<LoginResult> ConfirmTotpCode(string authSessionId, string keyCode, string host, bool rememberMe)
     {
+        // SEC-022: the storage lookup filters out deleted sessions (AND Deleted IS
+        // NULL) and throws TwoFactorAuthSessionNotFoundException when none is
+        // found, so a deleted session can never be completed.
         var twoFactorAuthenticationSession = await _twoFactorAuthenticationSessionStorage.Get(authSessionId);
+
+        // SEC-022: a session past its maximum age must not be completed, even with
+        // a valid TOTP code. Reject it with the same exception as a missing
+        // session so "expired" and "not found" are indistinguishable.
+        if (DateTimeOffset.Now - twoFactorAuthenticationSession.Created > TwoFactorSessionMaxAge)
+        {
+            _log.LogWarning(
+                "Rejected two-factor session {SessionId} for identity {IdentityId}: session has exceeded its maximum age",
+                twoFactorAuthenticationSession.SessionId,
+                twoFactorAuthenticationSession.IdentityId);
+
+            throw new TwoFactorAuthSessionNotFoundException("Two factor auth session not found");
+        }
+
         var localAccount = await _localAccountService.GetLocalAccountAsync(twoFactorAuthenticationSession.IdentityId);
 
         if (localAccount.TwoFactorTotpEnabled is null || localAccount.SharedTotpSecret is null)
         {
             throw new TotpIsNotEnabledForThisAccountException("Totp is not enabled for this local account");
+        }
+
+        await _usedTotpLogStorage.PruneStaleAsync(UsedTotpLogMaxAge);
+
+        if (await _usedTotpLogStorage.HasBeenUsedAsync(localAccount.IdentityId, keyCode))
+        {
+            _log.LogWarning("Rejected replay of an already used totp code for identity {IdentityId}", localAccount.IdentityId);
+
+            throw new TotpCodeAlreadyUsedException($"Totp code already used for identity '{localAccount.IdentityId}'");
         }
 
         var totp = new Totp(localAccount.SharedTotpSecret);
@@ -209,8 +273,35 @@ public class LoginService : ILoginService
         return claims;
     }
 
-    public Task LogoutAsync()
+    /// <summary>
+    /// SEC-015: runs a throw-away PBKDF2 with the same cost as a real password
+    /// verification (same salt length, iteration count and output length) so that
+    /// a login attempt for an unknown account takes the same time as one for a
+    /// known account with a wrong password.
+    /// </summary>
+    private void RunDummyPasswordHash(string password)
     {
-        throw new NotImplementedException();
+        var salt = new byte[_options.NumberOfBytesInPasswordSalt];
+        RandomNumberGenerator.Fill(salt);
+
+        _passwordHashGenerator.GetPasswordHash(salt, password, _options.IterationCount, _options.NumberOfBytesInPasswordHash);
+    }
+
+    /// <summary>
+    /// FUNC-004: signs the user out of the cookie scheme. The cookie handler
+    /// removes the authentication cookie and, when a SessionStore is configured
+    /// (SqlTicketStore), also removes the server-side ticket — the session is
+    /// marked Deleted in the Sessions table.
+    /// </summary>
+    public async Task LogoutAsync()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+
+        if (httpContext == null)
+        {
+            throw new Exception("No active http context");
+        }
+
+        await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     }
 }

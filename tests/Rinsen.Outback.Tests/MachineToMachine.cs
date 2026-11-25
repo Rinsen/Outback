@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -66,7 +67,9 @@ namespace Rinsen.Outback.Tests
 
             var encodedClientIdAndSecret = Base64UrlEncoder.Encode("MachineToMachineClientId:pwd");
 
-            var client = application.CreateClient();
+            // Speak https so the scheme-aware issuer (SEC-009) is https://localhost,
+            // which is what this test validates the token against.
+            var client = application.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", encodedClientIdAndSecret);
 
             // Act

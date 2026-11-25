@@ -41,16 +41,20 @@ public class WellKnownController : ControllerBase
     {
         await AddCorsHeadersIfRequiredAndSupported();
 
-        var host = HttpContext.Request.Host.ToString();
+        var baseUrl = HttpContext.Request.Scheme + "://" + HttpContext.Request.Host.ToString();
         var scopes = await _wellKnownScopeAccessor.GetScopesAsync();
 
         var openIdConfiguration = new OpenIdConfiguration
         {
-            Issuer = $"https://{host}",
-            JwksUri = $"https://{host}/.well-known/openid-configuration/jwks",
-            AuthorizationEndpoint = $"https://{host}/oauth/authorize",
-            TokenEndpoint = $"https://{host}/oauth/token",
+            Issuer = baseUrl,
+            JwksUri = $"{baseUrl}/.well-known/openid-configuration/jwks",
+            AuthorizationEndpoint = $"{baseUrl}/oauth/authorize",
+            TokenEndpoint = $"{baseUrl}/oauth/token",
+            UserInfoEndpoint = $"{baseUrl}/oauth/userinfo",
             CodeChallengeMethodsSupported = ["S256"],
+            ResponseTypesSupported = ["code"],
+            IdTokenSigningAlgValuesSupported = ["ES256"],
+            SubjectTypesSupported = ["public"],
             ScopesSupported = scopes.Where(m => m.ShowInDiscoveryDocument).Select(m => m.ScopeName).ToList()
         };
 
@@ -71,7 +75,7 @@ public class WellKnownController : ControllerBase
 
         if (await _outbackConfigurationAccessor.IsDeviceAuthorizationGrantActiveAsync())
         {
-            openIdConfiguration.DeviceAuthorizationEndpoint = $"https://{host}/oauth/device_authorization";
+            openIdConfiguration.DeviceAuthorizationEndpoint = $"{baseUrl}/oauth/device_authorization";
             openIdConfiguration.GrantTypesSupported.Add("urn:ietf:params:oauth:grant-type:device_code");
         }
 
@@ -83,11 +87,6 @@ public class WellKnownController : ControllerBase
         if (await _outbackConfigurationAccessor.IsRefreshTokenGrantActiveAsync())
         {
             openIdConfiguration.GrantTypesSupported.Add("refresh_token");
-        }
-
-        if (await _outbackConfigurationAccessor.IsCodeGrantActiveAsync())
-        {
-            openIdConfiguration.GrantTypesSupported.Add("authorization_code");
         }
 
         return openIdConfiguration;

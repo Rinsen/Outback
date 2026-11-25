@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Rinsen.Outback.Grants;
 
 namespace Rinsen.Outback.Accessors;
@@ -13,4 +14,6 @@ public interface IGrantAccessor
     Task SavePersistedGrantAsync(PersistedGrant persistedGrant);
     Task SaveRefreshTokenGrantAsync(RefreshTokenGrant refreshTokenGrant);
     Task SaveDeviceAuthorizationGrantAsync(DeviceCodeGrant deviceAuthorizationGrant);
+    Task RevokeRefreshTokenFamilyAsync(Guid familyId);
+    Task ResolveDeviceAuthorizationGrantAsync(string deviceCode);
 }

@@ -68,6 +68,8 @@ public class OutbackDataSeed : IDataSeed
         
         var credentials = await _defaultInstaller.Install();
 
-        _logger.LogInformation("Default clients installed. ClientId: {ClientId}, ClientSecret: {ClientSecret}", credentials.ClientId, credentials.Secret);
+        // SEC-019: log the ClientId only. The client secret is a credential and
+        // must never appear in install output or logs.
+        _logger.LogInformation("Default clients installed. ClientId: {ClientId}", credentials.ClientId);
     }
 }

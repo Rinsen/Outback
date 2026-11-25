@@ -63,7 +63,7 @@ namespace Rinsen.Outback.Grants
 
             if (!AbnfValidationHelper.IsValid(tokenModel.CodeVerifier, 43, 128))
             {
-                _logger.LogError("Code verifier is not ABNF valid for client {ClientId} with code verifier {CodeVerifier}", client.ClientId, tokenModel.CodeVerifier);
+                _logger.LogError("Code verifier is not ABNF valid for client {ClientId}", client.ClientId);
                 return new TokenResponse { ErrorResponse = new ErrorResponse { Error = ErrorResponses.InvalidRequest } };
             }
 
@@ -110,6 +110,7 @@ namespace Rinsen.Outback.Grants
                 RefreshToken = refreshToken,
                 Scope = persistedGrant.Scope,
                 SubjectId = persistedGrant.SubjectId,
+                FamilyId = Guid.NewGuid(),
             };
 
             await _grantAccessor.SaveRefreshTokenGrantAsync(refreshTokenGrant);
@@ -135,7 +136,7 @@ namespace Rinsen.Outback.Grants
             var challengeBytes = SHA256.HashData(Encoding.UTF8.GetBytes(codeVerifier));
             var codeChallenge = WebEncoders.Base64UrlEncode(challengeBytes);
 
-            if (codeChallenge != codeGrant.CodeChallenge)
+            if (!SecretComparer.FixedTimeEquals(codeChallenge, codeGrant.CodeChallenge))
             {
                 throw new SecurityException("Code verifier is not matching code challenge");
             }

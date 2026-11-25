@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
@@ -152,6 +153,7 @@ public class OAuthController : Controller
     [HttpPost]
     [AllowAnonymous]
     [Route("token")]
+    [EnableRateLimiting(RateLimitingPolicies.Credentials)]
     public async Task<IActionResult> Token([FromForm] TokenModel model)
     {
         if (ModelState.IsValid)
@@ -259,14 +261,16 @@ public class OAuthController : Controller
                 return BadRequest(new ErrorResponse { Error = ErrorResponses.InvalidRequest });
             }
 
+            var verificationUri = $"{GetIssuer()}/device";
+
             return Json(new DeviceAuthorizationResponse
             {
                 DeviceCode = deviceAuthorizationGrantRequest.DeviceCode,
                 UserCode = deviceAuthorizationGrantRequest.UserCode,
                 ExpiresIn = client.DeviceCodeUserCompletionLifetime,
                 Interval = deviceAuthorizationGrantRequest.Interval,
-                VerificationUri = $"https://{HttpContext.Request.Host}/device",
-                VerificationUriComplete = $"https://{HttpContext.Request.Host}/device?user_code={deviceAuthorizationGrantRequest.UserCode}"
+                VerificationUri = verificationUri,
+                VerificationUriComplete = $"{verificationUri}?user_code={deviceAuthorizationGrantRequest.UserCode}"
             });
         }
 
@@ -351,7 +355,7 @@ public class OAuthController : Controller
 
     private string GetIssuer()
     {
-        return "https://" + HttpContext.Request.Host.ToString();
+        return HttpContext.Request.Scheme + "://" + HttpContext.Request.Host.ToString();
     }
 
 

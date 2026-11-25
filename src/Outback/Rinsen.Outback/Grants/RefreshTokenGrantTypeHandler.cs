@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Security;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Logging;
 using Rinsen.Outback.Accessors;
 using Rinsen.Outback.Clients;
-using Rinsen.Outback.Configuration;
 using Rinsen.Outback.Helpers;
 using Rinsen.Outback.JwtTokens;
 using Rinsen.Outback.Models;
@@ -46,7 +40,7 @@ namespace Rinsen.Outback.Grants
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to resolve grant for client {ClientId} with {RefreshToken}", client.ClientId, tokenModel.RefreshToken);
+                _logger.LogError(e, "Failed to resolve grant for client {ClientId}", client.ClientId);
 
                 return new TokenResponse { ErrorResponse = new ErrorResponse { Error = ErrorResponses.InvalidGrant } };
             }
@@ -65,6 +59,21 @@ namespace Rinsen.Outback.Grants
             if (refreshTokenGrant == default)
             {
                 throw new SecurityException($"No RefreshToken found");
+            }
+
+            if (refreshTokenGrant.Resolved is not null)
+            {
+                // Reuse of an already-consumed token: revoke the entire token family (RFC 9700 §10.5)
+                _logger.LogWarning("Refresh token reuse detected for client {ClientId}; revoking token family {FamilyId}", clientId, refreshTokenGrant.FamilyId);
+
+                await _grantAccessor.RevokeRefreshTokenFamilyAsync(refreshTokenGrant.FamilyId);
+
+                throw new SecurityException("RefreshToken was already used");
+            }
+
+            if (refreshTokenGrant.Expires < DateTimeOffset.UtcNow)
+            {
+                throw new SecurityException("RefreshToken is expired");
             }
 
             if (!string.Equals(refreshTokenGrant.ClientId, clientId))
@@ -86,6 +95,7 @@ namespace Rinsen.Outback.Grants
                 RefreshToken = refreshToken,
                 Scope = refreshTokenGrant.Scope,
                 SubjectId = refreshTokenGrant.SubjectId,
+                FamilyId = refreshTokenGrant.FamilyId == Guid.Empty ? Guid.NewGuid() : refreshTokenGrant.FamilyId,
             };
 
             await _grantAccessor.SaveRefreshTokenGrantAsync(newRefreshTokenGrant);

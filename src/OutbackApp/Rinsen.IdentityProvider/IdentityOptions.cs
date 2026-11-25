@@ -4,7 +4,8 @@ public class IdentityOptions
 {
     public IdentityOptions()
     {
-        IterationCount = 100000;
+        // SEC-014: OWASP minimum for PBKDF2-HMAC-SHA256.
+        IterationCount = 600_000;
         NumberOfBytesInPasswordHash = 128 / 8;
         NumberOfBytesInPasswordSalt = 128 / 8;
         MaxFailedLoginSleepCount = 30;

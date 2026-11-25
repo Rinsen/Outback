@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Rinsen.IdentityProvider;
 using Rinsen.IdentityProvider.Configurations;
 using Rinsen.IdentityProvider.Outback.Entities;
+using Rinsen.Outback.JwtTokens;
 
 namespace Rinsen.Outback.App;
 
@@ -42,6 +43,9 @@ public class Program
             options.TotpIssuer = configuration["Rinsen:TotpIssuer"] ?? "Outback";
         });
         builder.Services.AddRinsenOutback();
+
+        // SEC-016: throttle credential endpoints (login, two-factor, create, token)
+        builder.Services.AddCredentialRateLimiting(configuration);
 
         var gelfhost = configuration["Rinsen:GelfHost"];
         if (!string.IsNullOrEmpty(gelfhost))
@@ -135,6 +139,7 @@ public class Program
         }
 
         app.UseRouting();
+        app.UseRateLimiter();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseStaticFiles();
@@ -171,6 +176,7 @@ public class Program
             {
                 options.Authority = configuration["Rinsen:Outback"];
                 options.Audience = configuration["Rinsen:ClientId"];
+                options.TokenValidationParameters = InboundTokenValidation.CreateTokenValidationParameters();
             });
     }
 

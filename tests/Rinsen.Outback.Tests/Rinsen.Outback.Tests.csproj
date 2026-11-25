@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="11.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -24,6 +25,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\sample\SampleServer\SampleServer.csproj" />
     <ProjectReference Include="..\..\src\Outback\Rinsen.Outback\Rinsen.Outback.csproj" />
+    <ProjectReference Include="..\..\src\OutbackApp\Rinsen.Outback.App\Rinsen.Outback.App.csproj" />
+    <ProjectReference Include="..\..\src\OutbackApp\Rinsen.Outback.App.Installation\Rinsen.Outback.App.Installation.csproj" />
   </ItemGroup>
 
 </Project>

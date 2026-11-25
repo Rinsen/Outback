@@ -42,6 +42,14 @@ namespace Rinsen.Outback.Grants
                 return new TokenResponse { ErrorResponse = new ErrorResponse { Error = ErrorResponses.InvalidRequest } };
             }
 
+            if (deviceGrant.Resolved is not null)
+            {
+                // Reuse of an already-redeemed device code (RFC 8628 §3.2)
+                _logger.LogWarning("Device code reuse detected for client {ClientId}", client.ClientId);
+
+                return new TokenResponse { ErrorResponse = new ErrorResponse { Error = ErrorResponses.InvalidGrant } };
+            }
+
             if (deviceGrant.AccessIsRejected)
             {
                 _logger.LogInformation("Device authorization grant {DeviceCode} is rejected", tokenModel.DeviceCode);
@@ -64,6 +72,9 @@ namespace Rinsen.Outback.Grants
             }
 
             var tokenResponse = await _tokenService.CreateTokenResponseAsync(client, deviceGrant, issuer);
+
+            // The device code is single-use: mark it resolved once the token has been issued (RFC 8628 §3.2)
+            await _grantAccessor.ResolveDeviceAuthorizationGrantAsync(deviceGrant.DeviceCode);
 
             return new TokenResponse { AccessTokenResponse = tokenResponse };
         }

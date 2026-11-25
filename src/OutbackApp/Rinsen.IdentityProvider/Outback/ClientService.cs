@@ -344,7 +344,7 @@ public class ClientService
                 var newSecret = new OutbackClientSecret
                 {
                     Description = secret.Description,
-                    Secret = HashHelper.GetSha256Hash(secret.Secret)
+                    Secret = HashHelper.HashClientSecret(secret.Secret)
                 };
 
                 client.Secrets.Add(newSecret);

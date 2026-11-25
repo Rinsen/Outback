@@ -48,5 +48,10 @@ namespace Rinsen.Outback.Grants
         /// </summary>
         public int Interval { get; set; }
 
+        /// <summary>
+        /// When the device code was redeemed (resolved), or null if it was still usable when it was looked up.
+        /// </summary>
+        public DateTimeOffset? Resolved { get; set; }
+
     }
 }

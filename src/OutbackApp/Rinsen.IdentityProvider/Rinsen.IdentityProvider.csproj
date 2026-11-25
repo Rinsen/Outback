@@ -25,5 +25,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Outback\Rinsen.Outback\Rinsen.Outback.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Rinsen.IdentityProvider.Tests" />
+  </ItemGroup>
 
 </Project>

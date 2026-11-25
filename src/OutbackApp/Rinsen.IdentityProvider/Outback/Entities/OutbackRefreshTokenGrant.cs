@@ -12,6 +12,8 @@ public class OutbackRefreshTokenGrant
 
     public string RefreshToken { get; set; } = string.Empty;
 
+    public Guid FamilyId { get; set; }
+
     public string Scope { get; set; } = string.Empty;
 
     public DateTimeOffset Created { get; set; }
