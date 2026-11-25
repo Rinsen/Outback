@@ -246,8 +246,21 @@ public class LoginService : ILoginService
         _passwordHashGenerator.GetPasswordHash(salt, password, _options.IterationCount, _options.NumberOfBytesInPasswordHash);
     }
 
-    public Task LogoutAsync()
+    /// <summary>
+    /// FUNC-004: signs the user out of the cookie scheme. The cookie handler
+    /// removes the authentication cookie and, when a SessionStore is configured
+    /// (SqlTicketStore), also removes the server-side ticket — the session is
+    /// marked Deleted in the Sessions table.
+    /// </summary>
+    public async Task LogoutAsync()
     {
-        throw new NotImplementedException();
+        var httpContext = _httpContextAccessor.HttpContext;
+
+        if (httpContext == null)
+        {
+            throw new Exception("No active http context");
+        }
+
+        await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     }
 }
