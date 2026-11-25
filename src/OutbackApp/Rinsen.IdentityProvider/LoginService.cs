@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace Rinsen.IdentityProvider;
@@ -26,6 +27,8 @@ public class LoginService : ILoginService
     private readonly IIdentityAttributeStorage _identityAttributeStorage;
     private readonly IUsedTotpLogStorage _usedTotpLogStorage;
     private readonly ITwoFactorAuthenticationSessionStorage _twoFactorAuthenticationSessionStorage;
+    private readonly IdentityOptions _options;
+    private readonly PasswordHashGenerator _passwordHashGenerator;
 
     public LoginService(ILocalAccountService localAccountService,
         IIdentityService identityService,
@@ -34,7 +37,9 @@ public class LoginService : ILoginService
         ITwoFactorAuthenticationSessionStorage twoFactorAuthenticationSessionStorage,
         IHttpContextAccessor httpContextAccessor,
         RandomStringGenerator randomStringGenerator,
-        ILogger<LoginService> log)
+        ILogger<LoginService> log,
+        IdentityOptions options,
+        PasswordHashGenerator passwordHashGenerator)
     {
         _localAccountService = localAccountService;
         _identityService = identityService;
@@ -44,6 +49,8 @@ public class LoginService : ILoginService
         _httpContextAccessor = httpContextAccessor;
         _randomStringGenerator = randomStringGenerator;
         _log = log;
+        _options = options;
+        _passwordHashGenerator = passwordHashGenerator;
     }
 
     public async Task<LoginResult> LoginAsync(string email, string password, string host, bool rememberMe)
@@ -62,6 +69,11 @@ public class LoginService : ILoginService
         catch (AccountNotFoundException e)
         {
             _log.LogWarning(e, "Login failed for email {email}", email);
+
+            // SEC-015: no account exists, so the real KDF never ran. Perform a dummy
+            // PBKDF2 with the same cost as a real verification so that unknown and
+            // known accounts are not distinguishable by response time.
+            RunDummyPasswordHash(password);
 
             return LoginResult.Failure();
         }
@@ -218,6 +230,20 @@ public class LoginService : ILoginService
         }
 
         return claims;
+    }
+
+    /// <summary>
+    /// SEC-015: runs a throw-away PBKDF2 with the same cost as a real password
+    /// verification (same salt length, iteration count and output length) so that
+    /// a login attempt for an unknown account takes the same time as one for a
+    /// known account with a wrong password.
+    /// </summary>
+    private void RunDummyPasswordHash(string password)
+    {
+        var salt = new byte[_options.NumberOfBytesInPasswordSalt];
+        RandomNumberGenerator.Fill(salt);
+
+        _passwordHashGenerator.GetPasswordHash(salt, password, _options.IterationCount, _options.NumberOfBytesInPasswordHash);
     }
 
     public Task LogoutAsync()

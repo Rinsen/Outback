@@ -102,7 +102,9 @@ public class TotpSingleUseTests
             new FakeTwoFactorAuthenticationSessionStorage(IdentityId),
             CreateHttpContextAccessor(),
             new RandomStringGenerator(),
-            NullLogger<LoginService>.Instance);
+            NullLogger<LoginService>.Instance,
+            new IdentityOptions(),
+            new PasswordHashGenerator());
 
         return (loginService, totpLogStorage);
     }

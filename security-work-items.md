@@ -193,13 +193,15 @@
 - **References:** OWASP Password Storage Cheat Sheet
 
 ### SEC-015 · [P3] Equalize login timing for unknown accounts
-- **Status:** Open
-- **Location:** `src/OutbackApp/Rinsen.IdentityProvider/LoginService.cs:60–64`
+- **Status:** Done (2026-11-24)
+- **Location:** `src/OutbackApp/Rinsen.IdentityProvider/LoginService.cs:69–80`
 - **Problem:** Unknown accounts return before the KDF runs, enabling timing-based enumeration.
 - **Acceptance criteria:**
-  - [ ] On `AccountNotFoundException`, run a dummy PBKDF2 with the same cost
-  - [ ] Response time for unknown vs. known account is statistically indistinguishable
-  - [ ] Test asserts both paths perform a KDF
+  - [x] On `AccountNotFoundException`, run a dummy PBKDF2 with the same cost
+  - [x] Response time for unknown vs. known account is statistically indistinguishable
+  - [x] Test asserts both paths perform a KDF
+- **Resolution:** `LoginService.LoginAsync` now, in the `AccountNotFoundException` handler (the only path where no KDF would otherwise run — the `InvalidPasswordException` path already spent the real KDF inside `LocalAccountService.ValidatePassword`), calls a new private `RunDummyPasswordHash(password)`: a throw-away PBKDF2-HMAC-SHA256 with the exact cost parameters of a real verification — random salt of `IdentityOptions.NumberOfBytesInPasswordSalt` bytes, `IdentityOptions.IterationCount` iterations (600,000 since SEC-014), `IdentityOptions.NumberOfBytesInPasswordHash` output bytes — computed through the injected `PasswordHashGenerator` with the submitted password, then discarded. `LoginService` gained two constructor dependencies, `IdentityOptions` and `PasswordHashGenerator` (both already registered in DI by `ExtensionMethods.AddRinsenIdentity`, and the same pair `LocalAccountService` already takes), so no registration changes were needed; the one direct construction site (`tests/Rinsen.IdentityProvider.Tests/TotpSingleUse.cs`) was updated. `PasswordHashGenerator.GetPasswordHash` became `virtual` (internal, same assembly) so tests can count KDF invocations while delegating to the real implementation.
+  - **Tests:** `tests/Rinsen.IdentityProvider.Tests/LoginTimingTests.cs` (new, 3 tests): `LoginAsync_UnknownAccount_RunsDummyKdf` — a counting `PasswordHashGenerator` spy asserts exactly one KDF ran on the unknown-account path with the configured default iteration count; `LoginAsync_KnownAccountWrongPassword_RunsKdf` — exactly one KDF on the known-account path (real `LocalAccountService` + a storage fake that mimics `LocalAccountStorage`'s `AccountNotFoundException` behavior, account created through the real `CreateAsync`); `LoginAsync_UnknownAccount_TakesComparableTimeToKnownAccount` — after warm-up, the median duration of the unknown path (3 runs) is within [0.5×, 2.0×] of the known path's, i.e. statistically indistinguishable. Full regression: `Rinsen.IdentityProvider.Tests` 22/22; `Rinsen.Outback.Tests` 65/65; `dotnet build Outback.slnx` 0 errors.
 
 ---
 
