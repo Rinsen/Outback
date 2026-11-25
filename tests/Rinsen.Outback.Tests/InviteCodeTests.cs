@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.FileProviders;
 using Rinsen.IdentityProvider;
 using Rinsen.IdentityProvider.AuditLogging;
 using Rinsen.IdentityProvider.LocalAccounts;
@@ -135,7 +133,6 @@ namespace Rinsen.Outback.Tests
                 configuration,
                 new StubIdentityAccessor(),
                 new NoOpSessionStorage(),
-                new TestWebHostEnvironment(),
                 new IdentityOptions());
 
             controller.ControllerContext = new ControllerContext
@@ -247,15 +244,5 @@ namespace Rinsen.Outback.Tests
             public Task UpdateAsync(Session session) => Task.CompletedTask;
         }
 
-        private sealed class TestWebHostEnvironment : IWebHostEnvironment
-        {
-            public string ApplicationName { get; set; } = "test";
-            public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
-            public string ContentRootPath { get; set; } = string.Empty;
-            public string EnvironmentName { get; set; } = "Development";
-            public IFileProvider FileProvider { get; set; } = new NullFileProvider();
-            public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
-            public string WebRootPath { get; set; } = string.Empty;
-        }
     }
 }

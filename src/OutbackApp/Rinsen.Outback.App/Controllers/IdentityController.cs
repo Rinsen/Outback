@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -30,7 +29,6 @@ public class IdentityController : Controller
     private readonly IConfiguration _configuration;
     private readonly IIdentityAccessor _identityAccessor;
     private readonly ISessionStorage _sessionStorage;
-    private readonly IWebHostEnvironment _env;
     private readonly IdentityOptions _identityOptions;
 
     public IdentityController(ILoginService loginService,
@@ -40,7 +38,6 @@ public class IdentityController : Controller
         IConfiguration configuration,
         IIdentityAccessor identityAccessor,
         ISessionStorage sessionStorage,
-        IWebHostEnvironment env,
         IdentityOptions identityOptions)
     {
         _loginService = loginService;
@@ -50,7 +47,6 @@ public class IdentityController : Controller
         _configuration = configuration;
         _identityAccessor = identityAccessor;
         _sessionStorage = sessionStorage;
-        _env = env;
         _identityOptions = identityOptions;
     }
 
@@ -164,11 +160,10 @@ public class IdentityController : Controller
         // Set logged in user to the one just created as this only will be provided at next request by the framework
         HttpContext.User = principal;
 
-        if (_env.IsDevelopment())
-        {
-            return Redirect(returnUrl);
-        }
-
+        // SEC-021: validate returnUrl in every environment. An external returnUrl
+        // is an open redirect (the previous Development-only branch followed it
+        // unvalidated), so anything that is not a local URL falls back to the
+        // site root.
         if (Url.IsLocalUrl(returnUrl))
         {
             return Redirect(returnUrl);

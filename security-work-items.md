@@ -266,13 +266,15 @@
   - **Tests:** `tests/Rinsen.Outback.Tests/InviteCodeTests.cs` (new, 7 tests): `InviteCodePolicyTests` — `IsStrong` is false for null, `"1234"`, and 31 chars; true for 32 and 64 chars. `IdentityControllerCreateTests` (real `IdentityController` with stubbed services, `DefaultHttpContext`, no-op `AuditLog`) — `Create_WeakConfiguredCode_MatchingSubmittedCode_IsRejected`: configured `"1234"` + submitted `"1234"` → rejected, **no identity created** (the old behavior would have succeeded); `Create_MissingConfiguredCode_AnySubmittedCode_IsRejected`: no configured code → rejected; `Create_StrongConfiguredCode_WrongSubmittedCode_IsRejected`: 128-bit configured code + wrong code → rejected; `Create_StrongConfiguredCode_CorrectCode_CreatesUser`: correct 128-bit code → identity + local account created, login attempted, `UserCreated` view returned. Full regression: `Rinsen.IdentityProvider.Tests` 30/30; `Rinsen.Outback.Tests` 90/90; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-021 · [P3] Enforce `Url.IsLocalUrl` in all environments
-- **Status:** Open
+- **Status:** Done (2026-11-24)
 - **Location:** `src/OutbackApp/Rinsen.Outback.App/Controllers/IdentityController.cs:164–167`
 - **Problem:** Development branch redirects to an unvalidated `returnUrl` (open redirect).
 - **Acceptance criteria:**
-  - [ ] `LoginSuccess` validates `returnUrl` with `Url.IsLocalUrl` in every environment
-  - [ ] External `returnUrl` falls back to `~/`
-  - [ ] Test: external URL is not honored
+  - [x] `LoginSuccess` validates `returnUrl` with `Url.IsLocalUrl` in every environment
+  - [x] External `returnUrl` falls back to `~/`
+  - [x] Test: external URL is not honored
+- **Resolution:** `LoginSuccess` no longer has the Development-only branch: `returnUrl` is now validated with `Url.IsLocalUrl` in **every** environment, and anything that is not a local URL falls back to `Redirect("~/")`. The now-dead `IWebHostEnvironment` dependency was removed from the controller (constructor is 8 args again; the `using Microsoft.AspNetCore.Hosting;` and `_env` field are gone), so the environment can no longer influence redirect behavior at all.
+  - **Tests:** `tests/Rinsen.Outback.Tests/ReturnUrlTests.cs` (new, 4 tests) — real `IdentityController` with a stubbed `ILoginService` returning a successful login, `DefaultHttpContext`, and the MVC `UrlHelperFactory`/`IActionDescriptorCollectionProvider` services registered in the request services (plus `RouteData` on the `ControllerContext`, which `UrlHelperBase`'s constructor dereferences). `Login_ExternalReturnUrl_RedirectsToSiteRoot`: `https://evil.example.com/phish` → `~/`, login still succeeds; `Login_ProtocolRelativeReturnUrl_RedirectsToSiteRoot`: `//evil.example.com/phish` (the classic open-redirect bypass) → `~/`; `Login_EmptyReturnUrl_RedirectsToSiteRoot`: empty → `~/`; `Login_LocalReturnUrl_IsHonored`: `/dashboard` → honored. Full regression: `Rinsen.IdentityProvider.Tests` 30/30; `Rinsen.Outback.Tests` 94/94; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-022 · [P3] Two-factor session lookup must honor `Deleted` and age
 - **Status:** Open
