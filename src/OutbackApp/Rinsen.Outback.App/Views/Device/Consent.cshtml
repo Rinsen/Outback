@@ -1,21 +1,37 @@
 ﻿@using Rinsen.Outback.App.Models
-@model DeviceAuthorizationModel
+@model DeviceConsentViewModel
 @{
     Layout = "_LayoutIdentity";
 }
 
-@using (Html.BeginForm("Login", "Identity", FormMethod.Post, htmlAttributes: new { @class = "form-signin" }))
+@using (Html.BeginForm("Consent", "Device", FormMethod.Post, htmlAttributes: new { @class = "form-signin" }))
 {
     <h1 class="h3 mb-3 font-weight-normal">Please authorize user code</h1>
-    @Html.LabelFor(m => m.UserCode, "User code", htmlAttributes: new { @class = "sr-only" })
-    @Html.TextBoxFor(m => m.UserCode, new { @type = "user_code", @class = "form-control", placeholder = "User code" })
-    <div class="checkbox mb-3">
-        <label>
-            @Html.CheckBoxFor(m => m.Authorize)
-            Remember me
-        </label>
+    @Html.HiddenFor(m => m.UserCode)
+    <div class="form-group">
+        <label>Requested access</label>
+        @if (Model.Scopes.Count == 0)
+        {
+            <p>No specific scopes were requested.</p>
+        }
+        else
+        {
+            <ul>
+                @foreach (var scope in Model.Scopes)
+                {
+                    <li>
+                        <strong>@scope.DisplayName</strong>
+                        @if (!string.IsNullOrEmpty(scope.Description))
+                        {
+                            <span> — @scope.Description</span>
+                        }
+                    </li>
+                }
+            </ul>
+        }
     </div>
-    <button class="btn btn-lg btn-primary btn-block" type="submit">Authorize device</button>
+    <button type="submit" name="Authorize" value="true" class="btn btn-lg btn-primary btn-block">Authorize device</button>
+    <button type="submit" name="Authorize" value="false" class="btn btn-lg btn-danger btn-block">Reject</button>
     <p class="mt-5 mb-3 text-muted">&copy; 2019-@DateTime.Now.Year</p>
     @Html.AntiForgeryToken()
 }

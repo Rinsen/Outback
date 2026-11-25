@@ -308,13 +308,14 @@
 - **Resolution:** `GrantType` now returns `"client_credentials"` (was `throw new NotImplementedException()`), so `OAuthController`'s handler enumeration no longer throws and the grant type matches the standard OAuth 2.0 client-credentials identifier. End-to-end verified by the `MachineToMachine` tests: `WhenUsingClientCredentialsInBasicAuthHeaderGetAccessToken` and `WhenUsingClientCredentialsInPostFormGetAccessToken` both succeed (200 + access token) against the SampleServer in `Rinsen.Outback.Tests`.
 
 ### FUNC-003 · [P3] Implement device-flow storage + consent
-- **Status:** Open
+- **Status:** Done (2026-11-24)
 - **Location:** `GrantAccessor.cs:54–57,139–142` · `DeviceController.cs` (consent POST commented out)
 - **Problem:** Device-flow accessor methods throw; consent POST is disabled.
 - **Acceptance criteria:**
-  - [ ] `GetDeviceAuthorizationGrantAsync` / `SaveDeviceAuthorizationGrantAsync` implemented
-  - [ ] Device consent POST re-enabled and wired
-  - [ ] Device flow completes end-to-end
+  - [x] `GetDeviceAuthorizationGrantAsync` / `SaveDeviceAuthorizationGrantAsync` implemented
+  - [x] Device consent POST re-enabled and wired
+  - [x] Device flow completes end-to-end
+- **Resolution:** The EF storage side was already implemented in `Rinsen.IdentityProvider/Outback/GrantAccessor.cs` (`GetDeviceAuthorizationGrantAsync` / `SaveDeviceAuthorizationGrantAsync` / `ResolveDeviceAuthorizationGrantAsync` map the entity `Guid SubjectId` ↔ model `string? SubjectId` with `Guid.Empty` = pending) and is exercised by the token-endpoint tests. The missing piece — the consent decision in the production app — is now implemented in `DeviceController.Consent` (`[HttpPost] [ValidateAntiForgeryToken]`): it looks up the grant by user code, guards against unknown/expired/resolved grants, and on **Authorize** binds the grant to the authenticated user (`SubjectId = IIdentityAccessor.IdentityId`, `Accepted = now`) so `DeviceCodeGrantTypeHandler` will issue a token; on **Reject** it sets `AccessIsRejected = true` so the token endpoint answers `access_denied`. Re-consent is idempotent (already-consented keeps its original subject, already-rejected stays rejected). The views were fixed: `Index.cshtml` is the user-code entry (GET to `Device/Index`), `Consent.cshtml` posts to `Device/Consent` with hidden user code, scope list and Authorize/Reject buttons (the old "Remember me" checkbox and the form posting to `Identity/Login` are gone), and new `ConsentGranted`/`ConsentDenied` confirmation views were added. `DeviceConsentViewModel` gained an `Authorize` flag (made public for the MVC action). New tests: `DeviceConsentTests` (7, EF InMemory + fake `IIdentityAccessor` — authorize binds subject, reject marks rejected, unknown/expired/already-consented/already-rejected/resolved guards) and `DeviceCodeConsent` (2 — pending → `authorization_pending`, rejected → `access_denied`, the previously untested `access_denied` path). The existing RFC 8628 e2e `DeviceAuthorizationFlow.TestingBasicFlow` (device_authorization → `authorization_pending` → consent → token) still passes. Full suites green: `Rinsen.Outback.Tests` 74/74, `Rinsen.IdentityProvider.Tests` 22/22, solution builds with 0 errors.
 
 ### FUNC-004 · [P3] Implement `LoginService.LogoutAsync`
 - **Status:** Open
