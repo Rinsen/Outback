@@ -220,13 +220,15 @@
   - **Tests:** `tests/Rinsen.IdentityProvider.Tests/AccountLockoutTests.cs` (new, 3 tests, `MaxFailedLoginSleepCount = 3`): `GetLocalAccountAsync_NFailedThenCorrectPassword_IsLockedOut` — N failed attempts each throw `InvalidPasswordException` and increment `FailedLoginCount`, then the N+1th attempt *with the correct password* throws `AccountLockedOutException`; `GetLocalAccountAsync_PreLockedAccount_CorrectPassword_IsLockedOut` — an account already at the threshold is rejected even with the correct password; `LoginAsync_LockedOutAccount_CorrectPassword_ReturnsGenericFailure` — through the real `LoginService`, the N+1th attempt with the correct password returns a generic `LoginResult.Failure()` with no principal. `tests/Rinsen.Outback.Tests/RateLimitingTests.cs` (new, 1 test): `TokenEndpoint_ExceedingPermitLimit_Returns429` — via `WebApplicationFactory<SampleServer.Program>` with `Rinsen:RateLimiting:PermitLimit` overridden to 2, the 1st and 2nd `POST /oauth/token` are allowed and the 3rd returns HTTP 429. Fakes: `FakeLocalAccountStorage` (stable `LocalAccount` instance so `FailedLoginCount` accumulates in memory, no-op persistence), `FakeIdentityAccessor`, and constructor stubs (mirroring `LoginTimingTests`). Full regression: `Rinsen.IdentityProvider.Tests` 27/27; `Rinsen.Outback.Tests` 82/82; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-017 · [P1] Enforce `IsDisabled` in the login path
-- **Status:** Open
+- **Status:** Done (2026-11-24)
 - **Location:** `src/OutbackApp/Rinsen.IdentityProvider/LoginService.cs:67,149–154`
 - **Problem:** A disabled account still authenticates; only `Deleted` is checked.
 - **Acceptance criteria:**
-  - [ ] `LoginAsync` rejects when `localAccount.IsDisabled` (covers the TOTP branch too)
-  - [ ] Returns the same generic failure result
-  - [ ] Test: disabled account → login fails; enabled account → succeeds
+  - [x] `LoginAsync` rejects when `localAccount.IsDisabled` (covers the TOTP branch too)
+  - [x] Returns the same generic failure result
+  - [x] Test: disabled account → login fails; enabled account → succeeds
+- **Resolution:** `LoginService.LoginAsync` now rejects disabled accounts with the same generic `LoginResult.Failure()` as a wrong password (no principal, no 2FA session started). The check runs immediately after the existing `Deleted` check and **before** the 2FA branch, so a disabled account with TOTP/email/SMS/app-notification 2FA enabled is rejected here and never enters the 2FA flow. A warn log records the blocked login. The `IsDisabled` flag is already maintained by `UserService.UpdateAsync` (enable/disable endpoint), so no storage or schema change was needed.
+  - **Tests:** `tests/Rinsen.IdentityProvider.Tests/DisabledAccountTests.cs` (new, 3 tests): `LoginAsync_DisabledAccount_ReturnsGenericFailure` — real `LocalAccountService` + `LoginService`, `IsDisabled = true`, correct password → `Failed`, no principal, no 2FA; `LoginAsync_DisabledAccountWithTotpEnabled_ReturnsGenericFailure` — `IsDisabled = true` **and** `TwoFactorTotpEnabled` set → still rejected before the 2FA branch (proves the TOTP branch is covered); `LoginAsync_EnabledAccount_SignsIn` — full `TestServer` host with cookie authentication (`AddDataProtection` + `AddCookie`), the real `LocalAccountService` (real PBKDF2 verification) and `LoginService`, `IsDisabled = false` → HTTP 200 and the authentication `Set-Cookie` is issued. Fakes: `FakeLocalAccountStorage` (stable `LocalAccount` instance), `FakeIdentityAccessor`, `EnabledIdentityService` (non-deleted identity), `NoAttributesStorage` (empty attribute list). Full regression: `Rinsen.IdentityProvider.Tests` 30/30; `Rinsen.Outback.Tests` 82/82; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-018 · [P1] Remove hardcoded secrets from the Aspire host & rotate
 - **Status:** Open

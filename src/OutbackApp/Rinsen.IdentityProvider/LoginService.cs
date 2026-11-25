@@ -93,6 +93,17 @@ public class LoginService : ILoginService
             return LoginResult.Failure();
         }
 
+        if (localAccount is not null && localAccount.IsDisabled)
+        {
+            // SEC-017: a disabled account must not authenticate. This check runs
+            // before the 2FA branch so a disabled account with TOTP enabled is
+            // rejected here, and it returns the same generic failure as a wrong
+            // password so the state is not distinguishable.
+            _log.LogWarning("Login blocked for disabled local account of email {email}", email);
+
+            return LoginResult.Failure();
+        }
+
         if (localAccount is not null && (localAccount.TwoFactorAppNotificationEnabled is not null || localAccount.TwoFactorEmailEnabled is not null
             || localAccount.TwoFactorSmsEnabled is not null || localAccount.TwoFactorTotpEnabled is not null))
         {
