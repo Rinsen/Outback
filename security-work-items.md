@@ -288,13 +288,15 @@
   - **Tests:** `tests/Rinsen.IdentityProvider.Tests/TwoFactorSessionSecurityTests.cs` (new, 4 tests): `ConfirmTotpCode_DeletedSession_IsRejected` — storage lookup throws the not-found exception (as the `Deleted IS NULL` filter causes) → rejected, account lookup never reached; `ConfirmTotpCode_ExpiredSession_IsRejected` — session created 11 min ago + valid TOTP code → rejected before account lookup and before TOTP verification; `ConfirmTotpCode_FreshSession_ValidCode_Succeeds` — control: 9-min-old session + valid code → login succeeds and the code is logged; `SelectSql_FiltersDeletedSessions` — asserts the `SELECT` statement contains `Deleted IS NULL` (the only way to verify the filter without a live SQL Server). `TotpSingleUseTests`' fake session now carries a real `Created` timestamp (a real session always has one — `LoginAsync` sets it), so the pre-existing TOTP single-use tests exercise the happy path through the new age check. Full regression: `Rinsen.IdentityProvider.Tests` 34/34; `Rinsen.Outback.Tests` 94/94; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-023 · [P3] Filter sensitive keys from the admin configuration dump
-- **Status:** Open
+- **Status:** Done (2026-11-24)
 - **Location:** `src/OutbackApp/Rinsen.Outback.App/ApiControllers/AdminController.cs:31–41`
 - **Problem:** `GetDebugView()` exposes connection strings and env-supplied secrets to any admin.
 - **Acceptance criteria:**
-  - [ ] Filter out keys matching `connectionstring`, `password`, `secret`, `invitationcode` (case-insensitive)
-  - [ ] Response no longer contains the DB connection string
-  - [ ] Test asserts sensitive keys are absent
+  - [x] Filter out keys matching `connectionstring`, `password`, `secret`, `invitationcode` (case-insensitive)
+  - [x] Response no longer contains the DB connection string
+  - [x] Test asserts sensitive keys are absent
+- **Resolution:** New `ConfigurationDebugViewFilter` (`src/OutbackApp/Rinsen.Outback.App/Helpers/ConfigurationDebugViewFilter.cs`) that `AdminController.GetConfiguration` now calls instead of the raw `GetDebugView()`. It applies two layers over the .NET 11 debug view (a plain-text tree, `{Key}={value} ({Provider})` per line): **value masking** — the framework's `GetDebugView(root, processValue)` overload (documented "for example, hiding secrets") returns a masked value for any entry whose full path touches a sensitive key, which also covers children of a sensitive section; **key removal** — lines whose own key contains `connectionstring`, `password`, `secret`, or `invitationcode` (case-insensitive substring) are dropped, so the keys themselves are absent from the response. Together: a sensitive key like `ConnectionStrings:Outback` or `Rinsen:ClientSecret` leaves neither its key nor its value in the dump, while non-sensitive keys (`Rinsen:ClientId`, `Rinsen:TotpIssuer`, …) pass through unchanged.
+  - **Tests:** `tests/Rinsen.Outback.Tests/ConfigurationDebugViewFilterTests.cs` (new, 5 tests): builds the real `AdminController` (with `new BackupGenerator(null!)` — unused on this path) over an in-memory configuration carrying the app's real keys with known sensitive values (`ConnectionStrings:Outback` connection string containing `Password=hunter2`, `Rinsen:ClientSecret`, `Rinsen:InvitationCode`, `Rinsen:DbPassword`) plus non-sensitive `Rinsen:ClientId`/`Rinsen:TotpIssuer`; asserts per token that the sensitive **value** and the sensitive **key** (case-insensitively) are both absent from the `OkObjectResult` body, and that the non-sensitive keys and their values are still present. Full regression: `Rinsen.IdentityProvider.Tests` 34/34; `Rinsen.Outback.Tests` 99/99; `dotnet build Outback.slnx` 0 errors.
 
 ---
 

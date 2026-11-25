@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Rinsen.IdentityProvider.Backup;
 using Rinsen.IdentityProvider.Outback;
+using Rinsen.Outback.App.Helpers;
 
 namespace Rinsen.Outback.App.ApiControllers;
 
@@ -35,7 +36,9 @@ public class AdminController : Controller
     [ProducesResponseType(200)]
     public IActionResult GetConfiguration()
     {
-        var result = ((IConfigurationRoot)_configuration).GetDebugView();
+        // SEC-023: connection strings, passwords, secrets and invitation codes
+        // must not reach the response — neither the keys nor their values.
+        var result = ConfigurationDebugViewFilter.GetFilteredDebugView((IConfigurationRoot)_configuration);
 
         return Ok(result);
     }
