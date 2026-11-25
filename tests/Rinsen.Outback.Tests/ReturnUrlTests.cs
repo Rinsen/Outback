@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Rinsen.IdentityProvider;
 using Rinsen.IdentityProvider.AuditLogging;
 using Rinsen.IdentityProvider.LocalAccounts;
@@ -92,6 +94,7 @@ namespace Rinsen.Outback.Tests
                 configuration,
                 new StubIdentityAccessor(),
                 new NoOpSessionStorage(),
+                new FakeWebHostEnvironment("Production"),
                 new IdentityOptions());
 
             // Url.IsLocalUrl is resolved through the controller's UrlHelper,
@@ -188,6 +191,21 @@ namespace Rinsen.Outback.Tests
             public Task<IEnumerable<Session>> GetAsync(Guid identityId, bool includeDeleted = false) => Task.FromResult<IEnumerable<Session>>(new List<Session>());
             public Task<Session?> GetAsync(string sessionId, bool includeDeleted = false) => Task.FromResult<Session?>(null);
             public Task UpdateAsync(Session session) => Task.CompletedTask;
+        }
+
+        private sealed class FakeWebHostEnvironment : IWebHostEnvironment
+        {
+            public FakeWebHostEnvironment(string environmentName)
+            {
+                EnvironmentName = environmentName;
+            }
+
+            public string ApplicationName { get; set; } = "Rinsen.Outback.Tests";
+            public string ContentRootPath { get; set; } = string.Empty;
+            public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+            public string EnvironmentName { get; set; } = string.Empty;
+            public string WebRootPath { get; set; } = string.Empty;
+            public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
         }
     }
 }

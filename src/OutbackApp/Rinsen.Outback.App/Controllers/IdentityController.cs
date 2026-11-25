@@ -1,5 +1,11 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -11,11 +17,6 @@ using Rinsen.IdentityProvider.LocalAccounts;
 using Rinsen.Outback.App.Models;
 using Rinsen.Outback.Claims;
 using Rinsen.Outback.Helpers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using UAParser;
 
 namespace Rinsen.Outback.App.Controllers;
@@ -29,6 +30,7 @@ public class IdentityController : Controller
     private readonly IConfiguration _configuration;
     private readonly IIdentityAccessor _identityAccessor;
     private readonly ISessionStorage _sessionStorage;
+    private readonly IWebHostEnvironment _env;
     private readonly IdentityOptions _identityOptions;
 
     public IdentityController(ILoginService loginService,
@@ -38,6 +40,7 @@ public class IdentityController : Controller
         IConfiguration configuration,
         IIdentityAccessor identityAccessor,
         ISessionStorage sessionStorage,
+        IWebHostEnvironment env,
         IdentityOptions identityOptions)
     {
         _loginService = loginService;
@@ -47,6 +50,7 @@ public class IdentityController : Controller
         _configuration = configuration;
         _identityAccessor = identityAccessor;
         _sessionStorage = sessionStorage;
+        _env = env;
         _identityOptions = identityOptions;
     }
 
@@ -247,13 +251,17 @@ public class IdentityController : Controller
         {
             var configuredInviteCode = _configuration["Rinsen:InvitationCode"];
 
-            // SEC-020: self-registration is opt-in. It is only enabled when the
-            // operator configured a strong invite code (>= 128 bits, at least 32
-            // characters, e.g. `openssl rand -hex 16`). A missing or weak code
-            // fails closed with the exact same signature as a wrong code, so the
-            // endpoint state is not distinguishable to an attacker.
-            if (!InviteCodePolicy.IsStrong(configuredInviteCode) ||
-                !SecretComparer.FixedTimeEquals(model.InviteCode, configuredInviteCode))
+            // SEC-020: self-registration is opt-in. Outside Development it is
+            // only enabled when the operator configured a strong invite code
+            // (>= 128 bits, at least 32 characters, e.g. `openssl rand -hex
+            // 16`). A missing or weak code fails closed with the exact same
+            // signature as a wrong code, so the endpoint state is not
+            // distinguishable to an attacker. In Development the invite-code
+            // check is bypassed entirely so local registration works without a
+            // configured code.
+            if (!_env.IsDevelopment() &&
+                (!InviteCodePolicy.IsStrong(configuredInviteCode) ||
+                 !SecretComparer.FixedTimeEquals(model.InviteCode, configuredInviteCode)))
             {
                 ModelState.AddModelError("InviteCode", "Invalid invite code.");
 

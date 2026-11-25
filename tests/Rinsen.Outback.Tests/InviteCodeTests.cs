@@ -1,10 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
 using Rinsen.IdentityProvider;
 using Rinsen.IdentityProvider.AuditLogging;
 using Rinsen.IdentityProvider.LocalAccounts;
@@ -48,7 +50,9 @@ namespace Rinsen.Outback.Tests
     /// enforces the invite-code policy. The constant-time comparison
     /// (SecretComparer.FixedTimeEquals, SEC-012) and the rate limiting
     /// ([EnableRateLimiting], SEC-016) are already in place; these tests cover
-    /// the strength gate and the success path.
+    /// the strength gate and the success path. In Development the invite-code
+    /// check is bypassed entirely, so local registration works without a
+    /// configured code.
     /// </summary>
     public class IdentityControllerCreateTests
     {
@@ -112,7 +116,35 @@ namespace Rinsen.Outback.Tests
             Assert.True(loginService.LoginCalled, "the new user must be signed in");
         }
 
-        private static (IdentityController, RecordingIdentityService, RecordingLocalAccountService, StubLoginService) CreateController(string? configuredCode)
+        [Fact]
+        public async Task Create_DevelopmentEnvironment_MissingConfiguredCode_AnySubmittedCode_CreatesUser()
+        {
+            var (controller, identityService, localAccountService, loginService) = CreateController(null, "Development");
+            var model = CreateModel("any-code-at-all");
+
+            var result = await controller.Create(model);
+
+            var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.Equal("UserCreated", viewResult.ViewName);
+            Assert.True(identityService.CreateCalled, "in Development the invite-code check is bypassed");
+            Assert.True(localAccountService.CreateCalled, "the local account must be created");
+            Assert.True(loginService.LoginCalled, "the new user must be signed in");
+        }
+
+        [Fact]
+        public async Task Create_DevelopmentEnvironment_WeakConfiguredCode_MatchingSubmittedCode_CreatesUser()
+        {
+            var (controller, identityService, _, _) = CreateController(WeakCode, "Development");
+            var model = CreateModel(WeakCode);
+
+            var result = await controller.Create(model);
+
+            var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.Equal("UserCreated", viewResult.ViewName);
+            Assert.True(identityService.CreateCalled, "in Development even a weak configured code must not block registration");
+        }
+
+        private static (IdentityController, RecordingIdentityService, RecordingLocalAccountService, StubLoginService) CreateController(string? configuredCode, string environmentName = "Production")
         {
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
@@ -125,6 +157,9 @@ namespace Rinsen.Outback.Tests
             var localAccountService = new RecordingLocalAccountService();
             var loginService = new StubLoginService();
 
+            // Production by default: the invite-code strength gate applies in
+            // every environment except Development, where the check is bypassed
+            // entirely (see Create_DevelopmentEnvironment_* tests).
             var controller = new IdentityController(
                 loginService,
                 identityService,
@@ -133,6 +168,7 @@ namespace Rinsen.Outback.Tests
                 configuration,
                 new StubIdentityAccessor(),
                 new NoOpSessionStorage(),
+                new FakeWebHostEnvironment(environmentName),
                 new IdentityOptions());
 
             controller.ControllerContext = new ControllerContext
@@ -242,6 +278,21 @@ namespace Rinsen.Outback.Tests
             public Task<IEnumerable<Session>> GetAsync(Guid identityId, bool includeDeleted = false) => Task.FromResult<IEnumerable<Session>>(new List<Session>());
             public Task<Session?> GetAsync(string sessionId, bool includeDeleted = false) => Task.FromResult<Session?>(null);
             public Task UpdateAsync(Session session) => Task.CompletedTask;
+        }
+
+        private sealed class FakeWebHostEnvironment : IWebHostEnvironment
+        {
+            public FakeWebHostEnvironment(string environmentName)
+            {
+                EnvironmentName = environmentName;
+            }
+
+            public string ApplicationName { get; set; } = "Rinsen.Outback.Tests";
+            public string ContentRootPath { get; set; } = string.Empty;
+            public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+            public string EnvironmentName { get; set; } = string.Empty;
+            public string WebRootPath { get; set; } = string.Empty;
+            public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
         }
 
     }
