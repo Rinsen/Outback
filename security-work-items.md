@@ -181,13 +181,15 @@
   - **Tests:** `tests/Rinsen.Outback.Tests/HashHelperClientSecretTests.cs` (new, 15 tests: salted format shape, two hashes of the same secret differ, correct/wrong secret against both formats, `IsLegacyClientSecret` both ways, 6 malformed-value fail-closed cases, null inputs) and `tests/Rinsen.Outback.Tests/ClientServiceSecretValidationTests.cs` (extended to 5 tests: salted stored secret accepted, wrong secret → `SecurityException`, legacy stored secret still accepted, legacy match triggers exactly one rehash call whose new value is salted and verifies, salted match triggers no rehash). Full regression: `Rinsen.Outback.Tests` 65/65; `Rinsen.IdentityProvider.Tests` 15/15; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-014 · [P2] Raise PBKDF2 iteration count to ≥ 600,000
-- **Status:** Open
+- **Status:** Done (2026-11-24)
 - **Location:** `src/OutbackApp/Rinsen.IdentityProvider/IdentityOptions.cs:7`
 - **Problem:** 100,000 iterations is ~6× weaker than the OWASP minimum for PBKDF2-HMAC-SHA256.
 - **Acceptance criteria:**
-  - [ ] Default `IterationCount = 600_000`
-  - [ ] Per-account `IterationCount` still honored for existing users
-  - [ ] Test: new account is created with the new default
+  - [x] Default `IterationCount = 600_000`
+  - [x] Per-account `IterationCount` still honored for existing users
+  - [x] Test: new account is created with the new default
+- **Resolution:** `IdentityOptions.IterationCount` default raised from 100,000 to `600_000` (OWASP minimum for PBKDF2-HMAC-SHA256) in `IdentityOptions.cs`. No schema or migration change is needed: the per-account `IterationCount` is already persisted on `LocalAccounts.IterationCount` and is the value used at verification time — `LocalAccountService.GetPasswordHash` (line 79) derives with `localAccount.IterationCount`, and `UserService.cs:174` (password change) does the same, so existing users' stored hashes (created at any iteration count, including the legacy 100k) continue to validate exactly as before; only *new* accounts and *new* password hashes use the raised default. `Rinsen.IdentityProvider.csproj` gained `<InternalsVisibleTo Include="Rinsen.IdentityProvider.Tests" />` (mirroring `Rinsen.Outback.csproj`) so the test project can assert the internal `InvalidPasswordException` type.
+  - **Tests:** `tests/Rinsen.IdentityProvider.Tests/LocalAccountServiceTests.cs` (new, 4 tests: default `IterationCount` ≥ 600,000; `CreateAsync` stores the new default on the account; an account created under the legacy 100k default still validates under a service configured with the new 600k default — proving verification is per-account; wrong password throws `InvalidPasswordException`). Fakes: `FakeIdentityAccessor` (fixed `IdentityId`, null `ClaimsPrincipal`) and `InMemoryLocalAccountStorage`. Full regression: `Rinsen.IdentityProvider.Tests` 19/19; `Rinsen.Outback.Tests` 65/65; `dotnet build Outback.slnx` 0 errors.
 - **References:** OWASP Password Storage Cheat Sheet
 
 ### SEC-015 · [P3] Equalize login timing for unknown accounts
