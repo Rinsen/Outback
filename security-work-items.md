@@ -243,13 +243,15 @@
   - **Tests:** no code-path change to cover with unit tests (configuration wiring in a dev-only orchestrator). Verified: `git grep` confirms the four old values are absent from all tracked files; `dotnet build Outback.slnx` 0 errors (Aspire host included); full regression: `Rinsen.IdentityProvider.Tests` 30/30; `Rinsen.Outback.Tests` 82/82.
 
 ### SEC-019 · [P1] Stop logging the client secret at install time
-- **Status:** Open
+- **Status:** Done (2026-11-24)
 - **Location:** `src/OutbackApp/Rinsen.Outback.App.Installation/Program.cs:71`
 - **Problem:** The generated client secret is logged at Information (always enabled).
 - **Acceptance criteria:**
-  - [ ] Log only `ClientId`; never the secret
-  - [ ] Grep confirms no other `ClientSecret`/secret value is logged
-  - [ ] Test/log review: install output contains no secret
+  - [x] Log only `ClientId`; never the secret
+  - [x] Grep confirms no other `ClientSecret`/secret value is logged
+  - [x] Test/log review: install output contains no secret
+- **Resolution:** `OutbackDataSeed.SeedData` (`Rinsen.Outback.App.Installation/Program.cs`) now logs `"Default clients installed. ClientId: {ClientId}"` with the `ClientId` only — the `ClientSecret: {ClientSecret}` portion and the `credentials.Secret` argument are removed, with a comment stating the secret must never appear in install output or logs. The `Credentials` object is still returned by `DefaultInstaller.Install()` for any caller that needs it; it is simply no longer written to the log. **Grep review:** a repo-wide search for log calls mentioning `Secret`/`Password` found only five statements, all of which log identifiers (`ClientId`, `LoginId`, `IdentityId`) or non-secret metadata (iteration count) — `UserService.cs:179`, `ClientService.cs:40,49,64`, `LocalAccountService.cs:153` — and no log call passes a secret value as an argument and no `Console.WriteLine` emits one. `DefaultInstaller` itself logs nothing.
+  - **Tests:** `tests/Rinsen.Outback.Tests/InstallationSecretLoggingTests.cs` (new, 1 test): `SeedData_LogsClientId_ButNeverTheSecret` — runs the real `OutbackDataSeed.SeedData` (real `DefaultInstaller` + EF InMemory `OutbackDbContext`) with `Rinsen:ClientId` and `Rinsen:ClientSecret` set to known values in configuration (the installer prefers configured values over generated ones), captures every log message through a capturing `ILogger<OutbackDataSeed>`, and asserts the ClientId **is** present in the output while no message contains the secret value. `Rinsen.Outback.Tests` gained a project reference to `Rinsen.Outback.App.Installation` for this. Full regression: `Rinsen.IdentityProvider.Tests` 30/30; `Rinsen.Outback.Tests` 83/83; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-020 · [P2] Strengthen the anonymous-registration invite code
 - **Status:** Open

@@ -26,6 +26,7 @@
     <ProjectReference Include="..\..\sample\SampleServer\SampleServer.csproj" />
     <ProjectReference Include="..\..\src\Outback\Rinsen.Outback\Rinsen.Outback.csproj" />
     <ProjectReference Include="..\..\src\OutbackApp\Rinsen.Outback.App\Rinsen.Outback.App.csproj" />
+    <ProjectReference Include="..\..\src\OutbackApp\Rinsen.Outback.App.Installation\Rinsen.Outback.App.Installation.csproj" />
   </ItemGroup>
 
 </Project>
