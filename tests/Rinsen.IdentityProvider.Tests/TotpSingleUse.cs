@@ -294,6 +294,9 @@ public class TotpSingleUseTests
                 IdentityId = identityId,
                 SessionId = "a-session",
                 Type = TwoFactorType.Totp,
+                // SEC-022: a real session always carries its creation time
+                // (LoginAsync sets it); the age check in ConfirmTotpCode relies on it.
+                Created = DateTimeOffset.Now,
             };
         }
 

@@ -277,13 +277,15 @@
   - **Tests:** `tests/Rinsen.Outback.Tests/ReturnUrlTests.cs` (new, 4 tests) — real `IdentityController` with a stubbed `ILoginService` returning a successful login, `DefaultHttpContext`, and the MVC `UrlHelperFactory`/`IActionDescriptorCollectionProvider` services registered in the request services (plus `RouteData` on the `ControllerContext`, which `UrlHelperBase`'s constructor dereferences). `Login_ExternalReturnUrl_RedirectsToSiteRoot`: `https://evil.example.com/phish` → `~/`, login still succeeds; `Login_ProtocolRelativeReturnUrl_RedirectsToSiteRoot`: `//evil.example.com/phish` (the classic open-redirect bypass) → `~/`; `Login_EmptyReturnUrl_RedirectsToSiteRoot`: empty → `~/`; `Login_LocalReturnUrl_IsHonored`: `/dashboard` → honored. Full regression: `Rinsen.IdentityProvider.Tests` 30/30; `Rinsen.Outback.Tests` 94/94; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-022 · [P3] Two-factor session lookup must honor `Deleted` and age
-- **Status:** Open
+- **Status:** Done (2026-11-24)
 - **Location:** `TwoFactorAuthenticationSessionStorage.cs:29–40,89–115` · `LoginService.ConfirmTotpCode:122–143`
 - **Problem:** A logically-deleted or arbitrarily old 2FA session can still be completed.
 - **Acceptance criteria:**
-  - [ ] `SELECT` filters `AND Deleted IS NULL`
-  - [ ] `ConfirmTotpCode` rejects sessions past a maximum age
-  - [ ] Tests: deleted session rejected; expired session rejected
+  - [x] `SELECT` filters `AND Deleted IS NULL`
+  - [x] `ConfirmTotpCode` rejects sessions past a maximum age
+  - [x] Tests: deleted session rejected; expired session rejected
+- **Resolution:** Two layers. **Deleted:** the `SelectWithSessionId` statement in `TwoFactorAuthenticationSessionStorage` now filters `WHERE SessionId = @SessionId AND Deleted IS NULL`, so a logically deleted session is invisible to the lookup (the session id is a bearer token for the login in progress — deleting the session must invalidate it). `Get` now throws the domain exception `TwoFactorAuthSessionNotFoundException` (the one `StartTotpFlow` already uses for a missing session) instead of a bare `Exception`. **Age:** `LoginService.ConfirmTotpCode` now rejects a session whose `Created` is more than 10 minutes old (`TwoFactorSessionMaxAge`, mirroring the existing `UsedTotpLogMaxAge` constant) — before account lookup and before TOTP verification, so even a valid code cannot complete an old session. The rejection throws the same `TwoFactorAuthSessionNotFoundException` as a missing session, so "expired" and "not found" are indistinguishable to the caller.
+  - **Tests:** `tests/Rinsen.IdentityProvider.Tests/TwoFactorSessionSecurityTests.cs` (new, 4 tests): `ConfirmTotpCode_DeletedSession_IsRejected` — storage lookup throws the not-found exception (as the `Deleted IS NULL` filter causes) → rejected, account lookup never reached; `ConfirmTotpCode_ExpiredSession_IsRejected` — session created 11 min ago + valid TOTP code → rejected before account lookup and before TOTP verification; `ConfirmTotpCode_FreshSession_ValidCode_Succeeds` — control: 9-min-old session + valid code → login succeeds and the code is logged; `SelectSql_FiltersDeletedSessions` — asserts the `SELECT` statement contains `Deleted IS NULL` (the only way to verify the filter without a live SQL Server). `TotpSingleUseTests`' fake session now carries a real `Created` timestamp (a real session always has one — `LoginAsync` sets it), so the pre-existing TOTP single-use tests exercise the happy path through the new age check. Full regression: `Rinsen.IdentityProvider.Tests` 34/34; `Rinsen.Outback.Tests` 94/94; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-023 · [P3] Filter sensitive keys from the admin configuration dump
 - **Status:** Open

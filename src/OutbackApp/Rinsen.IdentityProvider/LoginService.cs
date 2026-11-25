@@ -19,6 +19,11 @@ public class LoginService : ILoginService
 {
     private static readonly TimeSpan UsedTotpLogMaxAge = TimeSpan.FromMinutes(10);
 
+    // SEC-022: a 2FA session is a bearer token for the login in progress, so it
+    // must expire. Ten minutes is plenty for the flow (start + code entry) and
+    // matches the UsedTotpLog retention window.
+    private static readonly TimeSpan TwoFactorSessionMaxAge = TimeSpan.FromMinutes(10);
+
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly RandomStringGenerator _randomStringGenerator;
     private readonly IIdentityService _identityService;
@@ -154,7 +159,24 @@ public class LoginService : ILoginService
 
     public async Task<LoginResult> ConfirmTotpCode(string authSessionId, string keyCode, string host, bool rememberMe)
     {
+        // SEC-022: the storage lookup filters out deleted sessions (AND Deleted IS
+        // NULL) and throws TwoFactorAuthSessionNotFoundException when none is
+        // found, so a deleted session can never be completed.
         var twoFactorAuthenticationSession = await _twoFactorAuthenticationSessionStorage.Get(authSessionId);
+
+        // SEC-022: a session past its maximum age must not be completed, even with
+        // a valid TOTP code. Reject it with the same exception as a missing
+        // session so "expired" and "not found" are indistinguishable.
+        if (DateTimeOffset.Now - twoFactorAuthenticationSession.Created > TwoFactorSessionMaxAge)
+        {
+            _log.LogWarning(
+                "Rejected two-factor session {SessionId} for identity {IdentityId}: session has exceeded its maximum age",
+                twoFactorAuthenticationSession.SessionId,
+                twoFactorAuthenticationSession.IdentityId);
+
+            throw new TwoFactorAuthSessionNotFoundException("Two factor auth session not found");
+        }
+
         var localAccount = await _localAccountService.GetLocalAccountAsync(twoFactorAuthenticationSession.IdentityId);
 
         if (localAccount.TwoFactorTotpEnabled is null || localAccount.SharedTotpSecret is null)
