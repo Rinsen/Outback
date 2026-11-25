@@ -66,6 +66,14 @@ public class LoginService : ILoginService
 
             return LoginResult.Failure();
         }
+        catch (AccountLockedOutException e)
+        {
+            // SEC-016: locked-out account. Return the same generic failure as an
+            // invalid password so the lockout is not distinguishable.
+            _log.LogWarning(e, "Login blocked: account {email} is locked out", email);
+
+            return LoginResult.Failure();
+        }
         catch (AccountNotFoundException e)
         {
             _log.LogWarning(e, "Login failed for email {email}", email);

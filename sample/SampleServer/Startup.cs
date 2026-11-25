@@ -55,6 +55,11 @@ namespace SampleServer
                 });
 
             services.AddRinsenOutback();
+
+            // SEC-016: throttle the credential endpoint (/oauth/token). Limits are
+            // configurable under Rinsen:RateLimiting (defaults 10 / 60s window).
+            services.AddCredentialRateLimiting(_configuration);
+
             services.AddControllersWithViews()
                 .AddRinsenOutbackControllers();
         }
@@ -77,6 +82,8 @@ namespace SampleServer
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseRateLimiter();
 
             app.UseAuthentication();
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
@@ -152,6 +153,7 @@ public class OAuthController : Controller
     [HttpPost]
     [AllowAnonymous]
     [Route("token")]
+    [EnableRateLimiting(RateLimitingPolicies.Credentials)]
     public async Task<IActionResult> Token([FromForm] TokenModel model)
     {
         if (ModelState.IsValid)

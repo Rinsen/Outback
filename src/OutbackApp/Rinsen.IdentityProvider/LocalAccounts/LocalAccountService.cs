@@ -104,8 +104,18 @@ public class LocalAccountService : ILocalAccountService
     {
         var localAccount = await _localAccountStorage.GetAsync(loginId);
 
+        // SEC-016: enforce lockout. A locked-out account is rejected before any
+        // password verification. The KDF still runs so the response time matches a
+        // normal failed attempt (consistent with SEC-015 timing uniformity).
+        if (localAccount.FailedLoginCount >= _options.MaxFailedLoginSleepCount)
+        {
+            GetPasswordHash(password, localAccount);
+
+            throw new AccountLockedOutException("Account locked out");
+        }
+
         await ValidatePassword(localAccount, password);
-        
+
         if (localAccount.FailedLoginCount > 0)
         {
             await SetFailedLoginCountToZero(localAccount);

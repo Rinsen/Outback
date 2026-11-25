@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Rinsen.IdentityProvider;
@@ -114,6 +115,7 @@ public class IdentityController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingPolicies.Credentials)]
     public async Task<IActionResult> Login(LoginModel model)
     {
         if (ModelState.IsValid)
@@ -178,6 +180,7 @@ public class IdentityController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingPolicies.Credentials)]
     public async Task<IActionResult> TwoFactor(TwoFactorModel model)
     {
         if (ModelState.IsValid)
@@ -242,6 +245,7 @@ public class IdentityController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingPolicies.Credentials)]
     public async Task<IActionResult> Create(CreateIdentityModel model)
     {
         if (ModelState.IsValid)

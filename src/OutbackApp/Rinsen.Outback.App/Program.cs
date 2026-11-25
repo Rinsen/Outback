@@ -44,6 +44,9 @@ public class Program
         });
         builder.Services.AddRinsenOutback();
 
+        // SEC-016: throttle credential endpoints (login, two-factor, create, token)
+        builder.Services.AddCredentialRateLimiting(configuration);
+
         var gelfhost = configuration["Rinsen:GelfHost"];
         if (!string.IsNullOrEmpty(gelfhost))
         {
@@ -136,6 +139,7 @@ public class Program
         }
 
         app.UseRouting();
+        app.UseRateLimiter();
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseStaticFiles();
