@@ -1,6 +1,18 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
-var sqlPassword = builder.AddParameter("sql-password", "ddsaFDSS54#$%&hglk");
+// SEC-018: no secret defaults in source. The values below are provided per
+// developer, e.g. via the AppHost's user-secrets (UserSecretsId is set in the
+// csproj):
+//   dotnet user-secrets set "Parameters:sql-password" "<strong-password>"
+//   dotnet user-secrets set "Parameters:login-debug-password" "<strong-password>"
+//   dotnet user-secrets set "Parameters:login-runtime-password" "<strong-password>"
+//   dotnet user-secrets set "Parameters:invitation-code" "<strong-code>"
+// or set in the Aspire dashboard. The values previously committed to source are
+// treated as compromised and must not be reused.
+var sqlPassword = builder.AddParameter("sql-password", secret: true);
+var debugLoginPassword = builder.AddParameter("login-debug-password", secret: true);
+var runtimeLoginPassword = builder.AddParameter("login-runtime-password", secret: true);
+var invitationCode = builder.AddParameter("invitation-code", secret: true);
 
 var sqlServer = builder.AddSqlServer("outbackSqlServer", sqlPassword)
     .WithDataVolume();
@@ -14,15 +26,15 @@ var installation = builder.AddDotnetProject("outbackinstallation", "../../Outbac
     .WithEnvironment("DatabaseName", "Outback")
     .WithEnvironment("Schema", "dbo")
     .WithEnvironment("ConnectionStringName", "outbackSqlServer")
-    .WithEnvironment("Login__Debug__Password", "nfgsjknFSDgdf5436545fghscnhfgmDFSAFdfsj4534DFG")
-    .WithEnvironment("Login__Runtime__Password", "fds4235sfdgDFGfgde4523sdfgSDdcsfsfdg32");
+    .WithEnvironment("Login__Debug__Password", debugLoginPassword)
+    .WithEnvironment("Login__Runtime__Password", runtimeLoginPassword);
 
 var outbackApp = builder.AddDotnetProject("outbackapp", "../../OutbackApp/Rinsen.Outback.App/Rinsen.Outback.App.csproj")
     .WithReference(outbackDb)
     .WaitFor(outbackDb)
     .WaitFor(installation)
     .WithExternalHttpEndpoints()
-    .WithEnvironment("Rinsen__InvitationCode", "1234");
+    .WithEnvironment("Rinsen__InvitationCode", invitationCode);
 
 builder.AddJavaScriptApp("angular", "../../outback-admin", runScriptName: "start")
     .WithNpm(installCommand: "ci")

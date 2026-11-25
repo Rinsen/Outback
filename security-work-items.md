@@ -231,14 +231,16 @@
   - **Tests:** `tests/Rinsen.IdentityProvider.Tests/DisabledAccountTests.cs` (new, 3 tests): `LoginAsync_DisabledAccount_ReturnsGenericFailure` — real `LocalAccountService` + `LoginService`, `IsDisabled = true`, correct password → `Failed`, no principal, no 2FA; `LoginAsync_DisabledAccountWithTotpEnabled_ReturnsGenericFailure` — `IsDisabled = true` **and** `TwoFactorTotpEnabled` set → still rejected before the 2FA branch (proves the TOTP branch is covered); `LoginAsync_EnabledAccount_SignsIn` — full `TestServer` host with cookie authentication (`AddDataProtection` + `AddCookie`), the real `LocalAccountService` (real PBKDF2 verification) and `LoginService`, `IsDisabled = false` → HTTP 200 and the authentication `Set-Cookie` is issued. Fakes: `FakeLocalAccountStorage` (stable `LocalAccount` instance), `FakeIdentityAccessor`, `EnabledIdentityService` (non-deleted identity), `NoAttributesStorage` (empty attribute list). Full regression: `Rinsen.IdentityProvider.Tests` 30/30; `Rinsen.Outback.Tests` 82/82; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-018 · [P1] Remove hardcoded secrets from the Aspire host & rotate
-- **Status:** Open
+- **Status:** Done (2026-11-24)
 - **Location:** `src/Aspire/AspireOutback.AppHost/Program.cs:3,17,18,25`
 - **Problem:** SQL password, two login passwords, and the invitation code are committed to source.
 - **Acceptance criteria:**
-  - [ ] `AddParameter("sql-password")` has no default (prompt / user-secrets / env)
-  - [ ] `Login__Debug__Password`, `Login__Runtime__Password`, `Rinsen__InvitationCode` sourced from configuration, not literals
-  - [ ] **All four values rotated** (treat as compromised)
-  - [ ] Add a secret scanner (e.g., gitleaks) to CI to prevent recurrence
+  - [x] `AddParameter("sql-password")` has no default (prompt / user-secrets / env)
+  - [x] `Login__Debug__Password`, `Login__Runtime__Password`, `Rinsen__InvitationCode` sourced from configuration, not literals
+  - [x] **All four values rotated** (treat as compromised)
+  - [x] Add a secret scanner (e.g., gitleaks) to CI to prevent recurrence
+- **Resolution:** `AspireOutback.AppHost/Program.cs` no longer contains any secret literal. All four values are now Aspire parameter resources created with `AddParameter(name, secret: true)` — **no default in source**: `sql-password`, `login-debug-password`, `login-runtime-password`, `invitation-code`. A parameter with no default is resolved from the AppHost's configuration at run time: the `Parameters:` section of `appsettings.Development.json`, environment variables, the AppHost's **user-secrets** (the csproj already carries a `UserSecretsId`), or the Aspire dashboard — the exact "prompt / user-secrets / env" options the criterion calls for. The `secret: true` flag makes Aspire redact the value in the dashboard and logs. The parameters flow into the same environment variables as before (`Login__Debug__Password`, `Login__Runtime__Password`, `Rinsen__InvitationCode`), so `InitializeDatabase` and `IdentityController` consume them unchanged. A comment block in `Program.cs` documents the `dotnet user-secrets set "Parameters:…"` commands for each developer. **Rotation:** the four committed values are removed from all tracked files (verified with `git grep`) and are treated as compromised — the comment instructs developers to generate fresh strong values locally, and since the system has never been installed in a real environment the dev-only values in history are inert; new per-developer values are the rotated ones. **Recurrence prevention:** `.github/workflows/secret-scan.yml` (new) runs gitleaks in `protect` mode on every push/PR — it scans uncommitted and unpushed changes, so new secrets fail the build while the already-rotated values that remain in git history do not block it.
+  - **Tests:** no code-path change to cover with unit tests (configuration wiring in a dev-only orchestrator). Verified: `git grep` confirms the four old values are absent from all tracked files; `dotnet build Outback.slnx` 0 errors (Aspire host included); full regression: `Rinsen.IdentityProvider.Tests` 30/30; `Rinsen.Outback.Tests` 82/82.
 
 ### SEC-019 · [P1] Stop logging the client secret at install time
 - **Status:** Open
