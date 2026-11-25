@@ -327,12 +327,13 @@
 - **Resolution:** `LogoutAsync` now signs out through `HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme)` (resolving the ambient context via the injected `IHttpContextAccessor` and throwing `Exception("No active http context")` when absent, matching `PrivateLogin`). The cookie handler removes the authentication cookie and — because `Rinsen.Outback.App` configures `options.SessionStore = new SqlTicketStore(…)` — recovers the session key from the data-protected ticket and calls `SqlTicketStore.RemoveAsync(key)` → `ISessionStorage.DeleteAsync(key)`, which soft-deletes the row (`UPDATE Sessions SET Deleted = …`), so the active session lookup no longer finds it. New tests: `LogoutTests` (2) — a TestServer integration with real cookie authentication + the real `SqlTicketStore` + an in-memory `FakeSessionStorage` mimicking the soft-delete semantics: sign in (server-side session created, active), replay the auth cookie to a `/logout` endpoint that calls `LoginService.LogoutAsync`, and assert the cookie is cleared and the session is marked `Deleted` (invisible to the active lookup); plus a not-signed-in case that does not throw. Note: `Microsoft.AspNetCore.TestHost` 11.0.0 added to the test csproj (TestServer is not in the shared-framework compile refs). Full suites green: `Rinsen.IdentityProvider.Tests` 24/24, `Rinsen.Outback.Tests` 74/74, solution builds with 0 errors.
 
 ### FUNC-005 · [P3] Null-guard `AbnfValidationHelper.IsValid`
-- **Status:** Open
+- **Status:** Done (2026-11-24)
 - **Location:** `src/Outback/Rinsen.Outback/Helpers/AbnfValidationHelper.cs`
 - **Problem:** `IsValid(value, min, max)` throws `NullReferenceException` on null (latent 500).
 - **Acceptance criteria:**
-  - [ ] Returns `false` for null/empty instead of throwing
-  - [ ] Test: null input → `false`, no exception
+  - [x] Returns `false` for null/empty instead of throwing
+  - [x] Test: null input → `false`, no exception
+- **Resolution:** Both overloads now fail closed: `IsValid(value)` returns `false` for null/empty (`string.IsNullOrEmpty` guard before the character loop, which previously threw `NullReferenceException` on null), and `IsValid(value, minLength, maxLength)` returns `false` for null before the `value.Length` check that previously threw. Empty input is also rejected in both overloads, so the helper is total over its declared `string` domain. New tests: `AbnfValidationHelperTests` (7) — null → `false` in both overloads (no exception), empty → `false`, unreserved characters (`aZ09-._~`) → `true`, a reserved character (`+`) → `false`, and out-of-range lengths → `false`. Both production call sites (`AuthorizationCodeGrantTypeHandler`'s `code_verifier`/`code_challenge` checks, min length 43) are unaffected: they already rejected empty strings via the length check and now get a clean `false` instead of a potential 500 if a null ever reaches them. Full suites green: `Rinsen.Outback.Tests` 81/81, `Rinsen.IdentityProvider.Tests` 24/24, solution builds with 0 errors.
 
 ---
 
