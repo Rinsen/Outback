@@ -9,6 +9,11 @@
 //   dotnet user-secrets set "Parameters:invitation-code" "<strong-code>"
 // or set in the Aspire dashboard. The values previously committed to source are
 // treated as compromised and must not be reused.
+//
+// SEC-020: the invitation code gates anonymous self-registration and must be a
+// strong random value of at least 128 bits (the app fails closed below 32
+// characters). Generate one with, e.g.:
+//   openssl rand -hex 16
 var sqlPassword = builder.AddParameter("sql-password", secret: true);
 var debugLoginPassword = builder.AddParameter("login-debug-password", secret: true);
 var runtimeLoginPassword = builder.AddParameter("login-runtime-password", secret: true);

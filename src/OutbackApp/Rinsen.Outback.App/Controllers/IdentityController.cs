@@ -250,7 +250,15 @@ public class IdentityController : Controller
     {
         if (ModelState.IsValid)
         {
-            if (!SecretComparer.FixedTimeEquals(model.InviteCode, _configuration["Rinsen:InvitationCode"]))
+            var configuredInviteCode = _configuration["Rinsen:InvitationCode"];
+
+            // SEC-020: self-registration is opt-in. It is only enabled when the
+            // operator configured a strong invite code (>= 128 bits, at least 32
+            // characters, e.g. `openssl rand -hex 16`). A missing or weak code
+            // fails closed with the exact same signature as a wrong code, so the
+            // endpoint state is not distinguishable to an attacker.
+            if (!InviteCodePolicy.IsStrong(configuredInviteCode) ||
+                !SecretComparer.FixedTimeEquals(model.InviteCode, configuredInviteCode))
             {
                 ModelState.AddModelError("InviteCode", "Invalid invite code.");
 

@@ -254,14 +254,16 @@
   - **Tests:** `tests/Rinsen.Outback.Tests/InstallationSecretLoggingTests.cs` (new, 1 test): `SeedData_LogsClientId_ButNeverTheSecret` — runs the real `OutbackDataSeed.SeedData` (real `DefaultInstaller` + EF InMemory `OutbackDbContext`) with `Rinsen:ClientId` and `Rinsen:ClientSecret` set to known values in configuration (the installer prefers configured values over generated ones), captures every log message through a capturing `ILogger<OutbackDataSeed>`, and asserts the ClientId **is** present in the output while no message contains the secret value. `Rinsen.Outback.Tests` gained a project reference to `Rinsen.Outback.App.Installation` for this. Full regression: `Rinsen.IdentityProvider.Tests` 30/30; `Rinsen.Outback.Tests` 83/83; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-020 · [P2] Strengthen the anonymous-registration invite code
-- **Status:** Open
+- **Status:** Done (2026-11-24)
 - **Location:** `IdentityController.cs:241–263` · `AspireOutback.AppHost/Program.cs:25`
 - **Problem:** Unauthenticated account creation gated only by a 4-char code compared with `!=`, no rate limiting.
 - **Acceptance criteria:**
-  - [ ] Invite code is a strong random value (≥ 128 bits)
-  - [ ] Compared with `CryptographicOperations.FixedTimeEquals`
-  - [ ] Endpoint is rate-limited
-  - [ ] Re-evaluate whether public self-registration should exist at all
+  - [x] Invite code is a strong random value (≥ 128 bits)
+  - [x] Compared with `CryptographicOperations.FixedTimeEquals`
+  - [x] Endpoint is rate-limited
+  - [x] Re-evaluate whether public self-registration should exist at all
+- **Resolution:** The endpoint is now gated by a strength policy in addition to the existing controls. **Strong value (≥ 128 bits):** new `InviteCodePolicy` (`src/Outback/Rinsen.Outback/Helpers/InviteCodePolicy.cs`, next to `SecretComparer`) requires the configured `Rinsen:InvitationCode` to be at least 32 characters — 128 bits for hex, the canonical form of 16 random bytes (`openssl rand -hex 16`). `IdentityController.Create` (POST) now fails **closed** when the configured code is missing or shorter than 32 characters: the same `ModelState` error, the same `InvalidInvitationCode` audit event, and the same `View(model)` response as a wrong code, so the endpoint state is not distinguishable and a weak/absent code can never open registration. The Aspire host comment (SEC-018) now instructs generating the code with `openssl rand -hex 16`. **Constant-time comparison:** already in place since SEC-012 — `SecretComparer.FixedTimeEquals` wraps `CryptographicOperations.FixedTimeEquals` (length-checked, no short-circuit). **Rate limiting:** already in place since SEC-016 — `[EnableRateLimiting(RateLimitingPolicies.Credentials)]` on the POST action (fixed-window, 429). **Re-evaluation of public self-registration:** decision — keep the feature, but make it strictly opt-in and fail-closed: it exists only when an operator deliberately configures a strong ≥ 128-bit code; with no code (the default) or a weak code the endpoint is inert, and even when enabled it is bounded by the credential rate limiter and every attempt is audit-logged. `AuditLog.Log` became `virtual` (one keyword, mirroring the SEC-015 `PasswordHashGenerator` testability pattern) so tests can substitute a no-op sink.
+  - **Tests:** `tests/Rinsen.Outback.Tests/InviteCodeTests.cs` (new, 7 tests): `InviteCodePolicyTests` — `IsStrong` is false for null, `"1234"`, and 31 chars; true for 32 and 64 chars. `IdentityControllerCreateTests` (real `IdentityController` with stubbed services, `DefaultHttpContext`, no-op `AuditLog`) — `Create_WeakConfiguredCode_MatchingSubmittedCode_IsRejected`: configured `"1234"` + submitted `"1234"` → rejected, **no identity created** (the old behavior would have succeeded); `Create_MissingConfiguredCode_AnySubmittedCode_IsRejected`: no configured code → rejected; `Create_StrongConfiguredCode_WrongSubmittedCode_IsRejected`: 128-bit configured code + wrong code → rejected; `Create_StrongConfiguredCode_CorrectCode_CreatesUser`: correct 128-bit code → identity + local account created, login attempted, `UserCreated` view returned. Full regression: `Rinsen.IdentityProvider.Tests` 30/30; `Rinsen.Outback.Tests` 90/90; `dotnet build Outback.slnx` 0 errors.
 
 ### SEC-021 · [P3] Enforce `Url.IsLocalUrl` in all environments
 - **Status:** Open

@@ -14,7 +14,9 @@ public class AuditLog
         _auditLogStorage = auditLogStorage;
     }
 
-    public async Task Log(string eventType, string details, string ipAddress)
+    // virtual so tests can substitute a no-op sink (SEC-020); mirrors the
+    // testability pattern used for PasswordHashGenerator.GetPasswordHash.
+    public virtual async Task Log(string eventType, string details, string ipAddress)
     {
         var auditLogItem = new AuditLogItem
         {
