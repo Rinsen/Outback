@@ -10,20 +10,27 @@ using Rinsen.Outback.Models;
 
 namespace Rinsen.Outback.Grants
 {
-    internal class RefreshTokenGrantTypeHandler : IGrantTypeHandler
+
+    internal interface IRefreshTokenGrantTypeHandler
     {
-        private readonly IGrantAccessor _grantAccessor;
+        Task<string> CreateNewRefreshTokenAsync(Client client, string scope, string subjectId, Guid familyId);
+    }
+
+
+    internal class RefreshTokenGrantTypeHandler : IGrantTypeHandler, IRefreshTokenGrantTypeHandler
+    {
+        private readonly IRefreshTokenGrantAccessor _refreshTokenGrantAccessor;
         private readonly ITokenService _tokenService;
         private readonly RandomStringGenerator _randomStringGenerator;
         private readonly ILogger<RefreshTokenGrantTypeHandler> _logger;
 
         public RefreshTokenGrantTypeHandler(
-            IGrantAccessor grantAccessor,
+            IRefreshTokenGrantAccessor refreshTokenGrantAccessor,
             ITokenService tokenService,
             RandomStringGenerator randomStringGenerator,
             ILogger<RefreshTokenGrantTypeHandler> logger)
         {
-            _grantAccessor = grantAccessor;
+            _refreshTokenGrantAccessor = refreshTokenGrantAccessor;
             _tokenService = tokenService;
             _randomStringGenerator = randomStringGenerator;
             _logger = logger;
@@ -45,7 +52,7 @@ namespace Rinsen.Outback.Grants
                 return new TokenResponse { ErrorResponse = new ErrorResponse { Error = ErrorResponses.InvalidGrant } };
             }
 
-            var refreshToken = await CreateNewRefreshTokenAsync(client, refreshTokenGrant);
+            var refreshToken = await CreateNewRefreshTokenAsync(client, refreshTokenGrant.Scope, refreshTokenGrant.SubjectId, refreshTokenGrant.FamilyId);
 
             var tokenResponse = await _tokenService.CreateTokenResponseAsync(client, refreshTokenGrant, refreshToken, issuer);
 
@@ -54,7 +61,7 @@ namespace Rinsen.Outback.Grants
 
         private async Task<RefreshTokenGrant> GetRefreshTokenGrantAsync(string refreshToken, string clientId)
         {
-            var refreshTokenGrant = await _grantAccessor.GetRefreshTokenGrantAsync(refreshToken);
+            var refreshTokenGrant = await _refreshTokenGrantAccessor.GetRefreshTokenGrantAsync(refreshToken);
 
             if (refreshTokenGrant == default)
             {
@@ -66,7 +73,7 @@ namespace Rinsen.Outback.Grants
                 // Reuse of an already-consumed token: revoke the entire token family (RFC 9700 §10.5)
                 _logger.LogWarning("Refresh token reuse detected for client {ClientId}; revoking token family {FamilyId}", clientId, refreshTokenGrant.FamilyId);
 
-                await _grantAccessor.RevokeRefreshTokenFamilyAsync(refreshTokenGrant.FamilyId);
+                await _refreshTokenGrantAccessor.RevokeRefreshTokenFamilyAsync(refreshTokenGrant.FamilyId);
 
                 throw new SecurityException("RefreshToken was already used");
             }
@@ -84,7 +91,7 @@ namespace Rinsen.Outback.Grants
             return refreshTokenGrant;
         }
 
-        public async Task<string> CreateNewRefreshTokenAsync(Client client, RefreshTokenGrant refreshTokenGrant)
+        public async Task<string> CreateNewRefreshTokenAsync(Client client, string scope, string subjectId, Guid familyId)
         {
             var refreshToken = _randomStringGenerator.GetRandomString(40);
             var newRefreshTokenGrant = new RefreshTokenGrant
@@ -93,12 +100,12 @@ namespace Rinsen.Outback.Grants
                 Created = DateTimeOffset.UtcNow,
                 Expires = DateTimeOffset.UtcNow.AddSeconds(client.RefreshTokenLifetime),
                 RefreshToken = refreshToken,
-                Scope = refreshTokenGrant.Scope,
-                SubjectId = refreshTokenGrant.SubjectId,
-                FamilyId = refreshTokenGrant.FamilyId == Guid.Empty ? Guid.NewGuid() : refreshTokenGrant.FamilyId,
+                Scope = scope,
+                SubjectId = subjectId,
+                FamilyId = familyId == Guid.Empty ? Guid.NewGuid() : familyId,
             };
 
-            await _grantAccessor.SaveRefreshTokenGrantAsync(newRefreshTokenGrant);
+            await _refreshTokenGrantAccessor.SaveRefreshTokenGrantAsync(newRefreshTokenGrant);
 
             return refreshToken;
         }

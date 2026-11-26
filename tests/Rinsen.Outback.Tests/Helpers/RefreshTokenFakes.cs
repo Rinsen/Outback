@@ -13,7 +13,7 @@ namespace Rinsen.Outback.Tests.Helpers
     /// Returns a preconfigured refresh-token grant and records any rotated grant.
     /// Optionally throws from <see cref="GetRefreshTokenGrantAsync"/> to simulate a failed lookup.
     /// </summary>
-    public class FakeGrantAccessor : IGrantAccessor
+    public class FakeGrantAccessor : ICodeGrantAccessor, IRefreshTokenGrantAccessor, IDeviceAuthorizationGrantAccessor
     {
         private readonly RefreshTokenGrant? _grant;
         private readonly Exception? _getRefreshTokenGrantException;

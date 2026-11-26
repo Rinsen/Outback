@@ -22,7 +22,9 @@ namespace SampleServer
             var signingAccessor = new SigningAccessor();
             services.AddSingleton<IAllowedCorsOriginsAccessor, AllowedCorsOriginsAccessor>();
             services.AddSingleton<IClientAccessor, ClientAccessor>();
-            services.AddSingleton<IGrantAccessor, GrantAccessor>();
+            services.AddSingleton<ICodeGrantAccessor, GrantAccessor>();
+            services.AddSingleton<IRefreshTokenGrantAccessor, GrantAccessor>();
+            services.AddSingleton<IDeviceAuthorizationGrantAccessor, GrantAccessor>();
             services.AddSingleton<IScopeAccessor, ScopeAccessor>();
             services.AddSingleton<ITokenSigningAccessor>(signingAccessor);
             services.AddSingleton<IWellKnownSigningAccessor>(signingAccessor);

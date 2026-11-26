@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Rinsen.Outback.Clients;
 using Rinsen.Outback.Configuration;
@@ -27,6 +28,7 @@ namespace Rinsen.Outback.Tests
                 new CodeGrantActiveConfigurationAccessor(),
                 new FakeTokenService(),
                 new FakeGrantAccessor(grant: null),
+                new NotUsedRefreshTokenGrantTypeHandler(),
                 new RandomStringGenerator(),
                 logger);
 
@@ -63,6 +65,17 @@ namespace Rinsen.Outback.Tests
                 Code = Code,
                 CodeVerifier = CodeVerifier,
             };
+        }
+
+        /// <summary>
+        /// The request under test fails before refresh-token creation, so this is never called.
+        /// </summary>
+        private sealed class NotUsedRefreshTokenGrantTypeHandler : IRefreshTokenGrantTypeHandler
+        {
+            public Task<string> CreateNewRefreshTokenAsync(Client client, string scope, string subjectId, Guid familyId)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private sealed class CodeGrantActiveConfigurationAccessor : IOutbackConfigurationAccessor

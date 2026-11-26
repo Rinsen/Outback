@@ -69,7 +69,7 @@ namespace Rinsen.Outback.Tests
             // Speak https so the scheme-aware issuer (SEC-009) is https://localhost,
             // which is what this test validates the token against.
             var client = application.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
-            var grantAccessor = application.Services.GetRequiredService<IGrantAccessor>();
+            var grantAccessor = application.Services.GetRequiredService<IDeviceAuthorizationGrantAccessor>();
             var response = await client.PostAsync("oauth/device_authorization", formContent);
 
             // (B) The authorization server issues a device code and an end - user code and provides the end - user verification URI.

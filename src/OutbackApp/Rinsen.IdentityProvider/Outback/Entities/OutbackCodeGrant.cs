@@ -24,6 +24,8 @@ public class OutbackCodeGrant : ICreatedTimestamp
 
     public string Scope { get; set; } = string.Empty;
 
+    public Guid FamilyId { get; set; }
+
     public DateTimeOffset Created { get; set; }
 
     public DateTimeOffset? Resolved { get; set; }

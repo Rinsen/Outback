@@ -4,7 +4,7 @@ using Rinsen.Outback.Grants;
 
 namespace SampleServer.InMemoryAccessors
 {
-    public class GrantAccessor : IGrantAccessor
+    public class GrantAccessor : ICodeGrantAccessor, IRefreshTokenGrantAccessor, IDeviceAuthorizationGrantAccessor
     {
         private readonly ConcurrentDictionary<string, AuthorizationCodeGrant> _persistedGrants = new();
         private readonly ConcurrentDictionary<string, DeviceCodeGrant> _persistedDeviceAuthorizationGrant = new();

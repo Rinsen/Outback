@@ -21,20 +21,23 @@ namespace Rinsen.Outback.Grants
     {
         private readonly IOutbackConfigurationAccessor _outbackConfigurationAccessor;
         private readonly ITokenService _tokenFactory;
-        private readonly IGrantAccessor _grantAccessor;
+        private readonly ICodeGrantAccessor _codeGrantAccessor;
+        private readonly IRefreshTokenGrantTypeHandler _refreshTokenGrantTypeHandler;
         private readonly RandomStringGenerator _randomStringGenerator;
         private readonly ILogger<AuthorizationCodeGrantTypeHandler> _logger;
 
         public AuthorizationCodeGrantTypeHandler(
             IOutbackConfigurationAccessor outbackConfigurationAccessor,
             ITokenService tokenFactory,
-            IGrantAccessor grantAccessor,
+            ICodeGrantAccessor codeGrantAccessor,
+            IRefreshTokenGrantTypeHandler refreshTokenGrantTypeHandler,
             RandomStringGenerator randomStringGenerator,
             ILogger<AuthorizationCodeGrantTypeHandler> logger)
         {
             _outbackConfigurationAccessor = outbackConfigurationAccessor;
             _tokenFactory = tokenFactory;
-            _grantAccessor = grantAccessor;
+            _codeGrantAccessor = codeGrantAccessor;
+            _refreshTokenGrantTypeHandler = refreshTokenGrantTypeHandler;
             _randomStringGenerator = randomStringGenerator;
             _logger = logger;
         }
@@ -88,7 +91,8 @@ namespace Rinsen.Outback.Grants
             AccessTokenResponse accessTokenResponse;
             if (client.IssueRefreshToken)
             {
-                var refreshToken = await CreateRefreshTokenAsync(client, persistedGrant);
+                var refreshToken = await _refreshTokenGrantTypeHandler.CreateNewRefreshTokenAsync(client, persistedGrant.Scope, persistedGrant.SubjectId, persistedGrant.FamilyId);
+
                 accessTokenResponse = await _tokenFactory.CreateTokenResponseAsync(client, persistedGrant, refreshToken, issuer);
             }
             else
@@ -99,28 +103,9 @@ namespace Rinsen.Outback.Grants
             return new TokenResponse { AccessTokenResponse = accessTokenResponse };
         }
 
-        public async Task<string> CreateRefreshTokenAsync(Client client, AuthorizationCodeGrant persistedGrant)
-        {
-            var refreshToken = _randomStringGenerator.GetRandomString(40);
-            var refreshTokenGrant = new RefreshTokenGrant
-            {
-                ClientId = client.ClientId,
-                Created = DateTimeOffset.UtcNow,
-                Expires = DateTimeOffset.UtcNow.AddSeconds(client.RefreshTokenLifetime),
-                RefreshToken = refreshToken,
-                Scope = persistedGrant.Scope,
-                SubjectId = persistedGrant.SubjectId,
-                FamilyId = Guid.NewGuid(),
-            };
-
-            await _grantAccessor.SaveRefreshTokenGrantAsync(refreshTokenGrant);
-
-            return refreshToken;
-        }
-
         private async Task<AuthorizationCodeGrant> GetCodeGrantAsync(string code, string clientId, string codeVerifier)
         {
-            var codeGrant = await _grantAccessor.GetCodeGrantAsync(code);
+            var codeGrant = await _codeGrantAccessor.GetCodeGrantAsync(code);
 
             if (codeGrant.Expires < DateTimeOffset.UtcNow)
             {
@@ -167,13 +152,14 @@ namespace Rinsen.Outback.Grants
                 RedirectUri = model.RedirectUri,
                 Scope = model.Scope,
                 State = model.State,
+                FamilyId = Guid.NewGuid(),
                 Expires = DateTimeOffset.UtcNow.AddSeconds(client.AuthorityCodeLifetime),
                 Created = DateTimeOffset.UtcNow
             };
 
             SetSubjectId(user, grant);
 
-            await _grantAccessor.SaveCodeGrantAsync(grant);
+            await _codeGrantAccessor.SaveCodeGrantAsync(grant);
 
             return grant.Code;
         }
