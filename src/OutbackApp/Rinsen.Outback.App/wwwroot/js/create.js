@@ -1,12 +1,4 @@
-// Identity/Create: validator defaults and Bootstrap validation styles
-var settings = {
-    validClass: "is-valid",
-    errorClass: "is-invalid"
-};
-$.validator.setDefaults(settings);
-$.validator.unobtrusive.options = settings;
-
-// Example starter JavaScript for disabling form submissions if there are invalid fields
+// Identity/Create: Bootstrap validation styles
 (function () {
     'use strict';
     window.addEventListener('load', function () {

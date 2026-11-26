@@ -45,10 +45,9 @@
             <span asp-validation-for="InviteCode"></span>
         </div>
     </div>
-    <button class="btn btn-lg btn-primary btn-block" type="submit">Sign up</button>
+    <button class="btn btn-lg btn-primary w-100" type="submit">Sign up</button>
 </form>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script src="~/js/create.js"></script>
 }
