@@ -50,7 +50,9 @@ public static class ExtensionMethods
 
         services.AddScoped<IAllowedCorsOriginsAccessor, AllowedCorsOriginsAccessor>();
         services.AddScoped<IClientAccessor, ClientAccessor>();
-        services.AddScoped<IGrantAccessor, GrantAccessor>();
+        services.AddScoped<ICodeGrantAccessor, GrantAccessor>();
+        services.AddScoped<IRefreshTokenGrantAccessor, GrantAccessor>();
+        services.AddScoped<IDeviceAuthorizationGrantAccessor, GrantAccessor>();
         services.AddScoped<IScopeAccessor, ScopeAccessor>();
         services.AddScoped<IUserInfoAccessor, UserInfoAccessor>();
         services.AddScoped<ITokenSigningAccessor, TokenSigningAccessor>();

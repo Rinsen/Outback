@@ -9,7 +9,7 @@ using Rinsen.Outback.Grants;
 namespace Rinsen.IdentityProvider.Outback;
 
 
-public class GrantAccessor : IGrantAccessor
+public class GrantAccessor : ICodeGrantAccessor, IRefreshTokenGrantAccessor, IDeviceAuthorizationGrantAccessor
 {
     private readonly OutbackDbContext _outbackDbContext;
 
@@ -47,6 +47,7 @@ public class GrantAccessor : IGrantAccessor
             RedirectUri = outbackCodeGrant.RedirectUri,
             Scope = outbackCodeGrant.Scope,
             State = outbackCodeGrant.State,
+            FamilyId = outbackCodeGrant.FamilyId,
             SubjectId = outbackCodeGrant.SubjectId.ToString(),
         };
     }
@@ -175,6 +176,7 @@ public class GrantAccessor : IGrantAccessor
             Scope = codeGrant.Scope,
             State = codeGrant.State,
             SubjectId = Guid.Parse(codeGrant.SubjectId),
+            FamilyId = codeGrant.FamilyId,
         };
 
         await _outbackDbContext.CodeGrants.AddAsync(outbackCodeGrant);

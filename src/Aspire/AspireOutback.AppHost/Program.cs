@@ -41,13 +41,6 @@ var outbackApp = builder.AddDotnetProject("outbackapp", "../../OutbackApp/Rinsen
     .WithExternalHttpEndpoints()
     .WithEnvironment("Rinsen__InvitationCode", invitationCode);
 
-builder.AddJavaScriptApp("angular", "../../outback-admin", runScriptName: "start")
-    .WithNpm(installCommand: "ci")
-    .WithReference(outbackApp)
-    .WaitFor(outbackApp)
-    .WithHttpEndpoint(env: "PORT")
-    .WithExternalHttpEndpoints();
-
 // Plain HTML/JS/Bootstrap admin app (src/Admin). No npm dependencies, so no
 // WithNpm: Aspire just runs `npm run start`, which starts tools/static-server.mjs.
 // WithReference injects the backend URL as OUTBACKAPP; the static server's proxy

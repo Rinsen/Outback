@@ -13,17 +13,17 @@ namespace Rinsen.Outback.Grants
 {
     internal class DeviceCodeGrantTypeHandler : IGrantTypeHandler
     {
-        private readonly IGrantAccessor _grantAccessor;
+        private readonly IDeviceAuthorizationGrantAccessor _deviceAuthorizationGrantAccessor;
         private readonly ITokenService _tokenService;
         private readonly RandomStringGenerator _randomStringGenerator;
         private readonly ILogger<DeviceCodeGrantTypeHandler> _logger;
 
-        public DeviceCodeGrantTypeHandler(IGrantAccessor grantAccessor,
+        public DeviceCodeGrantTypeHandler(IDeviceAuthorizationGrantAccessor deviceAuthorizationGrantAccessor,
             ITokenService tokenService,
             RandomStringGenerator randomStringGenerator,
             ILogger<DeviceCodeGrantTypeHandler> logger)
         {
-            _grantAccessor = grantAccessor;
+            _deviceAuthorizationGrantAccessor = deviceAuthorizationGrantAccessor;
             _tokenService = tokenService;
             _randomStringGenerator = randomStringGenerator;
             _logger = logger;
@@ -33,7 +33,7 @@ namespace Rinsen.Outback.Grants
 
         public async Task<TokenResponse> GetTokenAsync(TokenModel tokenModel, Client client, string issuer)
         {
-            var deviceGrant = await _grantAccessor.GetDeviceAuthorizationGrantAsync(tokenModel.DeviceCode);
+            var deviceGrant = await _deviceAuthorizationGrantAccessor.GetDeviceAuthorizationGrantAsync(tokenModel.DeviceCode);
 
             if (client.ClientId != deviceGrant.ClientId)
             {
@@ -74,7 +74,7 @@ namespace Rinsen.Outback.Grants
             var tokenResponse = await _tokenService.CreateTokenResponseAsync(client, deviceGrant, issuer);
 
             // The device code is single-use: mark it resolved once the token has been issued (RFC 8628 §3.2)
-            await _grantAccessor.ResolveDeviceAuthorizationGrantAsync(deviceGrant.DeviceCode);
+            await _deviceAuthorizationGrantAccessor.ResolveDeviceAuthorizationGrantAsync(deviceGrant.DeviceCode);
 
             return new TokenResponse { AccessTokenResponse = tokenResponse };
         }
@@ -95,7 +95,7 @@ namespace Rinsen.Outback.Grants
                 UserCodeExpiration = DateTimeOffset.UtcNow.AddSeconds(client.DeviceCodeUserCompletionLifetime)
             };
 
-            await _grantAccessor.SaveDeviceAuthorizationGrantAsync(deviceAuthorizationGrant);
+            await _deviceAuthorizationGrantAccessor.SaveDeviceAuthorizationGrantAsync(deviceAuthorizationGrant);
 
             return deviceAuthorizationGrant;
         }

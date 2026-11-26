@@ -22,6 +22,8 @@ public class AuthorizationCodeGrant
 
     public string Scope { get; set; } = string.Empty;
 
+    public Guid FamilyId { get; set; }
+
     public DateTimeOffset Created { get; set; }
 
     public DateTimeOffset Expires { get; set; }

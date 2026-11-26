@@ -43,6 +43,8 @@ public static class ExtensionMethods
         services.AddScoped<IClientService, ClientService>();
         services.AddScoped<ITokenService, TokenService>();
 
+        services.AddScoped<IRefreshTokenGrantTypeHandler, RefreshTokenGrantTypeHandler>();
+
         // Register every grant type handler so OAuthController's
         // IEnumerable<IGrantTypeHandler> resolves to all of them and each
         // grant type maps to its handler at runtime.

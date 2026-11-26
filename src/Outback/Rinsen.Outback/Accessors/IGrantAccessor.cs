@@ -4,16 +4,24 @@ using Rinsen.Outback.Grants;
 
 namespace Rinsen.Outback.Accessors;
 
-public interface IGrantAccessor
+public interface ICodeGrantAccessor
 {
     Task<AuthorizationCodeGrant> GetCodeGrantAsync(string code);
     Task<PersistedGrant> GetPersistedGrantAsync(string clientId, string subjectId);
-    Task<RefreshTokenGrant> GetRefreshTokenGrantAsync(string refreshToken);
-    Task<DeviceCodeGrant> GetDeviceAuthorizationGrantAsync(string deviceCode);
     Task SaveCodeGrantAsync(AuthorizationCodeGrant codeGrant);
     Task SavePersistedGrantAsync(PersistedGrant persistedGrant);
+}
+
+public interface IRefreshTokenGrantAccessor
+{
+    Task<RefreshTokenGrant> GetRefreshTokenGrantAsync(string refreshToken);
     Task SaveRefreshTokenGrantAsync(RefreshTokenGrant refreshTokenGrant);
-    Task SaveDeviceAuthorizationGrantAsync(DeviceCodeGrant deviceAuthorizationGrant);
     Task RevokeRefreshTokenFamilyAsync(Guid familyId);
+}
+
+public interface IDeviceAuthorizationGrantAccessor
+{
+    Task<DeviceCodeGrant> GetDeviceAuthorizationGrantAsync(string deviceCode);
+    Task SaveDeviceAuthorizationGrantAsync(DeviceCodeGrant deviceAuthorizationGrant);
     Task ResolveDeviceAuthorizationGrantAsync(string deviceCode);
 }
