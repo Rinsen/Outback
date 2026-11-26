@@ -18,7 +18,16 @@ else
 {
     <link href="~/css/bootstrap.min.css" rel="stylesheet" />
 }
+@if (HostingEnvironment.IsDevelopment())
+{
+    <link href="~/icons/font/bootstrap-icons.css" rel="stylesheet" />
+}
+else
+{
+    <link href="~/icons/font/bootstrap-icons.min.css" rel="stylesheet" />
+}
     <link href="~/css/identity.css" rel="stylesheet" />
+    @RenderSection("Styles", false)
 </head>
 <body class="text-center">
     @RenderBody()

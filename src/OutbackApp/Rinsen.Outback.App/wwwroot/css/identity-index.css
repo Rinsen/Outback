@@ -1,0 +1,53 @@
+/* Additional styles specific to the Identity Index page */
+.identity-container {
+    width: 100%;
+    max-width: 800px;
+    padding: 15px;
+    margin: auto;
+    margin-top: 70px; /* Add space for the fixed navbar */
+}
+
+.identity-header {
+    text-align: center;
+}
+
+.user-name {
+    font-weight: bold;
+    color: #007bff;
+}
+
+.table {
+    font-size: 0.9rem;
+}
+
+.badge {
+    font-size: 85%;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+body {
+    align-items: flex-start;
+    padding-top: 20px;
+}
+
+/* Sticky navbar styles */
+.fixed-top {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1030;
+}
+
+.navbar-dark {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

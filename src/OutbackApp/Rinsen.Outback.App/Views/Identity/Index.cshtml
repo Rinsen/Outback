@@ -1,8 +1,11 @@
 @using Rinsen.Outback.App.Models
+@using Microsoft.Extensions.Configuration
 @model IdentityOverview
+@inject IConfiguration Configuration
 @{
     ViewData["Title"] = "Outback identity";
     Layout = "_LayoutIdentity";
+    var adminAppUrl = Configuration["Rinsen:AdminAppUrl"];
 }
 
 <!-- Sticky navbar outside the container -->
@@ -21,6 +24,12 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/swagger">Swagger</a>
                     </li>
+                    @if (!string.IsNullOrEmpty(adminAppUrl))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href="@adminAppUrl" target="_blank" rel="noopener">Admin</a>
+                        </li>
+                    }
                 }
                 <li class="nav-item">
                     <a class="nav-link" href="/Identity/Logout">Sign out</a>
@@ -97,71 +106,8 @@
     <p class="mt-5 mb-3 text-muted">&copy; 2019-@DateTime.Now.Year</p>
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const expiresCells = document.querySelectorAll(".format-time");
-        expiresCells.forEach(cell => {
-            const expiresIso = cell.getAttribute("data-time");
-            if (expiresIso) {
-                const localDate = new Date(expiresIso).toLocaleString();
-                cell.textContent = localDate;
-            }
-        });
-    });
-</script>
+<script src="~/js/identity-index.js"></script>
 
-<style>
-    /* Additional styles specific to this page */
-    .identity-container {
-        width: 100%;
-        max-width: 800px;
-        padding: 15px;
-        margin: auto;
-        margin-top: 70px; /* Add space for the fixed navbar */
-    }
-
-    .identity-header {
-        text-align: center;
-    }
-
-    .user-name {
-        font-weight: bold;
-        color: #007bff;
-    }
-
-    .table {
-        font-size: 0.9rem;
-    }
-
-    .badge {
-        font-size: 85%;
-    }
-
-    .card {
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        border-radius: 0.5rem;
-    }
-
-    .card-header {
-        background-color: rgba(0, 0, 0, 0.03);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-    }
-
-    body {
-        align-items: flex-start;
-        padding-top: 20px;
-    }
-    
-    /* Sticky navbar styles */
-    .fixed-top {
-        position: fixed;
-        top: 0;
-        right: 0;
-        left: 0;
-        z-index: 1030;
-    }
-    
-    .navbar-dark {
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-</style>
+@section Styles {
+    <link href="~/css/identity-index.css" rel="stylesheet" />
+}
