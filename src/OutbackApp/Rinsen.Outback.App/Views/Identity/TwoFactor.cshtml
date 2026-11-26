@@ -9,7 +9,7 @@
 <h1 class="h3 mb-3 font-weight-normal">2-Step Verification</h1>
     @Html.LabelFor(m => m.KeyCode, "Verification code", htmlAttributes: new { @class = "sr-only" })
     @Html.TextBoxFor(m => m.KeyCode, new { @type = "text", @class = "form-control", placeholder = "Verification code" })
-    <button class="btn btn-lg btn-primary btn-block" type="submit">Verify</button>
+    <button class="btn btn-lg btn-primary w-100" type="submit">Verify</button>
     <p class="mt-5 mb-3 text-muted">&copy; 2019-@DateTime.Now.Year</p>
     @Html.HiddenFor(m => m.ReturnUrl)
     @Html.AntiForgeryToken()

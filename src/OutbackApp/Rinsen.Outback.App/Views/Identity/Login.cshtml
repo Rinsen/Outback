@@ -7,22 +7,18 @@
 @using (Html.BeginForm("Login", "Identity", FormMethod.Post, htmlAttributes: new { @class = "form-signin" }))
 {
     <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
-    @Html.LabelFor(m => m.Email, "Email address", htmlAttributes: new { @class = "sr-only" })
+	@Html.LabelFor(m => m.Email, "Email address", htmlAttributes: new { @class = "sr-only", @autocomplete = "given-name" })
     @Html.TextBoxFor(m => m.Email, new { @type = "email", @class = "form-control", placeholder = "Email address" })
-    @Html.LabelFor(m => m.Password, "Password", htmlAttributes: new { @class = "sr-only" })
-    <div class="input-group">
+    @Html.LabelFor(m => m.Password, "password", htmlAttributes: new { @class = "sr-only" })
+    <div class="input-group mb-3">
         @Html.TextBoxFor(m => m.Password, new { @type = "password", @class = "form-control", placeholder = "Password", id = "password" })
-        <div class="input-group-append">
-            <button type="button" class="btn btn-outline-secondary" id="togglePassword">
-                <span class="glyphicon glyphicon-eye-open"></span>
-            </button>
-        </div>
+        <button type="button" class="btn btn-outline-secondary" id="togglePassword" aria-label="Show password" title="Show password">
+            <i class="bi bi-eye" aria-hidden="true"></i>
+        </button>
     </div>
-    <div class="checkbox mb-3">
-        <label>
-            @Html.CheckBoxFor(m => m.RememberMe)
-            Remember me
-        </label>
+    <div class="form-check form-check-inline mb-3">
+        @Html.CheckBoxFor(m => m.RememberMe, new { @class = "form-check-input" })
+        <label class="form-check-label" for="RememberMe">Remember me</label>
     </div>
     @if (Model.InvalidEmailOrPassword)
     {
@@ -30,7 +26,7 @@
             <span class="help-block text-danger">Email or password is incorrect</span>
         </div>
     }
-    <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+    <button class="btn btn-primary w-100" type="submit">Sign in</button>
     <p class="mt-2"><a href="/Identity/Create">Register account</a></p>
     <p class="mt-5 mb-3 text-muted">&copy; 2019-@DateTime.Now.Year</p>
     @Html.HiddenFor(m => m.ReturnUrl)
@@ -38,19 +34,5 @@
 }
 
 @section Scripts {
-    <script>
-        document.getElementById('togglePassword').addEventListener('click', function () {
-            const passwordField = document.getElementById('password');
-            const icon = this.querySelector('.glyphicon');
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                icon.classList.remove('glyphicon-eye-open');
-                icon.classList.add('glyphicon-eye-close');
-            } else {
-                passwordField.type = 'password';
-                icon.classList.remove('glyphicon-eye-close');
-                icon.classList.add('glyphicon-eye-open');
-            }
-        });
-    </script>
+    <script src="~/js/login.js"></script>
 }
